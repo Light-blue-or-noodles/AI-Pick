@@ -1,0 +1,157 @@
+<!--pages/activity-detail/activity-detail.wxml-->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="back-btn" bindtap="onGoBack">
+      <text class="back-icon">←</text>
+    </view>
+    <view class="header-actions">
+      <view class="action-btn" bindtap="onShowMore">
+        <text class="action-icon">⋮</text>
+      </view>
+      <button class="action-btn share-btn" open-type="share">
+        <text class="action-icon">↗</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view class="loading" wx:if="{{isLoading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- Content -->
+  <block wx:else>
+    <!-- Image Swiper -->
+    <view class="image-section">
+      <swiper 
+        class="image-swiper" 
+        circular 
+        bindchange="onImageChange"
+      >
+        <swiper-item 
+          wx:for="{{activityInfo.images}}" 
+          wx:key="*this"
+          bindtap="onPreviewImage"
+          data-index="{{index}}"
+        >
+          <image 
+            class="slide-image" 
+            src="{{item}}" 
+            mode="aspectFill" 
+          />
+        </swiper-item>
+      </swiper>
+      <view class="image-indicator">
+        {{currentImage + 1}}/{{activityInfo.images.length}}
+      </view>
+    </view>
+
+    <!-- Title & Info -->
+    <view class="info-section">
+      <text class="activity-title">{{activityInfo.title}}</text>
+      <view class="info-list">
+        <view class="info-item">
+          <text class="info-icon">📅</text>
+          <text class="info-text">时间：{{activityInfo.time}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-icon">📍</text>
+          <text class="info-text">地点：{{activityInfo.location}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-icon">👥</text>
+          <text class="info-text">人数：{{activityInfo.currentParticipants}}/{{activityInfo.maxParticipants}}人（还剩{{activityInfo.maxParticipants - activityInfo.currentParticipants}}个名额）</text>
+        </view>
+        <view class="info-item">
+          <text class="info-icon">💰</text>
+          <text class="info-text">费用：{{activityInfo.priceText}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-icon">🏷️</text>
+          <text class="info-text">标签：{{activityInfo.category}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Detail Section -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">活动详情</text>
+      </view>
+      <view class="section-content">
+        <text class="detail-text">{{activityInfo.description}}</text>
+      </view>
+    </view>
+
+    <!-- Organizer Section -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">主办方</text>
+      </view>
+      <view class="section-content">
+        <view class="organizer-info" bindtap="onViewOrganizer">
+          <image 
+            class="organizer-avatar" 
+            src="{{activityInfo.organizer.avatar}}" 
+            mode="aspectFill" 
+          />
+          <text class="organizer-name">{{activityInfo.organizer.nickname}}</text>
+          <view class="organizer-rating">
+            <text class="rating-star">⭐</text>
+            <text class="rating-value">{{activityInfo.organizer.rating}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Participants Section -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">已报名 ({{activityInfo.currentParticipants}})</text>
+      </view>
+      <view class="section-content">
+        <view class="participants-list">
+          <image 
+            class="participant-avatar" 
+            wx:for="{{activityInfo.participants}}" 
+            wx:key="id"
+            src="{{item.avatar}}"
+            mode="aspectFill"
+            bindtap="onViewParticipant"
+            data-id="{{item.id}}"
+          />
+          <view class="more-participants" wx:if="{{activityInfo.currentParticipants > 6}}">
+            <text>+{{activityInfo.currentParticipants - 6}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- Bottom Actions -->
+  <view class="bottom-actions">
+    <view class="action-item" bindtap="onToggleCollect">
+      <text class="action-icon-bottom">{{isCollected ? '❤️' : '♡'}}</text>
+      <text class="action-label">{{isCollected ? '已收藏' : '收藏'}}</text>
+    </view>
+    <button class="action-item share-action" open-type="share">
+      <text class="action-icon-bottom">↗</text>
+      <text class="action-label">分享</text>
+    </button>
+    <view class="join-btn" bindtap="onJoin">
+      <text>报名参加</text>
+    </view>
+  </view>
+
+  <!-- More Menu Modal -->
+  <view class="modal-mask" wx:if="{{showMoreMenu}}" bindtap="onHideMore"></view>
+  <view class="more-menu" wx:if="{{showMoreMenu}}">
+    <view class="menu-item" bindtap="onReport">
+      <text>举报</text>
+    </view>
+    <view class="menu-item" bindtap="onHideMore">
+      <text>取消</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,118 @@
+<!--pages/settings/settings.wxml-->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="back-btn" bindtap="onGoBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">设置</text>
+    <view style="width: 72rpx;"></view>
+  </view>
+
+  <!-- Account Settings -->
+  <view class="section">
+    <view class="section-title">账号设置</view>
+    <view class="setting-item" bindtap="onEditProfile">
+      <text class="setting-label">编辑资料</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="setting-item" bindtap="onChangePhone">
+      <text class="setting-label">修改手机号</text>
+      <view class="setting-right">
+        <text class="setting-value">{{phone || '未绑定'}}</text>
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="setting-item" bindtap="onChangePassword">
+      <text class="setting-label">修改密码</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">微信绑定</text>
+      <view class="setting-right">
+        <text class="setting-value {{wechatBound ? 'success' : ''}}">{{wechatBound ? '已绑定' : '未绑定'}}</text>
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" wx:if="{{!wechatBound}}" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Notification Settings -->
+  <view class="section">
+    <view class="section-title">通知设置</view>
+    <view class="setting-item">
+      <text class="setting-label">消息通知</text>
+      <switch 
+        checked="{{messageNotification}}" 
+        bindchange="onToggleNotification"
+        data-type="messageNotification"
+        color="#FF6B35"
+      />
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">新粉丝提醒</text>
+      <switch 
+        checked="{{newFollowerNotification}}" 
+        bindchange="onToggleNotification"
+        data-type="newFollowerNotification"
+        color="#FF6B35"
+      />
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">活动提醒</text>
+      <switch 
+        checked="{{activityNotification}}" 
+        bindchange="onToggleNotification"
+        data-type="activityNotification"
+        color="#FF6B35"
+      />
+    </view>
+  </view>
+
+  <!-- Privacy Settings -->
+  <view class="section">
+    <view class="section-title">隐私设置</view>
+    <view class="setting-item">
+      <text class="setting-label">谁可以找我聊天</text>
+      <view class="setting-right">
+        <picker mode="selector" range="{{['全部', '好友', '不允许']}}" bindchange="onSetChatPermission">
+          <text class="setting-value">{{chatPermission === 'all' ? '全部' : chatPermission === 'friends' ? '好友' : '不允许'}}</text>
+        </picker>
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">谁可以看我的动态</text>
+      <view class="setting-right">
+        <picker mode="selector" range="{{['全部', '好友', '仅自己']}}" bindchange="onSetProfileVisibility">
+          <text class="setting-value">{{profileVisibility === 'all' ? '全部' : profileVisibility === 'friends' ? '好友' : '仅自己'}}</text>
+        </picker>
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Other Settings -->
+  <view class="section">
+    <view class="section-title">其他</view>
+    <view class="setting-item" bindtap="onClearCache">
+      <text class="setting-label">清空缓存</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Logout -->
+  <view class="logout-btn" bindtap="onLogout">
+    <text>退出登录</text>
+  </view>
+
+  <!-- Version -->
+  <view class="version">
+    <text>AI-Pick v1.0.0</text>
+  </view>
+</view>

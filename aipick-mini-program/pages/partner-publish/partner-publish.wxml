@@ -1,0 +1,109 @@
+<!--pages/partner-publish/partner-publish.wxml-->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="back-btn" bindtap="onGoBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">发布搭子</text>
+    <view style="width: 72rpx;"></view>
+  </view>
+
+  <!-- Form -->
+  <view class="form">
+    <!-- Title -->
+    <view class="form-item">
+      <view class="form-label-row">
+        <text class="form-label">标题</text>
+        <text class="form-count">{{titleLength}}/20</text>
+      </view>
+      <input 
+        class="form-input" 
+        placeholder="请输入搭子标题..." 
+        value="{{title}}"
+        maxlength="20"
+        bindinput="onTitleInput"
+      />
+    </view>
+
+    <!-- Partner Type -->
+    <view class="form-item">
+      <text class="form-label">搭子类型 *</text>
+      <view class="type-tags">
+        <text 
+          class="type-tag {{partnerType === item ? 'active' : ''}}"
+          wx:for="{{partnerTypes}}"
+          wx:key="*this"
+          bindtap="onSelectType"
+          data-index="{{index}}"
+        >{{item}}</text>
+      </view>
+    </view>
+
+    <!-- Description -->
+    <view class="form-item">
+      <view class="form-label-row">
+        <text class="form-label">详细描述 *</text>
+        <text class="form-count">{{descLength}}/200</text>
+      </view>
+      <textarea 
+        class="form-textarea" 
+        placeholder="请描述你的搭子需求..." 
+        value="{{description}}"
+        maxlength="200"
+        bindinput="onDescInput"
+      />
+    </view>
+
+    <!-- Member Count -->
+    <view class="form-item">
+      <text class="form-label">人数</text>
+      <view class="counter">
+        <view 
+          class="counter-btn {{memberCount <= 2 ? 'disabled' : ''}}"
+          bindtap="onDecreaseCount"
+        >
+          <text>-</text>
+        </view>
+        <view class="counter-value">
+          <text class="count-number">{{memberCount}}</text>
+          <text class="count-unit">人</text>
+        </view>
+        <view 
+          class="counter-btn {{memberCount >= 20 ? 'disabled' : ''}}"
+          bindtap="onIncreaseCount"
+        >
+          <text>+</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Scope -->
+    <view class="form-item">
+      <text class="form-label">范围</text>
+      <view class="scope-tags">
+        <text 
+          class="scope-tag {{scope === item.value ? 'active' : ''}}"
+          wx:for="{{scopes}}"
+          wx:key="value"
+          bindtap="onSelectScope"
+          data-value="{{item.value}}"
+        >{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- Divider -->
+    <view class="divider"></view>
+
+    <!-- AI Help Button -->
+    <view class="ai-btn" bindtap="onAIComplete">
+      <text class="ai-icon">🤖</text>
+      <text class="ai-text">AI 帮我完善</text>
+    </view>
+
+    <!-- Submit Button -->
+    <view class="submit-btn" bindtap="onSubmit">
+      <text>发布搭子</text>
+    </view>
+  </view>
+</view>

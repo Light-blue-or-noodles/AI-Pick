@@ -1,0 +1,121 @@
+/* pages/settings/settings.wxss */
+
+.container {
+  min-height: 100vh;
+  background: #F5F5F5;
+  padding-bottom: 40rpx;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #ffffff;
+  border-bottom: 1rpx solid #E5E5E5;
+}
+
+.back-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 40rpx;
+  color: #333333;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+/* Section */
+.section {
+  margin-top: 20rpx;
+  background: #ffffff;
+}
+
+.section-title {
+  font-size: 26rpx;
+  color: #999999;
+  padding: 20rpx 32rpx;
+  background: #FAFAFA;
+}
+
+/* Setting Item */
+.setting-item {
+  display: flex;
+  align-items: center;
+  min-height: 100rpx;
+  padding: 0 32rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-label {
+  font-size: 30rpx;
+  color: #333333;
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.setting-value {
+  font-size: 28rpx;
+  color: #999999;
+  margin-right: 12rpx;
+  line-height: 1.4;
+}
+
+.setting-value.success {
+  color: #2ED573;
+}
+
+.setting-arrow {
+  width: 24rpx;
+  height: 24rpx;
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+
+/* Logout Button */
+.logout-btn {
+  margin: 60rpx 32rpx 0;
+  height: 96rpx;
+  background: #ffffff;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #FF3B30;
+}
+
+/* Version */
+.version {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+  font-size: 24rpx;
+  color: #CCCCCC;
+}

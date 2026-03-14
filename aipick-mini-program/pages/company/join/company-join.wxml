@@ -1,0 +1,51 @@
+<!--pages/company/join/company-join.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">加入公司</text>
+    <text class="page-subtitle">填写公司名称，加入企业组织</text>
+  </view>
+
+  <!-- 表单区域 -->
+  <view class="form-section">
+    <view class="form-item">
+      <text class="form-label">公司名称</text>
+      <input 
+        class="form-input" 
+        type="text" 
+        placeholder="请输入公司全称" 
+        value="{{companyName}}"
+        bindinput="onCompanyInput"
+        maxlength="50"
+      />
+    </view>
+
+    <!-- 提交按钮 -->
+    <button 
+      class="submit-btn" 
+      bindtap="onSubmit"
+      disabled="{{submitting}}"
+      loading="{{submitting}}"
+    >
+      {{submitting ? '提交中...' : '确认加入'}}
+    </button>
+  </view>
+
+  <!-- 已加入状态 -->
+  <view class="status-section" wx:if="{{hasJoined}}">
+    <view class="status-card">
+      <image class="status-icon" src="/images/success.png" mode="aspectFit" />
+      <text class="status-title">已加入公司</text>
+      <text class="status-company">{{userCompany}}</text>
+      <button class="change-btn" bindtap="onChangeCompany">更换公司</button>
+    </view>
+  </view>
+
+  <!-- 提示信息 -->
+  <view class="tips-section">
+    <view class="tips-title">温馨提示</view>
+    <view class="tips-item">• 公司名称请填写全称，确保准确</view>
+    <view class="tips-item">• 加入后可在个人中心查看</view>
+    <view class="tips-item">• 如需更换公司可重新提交</view>
+  </view>
+</view>

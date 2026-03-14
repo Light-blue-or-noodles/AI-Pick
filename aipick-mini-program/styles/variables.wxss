@@ -1,0 +1,89 @@
+/* variables.wxss - CSS 变量定义 */
+
+/* 主题色 - 活力橙配色方案 */
+page {
+  /* 主色调 */
+  --primary-color: #FF6B35;
+  --primary-light: #FF8C42;
+  --primary-dark: #E85A2A;
+  
+  /* 辅助色 */
+  --secondary-color: #FFB347;
+  --secondary-light: #FFD699;
+  --secondary-dark: #FF9957;
+  
+  /* 强调色 - 粉红 */
+  --accent-color: #FF4081;
+  --accent-light: #FF6B9D;
+  --accent-dark: #E83A7A;
+  
+  /* 功能色 */
+  --success-color: #52C41A;
+  --warning-color: #FA8C16;
+  --error-color: #FF4D4F;
+  --info-color: #1890FF;
+  
+  /* 背景色 */
+  --bg-color: #FFF8F5;
+  --bg-white: #FFFFFF;
+  --bg-gray: #F5F5F5;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* 文字色 */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-disabled: #CCCCCC;
+  --text-inverse: #FFFFFF;
+  
+  /* 边框色 */
+  --border-color: #EEEEEE;
+  --border-light: #F0F0F0;
+  --border-dark: #DDDDDD;
+  
+  /* 阴影 */
+  --shadow-sm: 0 2rpx 8rpx rgba(74, 144, 217, 0.08);
+  --shadow-md: 0 4rpx 16rpx rgba(74, 144, 217, 0.12);
+  --shadow-lg: 0 8rpx 24rpx rgba(74, 144, 217, 0.16);
+  --shadow-xl: 0 12rpx 48rpx rgba(74, 144, 217, 0.20);
+  
+  /* 圆角 */
+  --radius-sm: 8rpx;
+  --radius-md: 12rpx;
+  --radius-lg: 16rpx;
+  --radius-xl: 24rpx;
+  --radius-full: 9999rpx;
+  
+  /* 间距 */
+  --spacing-xs: 8rpx;
+  --spacing-sm: 16rpx;
+  --spacing-md: 24rpx;
+  --spacing-lg: 32rpx;
+  --spacing-xl: 48rpx;
+  
+  /* 字体大小 */
+  --font-xs: 22rpx;
+  --font-sm: 24rpx;
+  --font-base: 28rpx;
+  --font-lg: 32rpx;
+  --font-xl: 36rpx;
+  --font-xxl: 40rpx;
+  
+  /* 高度 */
+  --height-sm: 60rpx;
+  --height-md: 80rpx;
+  --height-lg: 96rpx;
+  --height-xl: 120rpx;
+
+  /* 底部 Tab 栏预留高度，避免内容被遮挡（与 custom-tab-bar 一致） */
+  --tab-bar-padding: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+/* 主题渐变 */
+.theme-gradient {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+}
+
+.accent-gradient {
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF8FB3 100%);
+}

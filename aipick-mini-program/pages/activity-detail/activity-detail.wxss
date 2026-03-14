@@ -1,0 +1,300 @@
+/* pages/activity-detail/activity-detail.wxss */
+
+.container {
+  min-height: 100vh;
+  background: #F5F5F5;
+  padding-bottom: 140rpx;
+}
+
+/* Header */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx;
+  z-index: 100;
+}
+
+.back-btn,
+.action-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  border: none;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.action-icon {
+  color: #ffffff;
+  font-size: 36rpx;
+}
+
+.share-btn {
+  padding: 0;
+}
+
+/* Image Section */
+.image-section {
+  position: relative;
+}
+
+.image-swiper {
+  height: 500rpx;
+}
+
+.slide-image {
+  width: 100%;
+  height: 100%;
+}
+
+.image-indicator {
+  position: absolute;
+  right: 24rpx;
+  bottom: 24rpx;
+  padding: 8rpx 16rpx;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 16rpx;
+  color: #ffffff;
+  font-size: 24rpx;
+}
+
+/* Info Section */
+.info-section {
+  background: #ffffff;
+  padding: 32rpx;
+}
+
+.activity-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #1A1A1A;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+}
+
+.info-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+}
+
+.info-text {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+/* Section */
+.section {
+  margin-top: 20rpx;
+  background: #ffffff;
+  padding: 32rpx;
+}
+
+.section-header {
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.section-content {
+  padding-left: 8rpx;
+}
+
+.detail-text {
+  font-size: 28rpx;
+  color: #666666;
+  line-height: 1.8;
+}
+
+/* Organizer */
+.organizer-info {
+  display: flex;
+  align-items: center;
+}
+
+.organizer-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-right: 20rpx;
+}
+
+.organizer-name {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333333;
+}
+
+.organizer-rating {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.rating-star {
+  font-size: 24rpx;
+}
+
+.rating-value {
+  font-size: 28rpx;
+  color: #FFB800;
+}
+
+/* Participants */
+.participants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.participant-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
+.more-participants {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  font-size: 24rpx;
+}
+
+/* Bottom Actions */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 0 24rpx;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24rpx;
+  background: none;
+  border: none;
+}
+
+.action-item::after {
+  border: none;
+}
+
+.action-icon-bottom {
+  font-size: 40rpx;
+}
+
+.action-label {
+  font-size: 22rpx;
+  color: #666666;
+  margin-top: 4rpx;
+}
+
+.share-action {
+  padding: 0 24rpx;
+}
+
+.join-btn {
+  flex: 1;
+  height: 80rpx;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 24rpx;
+  font-size: 32rpx;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+/* Modal */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+.more-menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 24rpx 24rpx 0 0;
+  z-index: 201;
+  overflow: hidden;
+}
+
+.menu-item {
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #333333;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.menu-item:last-child {
+  color: #999999;
+}

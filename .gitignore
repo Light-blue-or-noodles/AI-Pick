@@ -1,0 +1,32 @@
+# 环境与密钥（切勿提交）
+.env
+*.env
+!.env.example
+
+# 构建产物
+backend/aipick-backend/target/
+**/node_modules/
+**/dist/
+**/.next/
+
+# 上传与本地数据
+backend/aipick-backend/uploads/
+**/data/mysql/
+**/data/redis/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 日志
+*.log
+/var/
+
+# 其他
+*.class
+*.jar
+!backend/aipick-backend/docker-compose*.yml

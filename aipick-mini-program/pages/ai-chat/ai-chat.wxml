@@ -1,0 +1,83 @@
+<!--pages/ai-chat/ai-chat.wxml-->
+<view class="container">
+  <!-- 顶部标题 -->
+  <view class="header">
+    <view class="header-left" bindtap="goBack">
+      <text class="back-arrow">←</text>
+    </view>
+    <view class="header-title">
+      <image class="ai-avatar" src="/images/ai-icon.png" mode="aspectFit" />
+      <text>AI 助手</text>
+    </view>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 对话区域 -->
+  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollIntoView}}" enhanced show-scrollbar="{{false}}">
+    <block wx:for="{{messages}}" wx:key="id">
+      <!-- 用户消息 -->
+      <view class="message-item user" id="msg-{{item.id}}">
+        <view class="message-content user-content">
+          <text>{{item.content}}</text>
+        </view>
+        <image class="message-avatar" src="{{userInfo.avatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+      </view>
+
+      <!-- AI 消息 -->
+      <view class="message-item ai" id="msg-{{item.id}}">
+        <image class="message-avatar ai-avatar-img" src="/images/ai-icon.png" mode="aspectFill" />
+        <view class="message-content ai-content">
+          <text>{{item.reply}}</text>
+          <!-- 推荐内容 -->
+          <view class="recommend-section" wx:if="{{item.recommends && item.recommends.length > 0}}">
+            <view class="recommend-title">为你推荐：</view>
+            <block wx:for="{{item.recommends}}" wx:for-item="rec" wx:key="id">
+              <view class="recommend-card" bindtap="goToDetail" data-type="{{rec.type}}" data-id="{{rec.id}}">
+                <image class="rec-avatar" src="{{rec.avatar}}" mode="aspectFill" />
+                <view class="rec-info">
+                  <text class="rec-name">{{rec.name}}</text>
+                  <text class="rec-desc">{{rec.desc}}</text>
+                </view>
+                <view class="rec-match" wx:if="{{rec.match}}">{{rec.match}}%</view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 欢迎提示 -->
+    <view class="welcome-tip" wx:if="{{messages.length === 0}}">
+      <image class="welcome-img" src="/images/ai-icon.png" mode="aspectFit" />
+      <text class="welcome-text">你好！我是 AI 助手</text>
+      <text class="welcome-sub">告诉我你想找什么样的搭子或活动</text>
+    </view>
+
+    <!-- 快捷入口 -->
+    <view class="quick-actions" wx:if="{{messages.length === 0}}">
+      <view class="action-btn" bindtap="quickAsk" data-text="推荐一些游戏搭子">
+        <text>🎮 游戏搭子</text>
+      </view>
+      <view class="action-btn" bindtap="quickAsk" data-text="推荐一些运动活动">
+        <text>🏃 运动活动</text>
+      </view>
+      <view class="action-btn" bindtap="quickAsk" data-text="附近有什么活动">
+        <text>📍 附近动态</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 输入区域 -->
+  <view class="input-area">
+    <input class="message-input" 
+           placeholder="请输入你想找的搭子或活动..." 
+           value="{{inputValue}}"
+           bindinput="onInput"
+           bindconfirm="sendMessage"
+           confirm-type="send"
+           focus="{{inputFocus}}" />
+    <view class="send-btn" bindtap="sendMessage">
+      <text>发送</text>
+    </view>
+  </view>
+</view>

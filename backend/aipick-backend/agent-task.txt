@@ -1,0 +1,9 @@
+修改 src/main/java/com/aipick/service/impl/ChatServiceImpl.java 文件，使用 Spring AI Alibaba 调用阿里云百炼 API。
+
+具体要求：
+1. 在类中注入 ChatClient：添加字段 `private final ChatClient chatClient;`，添加带 @Autowired 的构造器
+2. 修改 chat 方法中的 AI 调用逻辑，将 generateReply 方法改为使用 `chatClient.create("dashscope").prompt().user(message).call().content()` 调用百炼 API
+3. 保持原有的消息保存逻辑不变
+4. 使用 qwen-max 模型（默认）
+
+修改完成后，运行 `mvn compile` 验证代码可以编译。

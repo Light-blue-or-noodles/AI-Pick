@@ -1,0 +1,171 @@
+<!--pages/activity-create/activity-create.wxml-->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="back-btn" bindtap="onGoBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">创建活动</text>
+    <view style="width: 72rpx;"></view>
+  </view>
+
+  <!-- Form -->
+  <view class="form">
+    <!-- Cover Image -->
+    <view class="form-item">
+      <text class="form-label">活动封面</text>
+      <view class="cover-upload" bindtap="onChooseCover">
+        <image 
+          wx:if="{{coverImage}}" 
+          class="cover-image" 
+          src="{{coverImage}}" 
+          mode="aspectFill" 
+        />
+        <view class="cover-placeholder" wx:else>
+          <text class="cover-add-icon">+</text>
+          <text class="cover-add-text">添加封面</text>
+          <text class="cover-tip">建议 750x400</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Title -->
+    <view class="form-item">
+      <view class="form-label-row">
+        <text class="form-label">活动标题</text>
+        <text class="form-count">{{titleLength}}/30</text>
+      </view>
+      <input 
+        class="form-input" 
+        placeholder="请输入活动标题..." 
+        value="{{title}}"
+        maxlength="30"
+        bindinput="onTitleInput"
+      />
+    </view>
+
+    <!-- Category -->
+    <view class="form-item">
+      <text class="form-label">活动类型</text>
+      <view class="category-tags">
+        <text 
+          class="category-tag {{category === item.value ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="value"
+          bindtap="onSelectCategory"
+          data-value="{{item.value}}"
+        >{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- Date & Time -->
+    <view class="form-item">
+      <text class="form-label">活动时间</text>
+      <view class="datetime-picker">
+        <picker mode="date" bindchange="onDateChange">
+          <view class="picker-item">
+            <text class="picker-icon">📅</text>
+            <text class="{{date ? 'picker-value' : 'picker-placeholder'}}">
+              {{date || '选择日期'}}
+            </text>
+          </view>
+        </picker>
+        <picker mode="time" bindchange="onTimeChange">
+          <view class="picker-item">
+            <text class="picker-icon">⏰</text>
+            <text class="{{time ? 'picker-value' : 'picker-placeholder'}}">
+              {{time || '选择时间'}}
+            </text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- Location -->
+    <view class="form-item">
+      <text class="form-label">活动地点</text>
+      <view class="location-input" bindtap="onChooseLocation">
+        <text class="location-icon">📍</text>
+        <text class="{{location ? 'location-value' : 'location-placeholder'}}">
+          {{location || '点击选择地点...'}}
+        </text>
+      </view>
+    </view>
+
+    <!-- Max Participants -->
+    <view class="form-item">
+      <text class="form-label">人数限制</text>
+      <view class="counter">
+        <view 
+          class="counter-btn {{maxParticipants <= 2 ? 'disabled' : ''}}"
+          bindtap="onDecreaseCount"
+        >
+          <text>-</text>
+        </view>
+        <view class="counter-value">
+          <text class="count-number">{{maxParticipants}}</text>
+          <text class="count-unit">人</text>
+        </view>
+        <view 
+          class="counter-btn {{maxParticipants >= 100 ? 'disabled' : ''}}"
+          bindtap="onIncreaseCount"
+        >
+          <text>+</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Price -->
+    <view class="form-item">
+      <text class="form-label">费用</text>
+      <view class="price-type-tags">
+        <text 
+          class="price-tag {{priceType === 'free' ? 'active' : ''}}"
+          bindtap="onSelectPriceType"
+          data-type="free"
+        >免费</text>
+        <text 
+          class="price-tag {{priceType === 'paid' ? 'active' : ''}}"
+          bindtap="onSelectPriceType"
+          data-type="paid"
+        >付费</text>
+      </view>
+      <view class="price-input" wx:if="{{priceType === 'paid'}}">
+        <text class="price-unit">¥</text>
+        <input 
+          class="price-value" 
+          type="digit" 
+          placeholder="输入金额" 
+          value="{{price}}"
+          bindinput="onPriceInput"
+        />
+      </view>
+    </view>
+
+    <!-- Description -->
+    <view class="form-item">
+      <view class="form-label-row">
+        <text class="form-label">活动详情</text>
+        <text class="form-count">{{descLength}}/500</text>
+      </view>
+      <textarea 
+        class="form-textarea" 
+        placeholder="请输入活动详情..." 
+        value="{{description}}"
+        maxlength="500"
+        bindinput="onDescInput"
+      />
+    </view>
+
+    <!-- AI Help Button -->
+    <view class="ai-btn" bindtap="onAIComplete">
+      <text class="ai-icon">🤖</text>
+      <text class="ai-text">AI 帮我完善</text>
+    </view>
+
+    <!-- Submit Button -->
+    <view class="submit-btn" bindtap="onSubmit">
+      <text>发布活动</text>
+    </view>
+  </view>
+</view>

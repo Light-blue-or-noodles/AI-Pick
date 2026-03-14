@@ -1,0 +1,44 @@
+# 生产环境 MySQL + Redis（与 DEPLOY-GUIDE-ALIYUN.md 配合使用）
+# 在 backend/aipick-backend 目录下执行：docker-compose -f docker-compose.prod.yml up -d
+# 需先创建 .env 文件，设置 DB_PASSWORD 等变量
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: aipick-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: aipick
+      MYSQL_USER: aipick
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - aipick-network
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7-alpine
+    container_name: aipick-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - aipick-network
+    command: redis-server --appendonly yes
+
+networks:
+  aipick-network:
+    driver: bridge

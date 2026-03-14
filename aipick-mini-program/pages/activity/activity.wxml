@@ -1,0 +1,146 @@
+<!--pages/activity/activity.wxml-->
+<view class="container">
+  <!-- 顶部工具栏 -->
+  <view class="top-bar">
+    <view class="search-box" bindtap="goToFilter">
+      <image class="search-icon" src="/images/search.png" mode="aspectFit" />
+      <text>搜索活动...</text>
+    </view>
+    <view class="calendar-btn" bindtap="goToCalendar">
+      <text>📅 日历</text>
+    </view>
+    <view class="filter-btn" bindtap="goToFilter">
+      <text>筛选</text>
+    </view>
+  </view>
+
+  <!-- 分类导航 -->
+  <scroll-view class="category-nav" scroll-x>
+    <view 
+      class="category-item {{activeCategory === index ? 'active' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="*this"
+      bindtap="selectCategory"
+      data-index="{{index}}"
+    >
+      {{item}}
+    </view>
+  </scroll-view>
+
+  <!-- 时间筛选 -->
+  <scroll-view class="time-nav" scroll-x>
+    <view 
+      class="time-item {{activeTime === index ? 'active' : ''}}"
+      wx:for="{{timeFilters}}"
+      wx:key="*this"
+      bindtap="selectTime"
+      data-index="{{index}}"
+    >
+      {{item}}
+    </view>
+  </scroll-view>
+
+  <!-- 活动列表 -->
+  <scroll-view class="activity-list" scroll-y wx:if="{{!isLoading}}">
+    <block wx:for="{{activities}}" wx:key="id">
+      <view class="activity-card" bindtap="goToDetail" data-id="{{item.id}}">
+        <image class="activity-cover" src="{{item.cover}}" mode="aspectFill" />
+        <view class="activity-badge" wx:if="{{item.isHot}}">热门</view>
+        <!-- 活动状态标签 -->
+        <view class="activity-status {{item.status}}">
+          {{item.status === 'recruiting' ? '招募中' : (item.status === 'full' ? '已满' : '已结束')}}
+        </view>
+        <view class="activity-content">
+          <view class="activity-title">{{item.title}}</view>
+          <view class="activity-tags">
+            <text class="tag">{{item.category}}</text>
+          </view>
+          <view class="activity-info">
+            <view class="info-item">
+              <image src="/images/time.png" mode="aspectFit" />
+              <text>{{item.time}}</text>
+            </view>
+            <view class="info-item">
+              <image src="/images/location.png" mode="aspectFit" />
+              <text>{{item.location}}</text>
+            </view>
+          </view>
+          <view class="activity-footer">
+            <view class="author-info">
+              <image class="author-avatar" src="{{item.author.avatar}}" mode="aspectFill" />
+              <text class="author-name">{{item.author.name}}</text>
+            </view>
+            <view class="participant-info">
+              <view class="progress-bar">
+                <view class="progress" style="width: {{item.progressPercent || 0}}%"></view>
+              </view>
+              <text class="participant-count">{{item.participantLabel}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="activity-action">
+          <view class="join-btn {{item.status === 'full' || item.status === 'ended' ? 'disabled' : ''}}" 
+                catchtap="joinActivity" 
+                data-id="{{item.id}}">
+            {{item.status === 'full' ? '已满' : (item.status === 'ended' ? '已结束' : '立即报名')}}
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{activities.length === 0}}">
+      <image src="/images/empty-activity.png" mode="aspectFit" />
+      <text>暂无活动</text>
+    </view>
+  </scroll-view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:else>
+    <text>加载中...</text>
+  </view>
+
+  <!-- 发布按钮：加号图标 -->
+  <view class="publish-btn" bindtap="showPublishModal">
+    <text class="publish-btn-icon">+</text>
+  </view>
+
+  <!-- 发布弹窗 -->
+  <view class="modal-mask" wx:if="{{showPublishModal}}" bindtap="hidePublishModal"></view>
+  <view class="modal-content" wx:if="{{showPublishModal}}">
+    <view class="modal-header">
+      <text class="modal-title">发布活动</text>
+      <image class="modal-close" src="/images/close.png" bindtap="hidePublishModal" />
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">活动标题</text>
+        <input class="form-input" placeholder="请输入活动标题" data-field="title" bindinput="updateForm" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">活动分类</text>
+        <picker bindchange="onCategoryChange" value="{{categoryIndex}}" range="{{categories}}">
+          <view class="picker-value">{{publishForm.category}}</view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">活动时间</text>
+        <picker mode="date" bindchange="onTimeChange">
+          <view class="picker-value">{{publishForm.time || '选择日期时间'}}</view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">活动地点</text>
+        <input class="form-input" placeholder="请输入活动地点" data-field="location" bindinput="updateForm" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">活动描述</text>
+        <textarea class="form-textarea" placeholder="请输入活动描述" data-field="description" bindinput="updateForm" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">最大人数</text>
+        <input class="form-input" type="number" placeholder="请输入最大参与人数" data-field="maxParticipants" bindinput="updateForm" />
+      </view>
+      <view class="submit-btn" bindtap="submitActivity">发布</view>
+    </view>
+  </view>
+</view>

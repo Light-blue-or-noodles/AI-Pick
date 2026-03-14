@@ -1,0 +1,177 @@
+/* pages/my-activity/my-activity.wxss */
+
+.container {
+  min-height: 100vh;
+  background: #F5F5F5;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #ffffff;
+  border-bottom: 1rpx solid #E5E5E5;
+}
+
+.back-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 40rpx;
+  color: #333333;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.create-btn {
+  padding: 12rpx 24rpx;
+  background: #FF6B35;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  color: #ffffff;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: #ffffff;
+  padding: 0 24rpx;
+  border-bottom: 1rpx solid #E5E5E5;
+}
+
+.tab {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  color: #666666;
+  position: relative;
+}
+
+.tab.active {
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 6rpx;
+  background: #FF6B35;
+  border-radius: 3rpx;
+}
+
+/* List */
+.list {
+  padding: 24rpx;
+}
+
+/* Activity Card */
+.activity-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.activity-cover {
+  width: 100%;
+  height: 240rpx;
+}
+
+.activity-content {
+  padding: 24rpx;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.activity-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.activity-status {
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  background: rgba(46, 213, 115, 0.1);
+  color: #2ED573;
+}
+
+.activity-status.draft {
+  background: rgba(153, 153, 153, 0.1);
+  color: #999999;
+}
+
+.activity-status.ongoing {
+  background: rgba(255, 107, 53, 0.1);
+  color: #FF6B35;
+}
+
+.activity-info {
+  display: flex;
+  gap: 24rpx;
+}
+
+.info-item {
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.info-tag {
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.activity-stats {
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid #F5F5F5;
+  font-size: 26rpx;
+  color: #999999;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  color: #999999;
+  font-size: 28rpx;
+}

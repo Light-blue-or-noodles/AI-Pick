@@ -1,0 +1,95 @@
+<!--pages/my-partner/my-partner.wxml-->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="back-btn" bindtap="onGoBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">我的搭子</text>
+    <view class="publish-btn" bindtap="onGoToPublish">
+      <text>发起</text>
+    </view>
+  </view>
+
+  <!-- Tabs -->
+  <view class="tabs">
+    <view 
+      class="tab {{activeTab === index ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="*this"
+      bindtap="onSwitchTab"
+      data-index="{{index}}"
+    >
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view class="loading" wx:if="{{isLoading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- Partner List -->
+  <view class="list" wx:else>
+    <!-- Active / Ended Tab -->
+    <block wx:if="{{activeTab !== 2}}">
+      <view 
+        class="partner-card"
+        wx:for="{{partners}}"
+        wx:key="id"
+        bindtap="onViewDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="partner-header">
+          <text class="partner-title">🎯 {{item.title}}</text>
+          <text class="partner-status {{item.status}}">{{item.statusText}}</text>
+        </view>
+        <view class="partner-info">
+          <text class="info-item">📍 {{item.location}}</text>
+          <text class="info-item">👥 {{item.currentMembers}}/{{item.maxMembers}}人</text>
+        </view>
+        <view class="partner-footer">
+          <text class="partner-time">{{item.createTime}}</text>
+          <view class="action-btns">
+            <view class="btn-view" bindtap="onViewDetail" data-id="{{item.id}}">查看</view>
+            <view class="btn-quit" catchtap="onQuit" data-id="{{item.id}}">退出</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="empty-state" wx:if="{{partners.length === 0}}">
+        <text>暂无搭子</text>
+      </view>
+    </block>
+
+    <!-- My Published Tab -->
+    <block wx:else>
+      <view 
+        class="partner-card"
+        wx:for="{{myPublished}}"
+        wx:key="id"
+        bindtap="onViewDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="partner-header">
+          <text class="partner-title">🎯 {{item.title}}</text>
+          <text class="partner-status {{item.status}}">{{item.statusText}}</text>
+        </view>
+        <view class="partner-info">
+          <text class="info-item">📍 {{item.location}}</text>
+          <text class="info-item">👥 {{item.currentMembers}}/{{item.maxMembers}}人</text>
+        </view>
+        <view class="partner-footer">
+          <text class="partner-time">{{item.createTime}}</text>
+          <view class="action-btns">
+            <view class="btn-view" bindtap="onViewDetail" data-id="{{item.id}}">查看</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="empty-state" wx:if="{{myPublished.length === 0}}">
+        <text>暂无发布的搭子</text>
+      </view>
+    </block>
+  </view>
+</view>

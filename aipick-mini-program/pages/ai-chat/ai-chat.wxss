@@ -1,0 +1,240 @@
+/* pages/ai-chat/ai-chat.wxss */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* 顶部标题 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  padding: 0 15px;
+  background-color: #fff;
+  border-bottom: 1rpx solid #eee;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.header-left {
+  width: 40px;
+}
+
+.back-arrow {
+  font-size: 24px;
+  color: #333;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  font-size: 17px;
+  font-weight: 500;
+  color: #333;
+}
+
+.ai-avatar {
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+
+.header-right {
+  width: 40px;
+}
+
+/* 对话区域 */
+.chat-list {
+  flex: 1;
+  padding: 60px 15px 70px;
+  overflow-y: auto;
+}
+
+/* 欢迎提示 */
+.welcome-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.welcome-img {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+}
+
+.welcome-text {
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.welcome-sub {
+  font-size: 14px;
+  color: #999;
+}
+
+/* 快捷入口 */
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 20px;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  background-color: #fff;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #333;
+  border: 1rpx solid #eee;
+}
+
+/* 消息项 */
+.message-item {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.message-item.user {
+  justify-content: flex-end;
+}
+
+.message-item.ai {
+  justify-content: flex-start;
+}
+
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ai-avatar-img {
+  background-color: #f0f0f0;
+}
+
+.message-content {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.user-content {
+  background-color: #FF6B35;
+  color: #fff;
+  margin-left: 10px;
+}
+
+.ai-content {
+  background-color: #fff;
+  color: #333;
+  margin-right: 10px;
+}
+
+/* 推荐区域 */
+.recommend-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1rpx solid #eee;
+}
+
+.recommend-title {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.recommend-card {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.recommend-card:active {
+  background-color: #f0f0f0;
+}
+
+.rec-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+.rec-info {
+  flex: 1;
+}
+
+.rec-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.rec-desc {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.rec-match {
+  padding: 4px 8px;
+  background-color: #FF6B35;
+  color: #fff;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+/* 输入区域 */
+.input-area {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #fff;
+  border-top: 1rpx solid #eee;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.message-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 15px;
+  background-color: #f5f5f5;
+  border-radius: 18px;
+  font-size: 14px;
+}
+
+.send-btn {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: #FF6B35;
+  color: #fff;
+  border-radius: 18px;
+  font-size: 14px;
+}
+
+.send-btn:active {
+  background-color: #e55a2b;
+}

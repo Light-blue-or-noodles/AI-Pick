@@ -1,0 +1,41 @@
+.agreement-page {
+  height: 100vh;
+  background: #f7f7f7;
+}
+
+.agreement-scroll {
+  height: 100%;
+  padding: 24rpx 32rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.agreement-section {
+  margin-bottom: 32rpx;
+}
+
+.agreement-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #222222;
+  margin-bottom: 12rpx;
+}
+
+.agreement-update-time {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.agreement-subtitle {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 12rpx;
+}
+
+.agreement-paragraph {
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: #555555;
+  margin-bottom: 12rpx;
+}
+/* pages/agreement/privacy-policy/privacy-policy.wxss */

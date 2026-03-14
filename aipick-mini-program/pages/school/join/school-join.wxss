@@ -1,0 +1,147 @@
+/* pages/school/join/school-join.wxss */
+
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 40rpx;
+}
+
+/* 页面标题 */
+.page-header {
+  background: linear-gradient(135deg, #4ECDC4 0%, #6EE7DB 100%);
+  padding: 60rpx 30rpx 40rpx;
+  text-align: center;
+}
+
+.page-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12rpx;
+}
+
+.page-subtitle {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 表单区域 */
+.form-section {
+  background: #fff;
+  margin: 30rpx;
+  padding: 40rpx 30rpx;
+  border-radius: 16rpx;
+}
+
+.form-item {
+  margin-bottom: 40rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  background: #fff;
+  border-color: #4ECDC4;
+}
+
+/* 提交按钮 */
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: linear-gradient(135deg, #4ECDC4 0%, #6EE7DB 100%);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+  border: none;
+}
+
+.submit-btn[disabled] {
+  background: #ccc;
+  color: #999;
+}
+
+/* 已加入状态 */
+.status-section {
+  margin: 0 30rpx 30rpx;
+}
+
+.status-card {
+  background: #fff;
+  padding: 50rpx 30rpx;
+  border-radius: 16rpx;
+  text-align: center;
+}
+
+.status-icon {
+  width: 100rpx;
+  height: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.status-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.status-school {
+  display: block;
+  font-size: 36rpx;
+  color: #4ECDC4;
+  font-weight: 600;
+  margin-bottom: 40rpx;
+}
+
+.change-btn {
+  display: inline-block;
+  padding: 20rpx 60rpx;
+  background: transparent;
+  color: #4ECDC4;
+  font-size: 28rpx;
+  border: 2rpx solid #4ECDC4;
+  border-radius: 44rpx;
+}
+
+/* 提示信息 */
+.tips-section {
+  background: #fff;
+  margin: 30rpx;
+  padding: 30rpx;
+  border-radius: 16rpx;
+}
+
+.tips-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.tips-item {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 2;
+}

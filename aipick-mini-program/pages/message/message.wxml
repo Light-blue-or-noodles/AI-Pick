@@ -1,0 +1,42 @@
+<!--pages/message/message.wxml-->
+<view class="container">
+  <!-- 消息列表 -->
+  <scroll-view class="message-list" scroll-y wx:if="{{!isLoading}}">
+    <block wx:for="{{messages}}" wx:key="id">
+      <view 
+        class="message-item {{item.unreadCount > 0 ? 'unread' : ''}}" 
+        bindtap="goToChat" 
+        data-id="{{item.user.id}}"
+        bindlongpress="deleteMessage"
+        data-id="{{item.id}}"
+      >
+        <view class="message-avatar">
+          <image src="{{item.user.avatar}}" mode="aspectFill" />
+          <view class="online-status" wx:if="{{item.isOnline}}"></view>
+        </view>
+        <view class="message-content">
+          <view class="message-header">
+            <text class="message-name">{{item.user.name}}</text>
+            <text class="message-time">{{item.time}}</text>
+          </view>
+          <view class="message-body">
+            <text class="message-text">{{item.lastMessage}}</text>
+            <view class="unread-badge" wx:if="{{item.unreadCount > 0}}">
+              {{item.unreadCount > 99 ? '99+' : item.unreadCount}}
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{messages.length === 0}}">
+      <image src="/images/empty-message.png" mode="aspectFit" />
+      <text>暂无消息</text>
+    </view>
+  </scroll-view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:else>
+    <text>加载中...</text>
+  </view>
+</view>

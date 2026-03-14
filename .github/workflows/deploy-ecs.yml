@@ -1,0 +1,36 @@
+# 推送到 main 后，通过 SSH 在 ECS 上拉取代码并重启后端服务
+# 首次部署请先在 ECS 上按 GITHUB-DEPLOY.md 完成 clone + .env + run-on-server.sh
+# 需在 GitHub 仓库 Settings → Secrets 中配置：ECS_HOST、ECS_USER、ECS_SSH_KEY
+
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.ECS_SSH_KEY }}
+          script: |
+            set -e
+            DEPLOY_DIR="/opt/OpenClaw"
+            BACKEND_DIR="$DEPLOY_DIR/backend/aipick-backend"
+            if [ ! -d "$DEPLOY_DIR/.git" ]; then
+              echo "未检测到已克隆的仓库，请先在 ECS 上执行首次部署（见 GITHUB-DEPLOY.md）"
+              exit 1
+            fi
+            cd "$DEPLOY_DIR"
+            git fetch origin
+            git reset --hard origin/main
+            cd "$BACKEND_DIR"
+            mvn -q package -DskipTests -B
+            systemctl restart aipick || true
+            echo "部署完成，aipick 已重启"

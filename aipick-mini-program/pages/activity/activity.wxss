@@ -1,0 +1,422 @@
+/* pages/activity/activity.wxss - 活动页样式 */
+
+@import '../../styles/variables.wxss';
+@import '../../styles/common.wxss';
+/* 不引入 circle.wxss，避免与当前页 .activity-card / .activity-status 冲突 */
+
+/* 顶部工具栏 */
+.top-bar {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background-color: var(--bg-white);
+}
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background-color: var(--bg-gray);
+  border-radius: var(--radius-full);
+}
+
+.search-box .search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+}
+
+.search-box text {
+  font-size: var(--font-base);
+  color: var(--text-tertiary);
+}
+
+.calendar-btn {
+  margin-left: 16rpx;
+  padding: 16rpx 20rpx;
+  background-color: var(--bg-gray);
+  border-radius: var(--radius-full);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.filter-btn {
+  margin-left: 12rpx;
+  padding: 16rpx 24rpx;
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: var(--font-base);
+}
+
+/* 分类导航 */
+.category-nav {
+  background: var(--bg-white);
+  white-space: nowrap;
+  padding: 16rpx 30rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.category-item {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin-right: 16rpx;
+  border-radius: var(--radius-full);
+  background: var(--bg-gray);
+}
+
+.category-item.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+/* 时间筛选 */
+.time-nav {
+  background: var(--bg-white);
+  white-space: nowrap;
+  padding: 0 30rpx 20rpx;
+}
+
+.time-item {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  margin-right: 12rpx;
+  border-radius: var(--radius-full);
+  border: 1rpx solid var(--border-color);
+}
+
+.time-item.active {
+  background: var(--secondary-color);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* 活动列表：底部留出空间避免被发布按钮和 Tab 栏遮挡 */
+.activity-list {
+  height: calc(100vh - 300rpx);
+  padding: 20rpx;
+  padding-bottom: calc(140rpx + 120rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.activity-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.activity-cover {
+  width: 100%;
+  height: 260rpx;
+  background: var(--bg-gray);
+  display: block;
+}
+
+.activity-badge {
+  position: absolute;
+  top: 20rpx;
+  left: 20rpx;
+  padding: 8rpx 20rpx;
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%);
+  color: #fff;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-full);
+}
+
+/* 活动状态标签：限制在卡片内，避免与底部按钮重叠 */
+.activity-card .activity-status {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  padding: 8rpx 20rpx;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-full);
+  z-index: 2;
+}
+
+.activity-card .activity-status.recruiting {
+  background: rgba(82, 196, 26, 0.95);
+  color: #fff;
+}
+
+.activity-card .activity-status.full {
+  background: rgba(255, 77, 79, 0.95);
+  color: #fff;
+}
+
+.activity-card .activity-status.ended {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+.activity-content {
+  padding: 24rpx;
+}
+
+.activity-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12rpx;
+}
+
+.activity-tags {
+  display: flex;
+  margin-bottom: 16rpx;
+}
+
+.tag {
+  display: inline-block;
+  padding: 6rpx 14rpx;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+  background: var(--secondary-color);
+  color: var(--primary-color);
+}
+
+.activity-info {
+  margin-bottom: 16rpx;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.info-item image {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 10rpx;
+}
+
+.info-item text {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.activity-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+}
+
+.author-name {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.participant-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.progress-bar {
+  width: 160rpx;
+  min-width: 160rpx;
+  height: 12rpx;
+  background: var(--border-color);
+  border-radius: 6rpx;
+  margin-right: 16rpx;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  min-width: 8rpx;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  border-radius: 6rpx;
+}
+
+.participant-count {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+.activity-action {
+  padding: 0 24rpx 24rpx;
+  box-sizing: border-box;
+}
+
+.join-btn {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  color: #fff;
+  font-size: var(--font-base);
+  text-align: center;
+  border-radius: var(--radius-full);
+  border: none;
+}
+
+.join-btn.disabled {
+  background: var(--text-disabled);
+}
+
+/* 发布按钮：固定右下角，不遮挡列表内容（列表已留 padding-bottom） */
+.publish-btn {
+  position: fixed;
+  right: 30rpx;
+  bottom: calc(120rpx + env(safe-area-inset-bottom, 0px));
+  width: 96rpx;
+  height: 96rpx;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+  z-index: 50;
+}
+
+.publish-btn image {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.publish-btn-icon {
+  font-size: 56rpx;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1;
+  margin-top: -4rpx;
+}
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-overlay);
+  z-index: 100;
+}
+
+.modal-content {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 30rpx;
+  padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
+  z-index: 101;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.modal-title {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.form-input,
+.picker-value {
+  width: 100%;
+  padding: 20rpx 24rpx;
+  background: var(--bg-gray);
+  border-radius: var(--radius-md);
+  font-size: var(--font-base);
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 20rpx 24rpx;
+  background: var(--bg-gray);
+  border-radius: var(--radius-md);
+  font-size: var(--font-base);
+  min-height: 150rpx;
+  box-sizing: border-box;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 24rpx;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: var(--font-lg);
+  text-align: center;
+  border-radius: var(--radius-full);
+  margin-top: 20rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) 0;
+}
+
+.empty-state image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.5;
+}
+
+.empty-state text {
+  color: var(--text-tertiary);
+  font-size: var(--font-base);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  color: var(--text-tertiary);
+  font-size: var(--font-base);
+}

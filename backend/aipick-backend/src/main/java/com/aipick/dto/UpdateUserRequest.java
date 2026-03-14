@@ -1,0 +1,102 @@
+package com.aipick.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+/**
+ * 更新用户信息请求
+ *
+ * @author AI-Pick
+ */
+public class UpdateUserRequest {
+
+    /** 昵称 */
+    @NotBlank(message = "昵称不能为空")
+    private String nickname;
+
+    /** 头像 URL */
+    private String avatar;
+
+    /** 手机号 */
+    private String phone;
+
+    /** 邮箱 */
+    private String email;
+
+    /** 性别 0-未知 1-男 2-女 */
+    @NotNull(message = "性别不能为空")
+    private Integer gender;
+
+    /** 个性签名 */
+    private String bio;
+
+    /** 公司名称（可选） */
+    private String companyName;
+
+    /** 学校名称（可选） */
+    private String schoolName;
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Integer getGender() {
+        return gender;
+    }
+
+    public void setGender(Integer gender) {
+        this.gender = gender;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getSchoolName() {
+        return schoolName;
+    }
+
+    public void setSchoolName(String schoolName) {
+        this.schoolName = schoolName;
+    }
+}
