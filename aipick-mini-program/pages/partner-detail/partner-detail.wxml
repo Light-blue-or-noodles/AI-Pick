@@ -37,7 +37,7 @@
         <text>{{isFollowing ? '已关注' : '+关注'}}</text>
       </view>
       <view class="btn-action btn-chat" bindtap="onStartChat"><text>💬 聊天</text></view>
-      <view class="btn-action btn-match" bindtap="onShowMatch"><text>❤️ 匹配</text></view>
+      <view class="btn-action btn-match" bindtap="onShowMatch"><text>🎯 匹配</text></view>
     </view>
 
     <view class="section">

@@ -1,6 +1,6 @@
 // pages/activity-detail/activity-detail.js
 const app = getApp();
-const { post } = require('../../utils/request');
+const { get, post } = require('../../utils/request');
 
 Page({
   data: {
@@ -17,7 +17,20 @@ Page({
     if (options.id) {
       this.setData({ activityId: options.id });
       this.fetchActivityDetail(options.id);
+      this.checkFavoriteStatus(options.id);
     }
+  },
+
+  // Check favorite status
+  checkFavoriteStatus(activityId) {
+    get(`/api/activity/${activityId}/favorite/status`, {})
+      .then((res) => {
+        const isCollected = res.data === true || res.data === 1;
+        this.setData({ isCollected });
+      })
+      .catch(() => {
+        // Silent fail
+      });
   },
 
   // Fetch activity detail
@@ -178,13 +191,25 @@ Page({
 
   // Toggle collect
   onToggleCollect() {
+    const activityId = this.data.activityId;
     const newStatus = !this.data.isCollected;
-    this.setData({ isCollected: newStatus });
     
-    wx.showToast({
-      title: newStatus ? '已收藏' : '取消收藏',
-      icon: 'success'
-    });
+    const action = newStatus ? 'add' : 'cancel';
+    
+    post(`/api/activity/${activityId}/favorite`, { action })
+      .then(() => {
+        this.setData({ isCollected: newStatus });
+        wx.showToast({
+          title: newStatus ? '已收藏' : '取消收藏',
+          icon: 'success'
+        });
+      })
+      .catch(() => {
+        wx.showToast({
+          title: '操作失败',
+          icon: 'none'
+        });
+      });
   },
 
   // Share

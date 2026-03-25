@@ -13,6 +13,8 @@
     "pages/activity-detail/activity-detail",
     "pages/activity-create/activity-create",
     "pages/my-activity/my-activity",
+    "pages/my-favorites/my-favorites",
+    "pages/my-following/my-following",
     "pages/filter/filter",
     "pages/calendar/calendar",
     "pages/message/message",
@@ -20,6 +22,9 @@
     "pages/profile/profile",
     "pages/profile-edit/profile-edit",
     "pages/settings/settings",
+    "pages/account-security/account-security",
+    "pages/privacy-settings/privacy-settings",
+    "pages/about-us/about-us",
     "pages/company/join/company-join",
     "pages/school/join/school-join"
   ],

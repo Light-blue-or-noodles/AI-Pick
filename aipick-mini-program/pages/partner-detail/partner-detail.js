@@ -1,5 +1,6 @@
 // pages/partner-detail/partner-detail.js
 const app = getApp();
+const { get, post } = require('../../utils/request');
 
 Page({
   data: {
@@ -16,10 +17,54 @@ Page({
     if (validId) {
       this.setData({ partnerId: id });
       this.fetchPartnerDetail(id);
+      this.checkFollowStatus(id);
     } else {
       this.setData({ isLoading: false });
       wx.showToast({ title: '参数错误', icon: 'none' });
     }
+  },
+
+  // Check follow status
+  checkFollowStatus(partnerId) {
+    // 获取搭子发布者ID后检查关注状态
+    const userId = this.data.partnerInfo && this.data.partnerInfo.userId;
+    if (!userId) return;
+    
+    get(`/api/user/${userId}/follow/status`, {})
+      .then((res) => {
+        const isFollowing = res.data === true || res.data === 1;
+        this.setData({ isFollowing });
+      })
+      .catch(() => {
+        // Silent fail
+      });
+  },
+
+  // Toggle follow
+  onToggleFollow() {
+    const userId = this.data.partnerInfo && this.data.partnerInfo.userId;
+    if (!userId) {
+      wx.showToast({ title: '无法关注', icon: 'none' });
+      return;
+    }
+    
+    const newStatus = !this.data.isFollowing;
+    const action = newStatus ? 'add' : 'cancel';
+    
+    post(`/api/user/${userId}/follow`, { action })
+      .then(() => {
+        this.setData({ isFollowing: newStatus });
+        wx.showToast({
+          title: newStatus ? '已关注' : '取消关注',
+          icon: 'success'
+        });
+      })
+      .catch(() => {
+        wx.showToast({
+          title: '操作失败',
+          icon: 'none'
+        });
+      });
   },
 
   fetchPartnerDetail(id) {

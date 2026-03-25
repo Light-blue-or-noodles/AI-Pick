@@ -53,6 +53,41 @@ Page({
     wx.showToast({ title: '功能开发中', icon: 'none' });
   },
 
+  // Navigate to account security
+  onAccountSecurity() {
+    wx.navigateTo({
+      url: '/pages/account-security/account-security'
+    });
+  },
+
+  // Navigate to privacy settings
+  onPrivacySettings() {
+    wx.navigateTo({
+      url: '/pages/privacy-settings/privacy-settings'
+    });
+  },
+
+  // Navigate to about us
+  onAboutUs() {
+    wx.navigateTo({
+      url: '/pages/about-us/about-us'
+    });
+  },
+
+  // Navigate to my favorites
+  onMyFavorites() {
+    wx.navigateTo({
+      url: '/pages/my-favorites/my-favorites'
+    });
+  },
+
+  // Navigate to my following
+  onMyFollowing() {
+    wx.navigateTo({
+      url: '/pages/my-following/my-following'
+    });
+  },
+
   // Bind WeChat
   onBindWeChat() {
     wx.showToast({ title: '已绑定微信', icon: 'success' });
