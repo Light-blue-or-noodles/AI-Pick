@@ -28,12 +28,12 @@
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "AI-Pick",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F5F5F5"
+    "backgroundColor": "#F5FAF9"
   },
   "tabBar": {
     "custom": true,
     "color": "#999999",
-    "selectedColor": "#FF6B35",
+    "selectedColor": "#5FB3A8",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
@@ -68,6 +68,17 @@
         "selectedIconPath": "images/profile-active.png"
       }
     ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于首页推荐附近搭子/活动、活动与搭子发布选点"
+    },
+    "scope.album": {
+      "desc": "用于选择活动图片"
+    },
+    "scope.camera": {
+      "desc": "用于拍摄活动图片"
+    }
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2"

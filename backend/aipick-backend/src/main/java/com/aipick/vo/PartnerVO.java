@@ -58,20 +58,38 @@ public class PartnerVO {
     /** 标题 */
     private String title;
 
-    /** 描述 */
+    /** 描述（详情正文） */
     private String description;
 
-    /** 类型 */
+    /** 搭子偏好 */
+    private String preference;
+
+    /** 状态 0招募中 1已满 2已结束 */
+    private Integer status;
+
+    /** 类型编码 1～15 */
+    private Integer typeCode;
+
+    /** 类型展示名，如 游戏、运动 */
+    private String typeName;
+
+    /** 封面图 */
+    private String coverImage;
+
+    /** 类型（兼容旧字段，可为数字字符串） */
     private String type;
+
+    /** 可见范围位掩码（1 公开、2 同事、4 校友） */
+    private Integer scope;
+
+    /** 范围展示名，如「公开、同事」 */
+    private String scopeName;
 
     /** 最大人数 */
     private Integer maxParticipants;
 
     /** 当前人数 */
     private Integer currentParticipants;
-
-    /** 范围 */
-    private String scope;
 
     /** 纬度 */
     private Double latitude;
@@ -90,6 +108,9 @@ public class PartnerVO {
 
     /** 创建时间 */
     private LocalDateTime createTime;
+
+    /** 计划/集合时间 */
+    private LocalDateTime planTime;
 
     /** 距离 */
     private Double distance;

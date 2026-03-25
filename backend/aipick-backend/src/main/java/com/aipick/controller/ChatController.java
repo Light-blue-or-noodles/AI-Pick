@@ -39,10 +39,13 @@ public class ChatController {
     }
 
     /**
-     * 获取会话历史
+     * 获取会话历史（sessionId 为空时返回空列表，避免 500）
      */
     @GetMapping("/history/{sessionId}")
-    public Result<List<ChatMessage>> getHistory(@PathVariable String sessionId) {
+    public Result<List<ChatMessage>> getHistory(@PathVariable(required = false) String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return Result.success(List.of());
+        }
         List<ChatMessage> history = chatService.getHistory(sessionId);
         return Result.success(history);
     }

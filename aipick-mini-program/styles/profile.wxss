@@ -2,7 +2,7 @@
 
 /* 页面头部 */
 .profile-header {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   padding: 60rpx 30rpx 40rpx;
   position: relative;
 }

@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "编辑资料",
-  "usingComponents": {}
+  "usingComponents": {
+    "network-image": "/components/network-image/network-image"
+  }
 }

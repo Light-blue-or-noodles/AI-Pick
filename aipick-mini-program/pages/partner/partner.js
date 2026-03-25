@@ -1,14 +1,13 @@
 // pages/partner/partner.js
 const app = getApp();
-
-const TYPE_NAMES = { 1: '美食', 2: '旅游', 3: '运动', 4: '学习', 5: '游戏', 6: '其他' };
+const { mapPartnerForList } = require('../../utils/partnerListMap.js');
 
 /**
  * 封装 wx.request 为 Promise，请求搭子列表接口
- * 后端返回 { code: 0, data: IPage }，列表在 data.records
+ * @param scopeType 展示范围：company-同事搭，school-校友搭，platform-Pick搭（全平台）
  * @returns {Promise<Array>} 搭子列表（已映射为页面所需结构）
  */
-function fetchPartnerList() {
+function fetchPartnerList(scopeType) {
   const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
   const header = { 'Content-Type': 'application/json' };
   const token = app.globalData.token || wx.getStorageSync('token');
@@ -16,9 +15,10 @@ function fetchPartnerList() {
   if (token) header['Authorization'] = 'Bearer ' + token;
   if (userId) header['X-User-Id'] = String(userId);
 
+  const query = scopeType ? `?scopeType=${encodeURIComponent(scopeType)}` : '';
   return new Promise((resolve, reject) => {
     wx.request({
-      url: `${baseUrl}/api/partner`,
+      url: `${baseUrl}/api/partner${query}`,
       method: 'GET',
       header,
       success: (res) => {
@@ -44,69 +44,64 @@ function fetchPartnerList() {
   });
 }
 
-function mapPartnerForList(p, baseUrl) {
-  const status = p.status;
-  const statusText = status === 0 ? 'recruiting' : status === 1 ? 'full' : 'ended';
-  const statusLabel = status === 0 ? '招募中' : status === 1 ? '已满' : '已结束';
-  const createTime = p.createTime ? (typeof p.createTime === 'string' ? p.createTime.replace('T', ' ').substring(0, 16) : '') : '';
-  const cover = (p.coverImage && (p.coverImage.startsWith('http') ? p.coverImage : (baseUrl + p.coverImage))) || '/images/partner-banner.png';
-  return {
-    id: p.id,
-    title: p.title || '未命名',
-    category: TYPE_NAMES[p.type] || '其他',
-    description: p.content || '',
-    status: statusText,
-    statusLabel,
-    cover,
-    author: {
-      name: p.nickname || '用户',
-      avatar: p.avatar || '/images/default-avatar.png'
-    },
-    members: p.currentCount != null ? p.currentCount : 0,
-    maxMembers: p.targetCount != null ? p.targetCount : 2,
-    createTime,
-    tags: p.tags || [],
-    distance: p.location || '',
-    match: p.matchScore
-  };
-}
-
 Page({
   data: {
     partners: [],
-    categories: ['全部', '游戏', '运动', '美食', '学习', '旅游'],
-    activeCategory: 0,
-    isLoading: true,
-    showPublishModal: false,
-    publishForm: {
-      title: '',
-      category: '游戏',
-      description: '',
-      requirements: '',
-      contact: ''
-    }
+    scopeTabs: [
+      // 将 Pick 搭子放在第一个，进入页面默认展示 Pick 搭子
+      { key: 'platform', label: 'Pick搭' },
+      { key: 'company', label: '同事搭' },
+      { key: 'school', label: '校友搭' }
+    ],
+    activeScope: 0,
+    isLoading: true
   },
 
   onLoad(options) {
     if (options.filter) {
       // 处理筛选参数
     }
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7765/ingest/f4d89e39-b9eb-4a44-9895-809c60c7efc4', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '24c833'
+        },
+        body: JSON.stringify({
+          sessionId: '24c833',
+          runId: 'partner-page-load',
+          hypothesisId: 'H1',
+          location: 'pages/partner/partner.js:onLoad',
+          message: 'partner page loaded',
+          data: {
+            hasShowPublishModalFn: typeof this.showPublishModal === 'function'
+          },
+          timestamp: Date.now()
+        })
+      }).catch(() => {});
+    } catch (e) {}
+    // #endregion agent log
     this.loadPartners();
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 1
-      });
-    }
+    const that = this;
+    setTimeout(function () {
+      if (typeof that.getTabBar === 'function') {
+        const bar = that.getTabBar();
+        if (bar) bar.setData({ selected: 1 });
+      }
+    }, 0);
   },
 
-  // 加载搭子列表
+  // 加载搭子列表（按当前选中的展示范围：同事搭/校友搭/Pick搭）
   loadPartners() {
     this.setData({ isLoading: true });
+    const scopeType = this.data.scopeTabs[this.data.activeScope].key;
 
-    return fetchPartnerList()
+    return fetchPartnerList(scopeType)
       .then((list) => {
         this.setData({
           partners: list,
@@ -126,10 +121,10 @@ Page({
       });
   },
 
-  // 选择分类
-  selectCategory(e) {
+  // 选择展示范围：同事搭 / 校友搭 / Pick搭
+  selectScope(e) {
     const index = e.currentTarget.dataset.index;
-    this.setData({ activeCategory: index });
+    this.setData({ activeScope: index });
     this.loadPartners();
   },
 
@@ -140,42 +135,11 @@ Page({
     });
   },
 
-  // 显示发布弹窗
-  showPublishModal() {
-    this.setData({ showPublishModal: true });
-  },
-
-  // 隐藏发布弹窗
-  hidePublishModal() {
-    this.setData({ showPublishModal: false });
-  },
-
-  // 更新表单
-  updateForm(e) {
-    const field = e.currentTarget.dataset.field;
-    const value = e.detail.value;
-    this.setData({
-      [`publishForm.${field}`]: value
+  // 跳转到发布搭子二级页
+  goToPublish() {
+    wx.navigateTo({
+      url: '/pages/partner-publish/partner-publish'
     });
-  },
-
-  // 发布搭子
-  submitPartner() {
-    const form = this.data.publishForm;
-    if (!form.title || !form.description) {
-      wx.showToast({
-        title: '请填写完整信息',
-        icon: 'none'
-      });
-      return;
-    }
-
-    // 模拟成功
-    wx.showToast({
-      title: '发布成功',
-      icon: 'success'
-    });
-    this.hidePublishModal();
   },
 
   // 查看详情

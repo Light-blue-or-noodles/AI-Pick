@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.aipick.common.BusinessException;
+import com.aipick.common.PartnerPreferenceConstants;
+import com.aipick.common.PartnerScopeConstants;
+import com.aipick.common.PartnerTypeConstants;
 import com.aipick.dto.ApplyPartnerRequest;
 import com.aipick.dto.CreatePartnerRequest;
 import com.aipick.dto.PageRequest;
@@ -14,10 +17,14 @@ import com.aipick.mapper.PartnerApplyMapper;
 import com.aipick.mapper.PartnerMapper;
 import com.aipick.mapper.UserMapper;
 import com.aipick.service.PartnerService;
+import com.aipick.util.AvatarUtil;
+import com.aipick.vo.PartnerVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +53,31 @@ public class PartnerServiceImpl implements PartnerService {
     public Partner createPartner(Long userId, CreatePartnerRequest request) {
         Partner partner = new Partner();
         partner.setUserId(userId);
-        partner.setTitle(request.getTitle());
-        partner.setContent(request.getContent());
+        partner.setTitle(request.getTitle().trim());
+        partner.setContent(request.getContent().trim());
+        partner.setPreference(PartnerPreferenceConstants.normalizeAndValidate(request.getPreference()));
+        partner.setScope(PartnerScopeConstants.maskFromScopeList(request.getScopes()));
         partner.setType(request.getType());
         partner.setTargetCount(request.getTargetCount() != null ? request.getTargetCount() : 2);
         partner.setCurrentCount(1);
-        partner.setLocation(request.getLocation());
+        String loc = request.getLocation();
+        if (loc != null && !loc.isBlank()) {
+            partner.setLocation(loc.trim());
+        } else {
+            partner.setLocation(null);
+        }
+        Double lat = request.getLatitude();
+        Double lng = request.getLongitude();
+        if (lat != null || lng != null) {
+            if (lat == null || lng == null) {
+                throw new BusinessException("地图选点纬度与经度需同时填写");
+            }
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                throw new BusinessException("地图坐标无效");
+            }
+            partner.setLatitude(lat);
+            partner.setLongitude(lng);
+        }
         partner.setPlanTime(request.getPlanTime());
         String coverImage = request.getCoverImage();
         if (coverImage == null || coverImage.isBlank()) {
@@ -74,72 +100,166 @@ public class PartnerServiceImpl implements PartnerService {
         return partner;
     }
 
-    /** 按搭子类型返回默认封面：1-吃饭 2-旅游 3-运动 4-学习 5-游戏 6-其他 */
+    /**
+     * 无封面时按类型给默认图（1～15 类型分组映射到现有静态图）
+     */
     private static String defaultCoverByPartnerType(Integer type) {
         if (type == null) {
             return "/static/covers/partner-default.png";
         }
         switch (type) {
-            case 1: return "/static/covers/partner-food.png";
-            case 2: return "/static/covers/activity-default.png";
-            case 3: return "/static/covers/partner-sport.png";
-            case 4: return "/static/covers/partner-study.png";
-            case 5: return "/static/covers/activity-party.png";
-            case 6: return "/static/covers/partner-default.png";
-            default: return "/static/covers/partner-default.png";
+            case 7:
+            case 10:
+                return "/static/covers/partner-food.png";
+            case 8:
+                return "/static/covers/activity-default.png";
+            case 5:
+            case 15:
+                return "/static/covers/partner-sport.png";
+            case 14:
+                return "/static/covers/partner-study.png";
+            case 9:
+            case 11:
+            case 13:
+                return "/static/covers/activity-party.png";
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 6:
+            case 12:
+            default:
+                return "/static/covers/partner-default.png";
         }
     }
 
     @Override
-    public IPage<Partner> getPartnerList(PageRequest pageRequest, Integer type) {
+    public IPage<PartnerVO> getPartnerList(PageRequest pageRequest, Integer type, Long currentUserId, String scopeType) {
         Page<Partner> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
         LambdaQueryWrapper<Partner> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Partner::getStatus, 0);
         if (type != null) {
             wrapper.eq(Partner::getType, type);
         }
+        applyVisibilityFilter(wrapper, currentUserId);
+        if (currentUserId != null && scopeType != null && !scopeType.isEmpty()) {
+            if ("platform".equalsIgnoreCase(scopeType)) {
+                wrapper.and(w -> w.isNull(Partner::getScope).or().apply("(scope & 1) <> 0"));
+            } else if ("company".equalsIgnoreCase(scopeType)) {
+                List<Long> userIds = userIdsByCompany(currentUserId);
+                if (userIds.isEmpty()) {
+                    wrapper.eq(Partner::getUserId, -1L);
+                } else {
+                    wrapper.and(w -> w.apply("(scope & 2) <> 0").in(Partner::getUserId, userIds));
+                }
+            } else if ("school".equalsIgnoreCase(scopeType)) {
+                List<Long> userIds = userIdsBySchool(currentUserId);
+                if (userIds.isEmpty()) {
+                    wrapper.eq(Partner::getUserId, -1L);
+                } else {
+                    wrapper.and(w -> w.apply("(scope & 4) <> 0").in(Partner::getUserId, userIds));
+                }
+            }
+        }
         wrapper.orderByDesc(Partner::getCreateTime);
 
         IPage<Partner> result = partnerMapper.selectPage(page, wrapper);
 
-        // 批量查询发布者信息，避免 N+1 问题
-        List<Long> userIds = result.getRecords().stream()
+        IPage<PartnerVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        voPage.setRecords(toPartnerVOList(result.getRecords()));
+        return voPage;
+    }
+
+    /**
+     * 可见范围（位掩码）：未登录仅公开位；已登录可见本人、含公开位、或同事位且同公司、或校友位且同校
+     */
+    private void applyVisibilityFilter(LambdaQueryWrapper<Partner> wrapper, Long viewerUserId) {
+        if (viewerUserId == null) {
+            wrapper.and(w -> w.isNull(Partner::getScope).or().apply("(scope & 1) <> 0"));
+            return;
+        }
+        List<Long> companyIds = userIdsByCompany(viewerUserId);
+        List<Long> schoolIds = userIdsBySchool(viewerUserId);
+        wrapper.and(w -> {
+            w.isNull(Partner::getScope)
+                    .or()
+                    .apply("(scope & 1) <> 0")
+                    .or()
+                    .eq(Partner::getUserId, viewerUserId);
+            if (!companyIds.isEmpty()) {
+                w.or(sub -> sub.apply("(scope & 2) <> 0").in(Partner::getUserId, companyIds));
+            }
+            if (!schoolIds.isEmpty()) {
+                w.or(sub -> sub.apply("(scope & 4) <> 0").in(Partner::getUserId, schoolIds));
+            }
+        });
+    }
+
+    private List<PartnerVO> toPartnerVOList(List<Partner> partners) {
+        if (partners == null || partners.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> userIds = partners.stream()
                 .map(Partner::getUserId)
                 .filter(id -> id != null)
                 .distinct()
                 .collect(Collectors.toList());
-        
         Map<Long, User> userMap = new HashMap<>();
         if (!userIds.isEmpty()) {
-            List<User> users = userMapper.selectBatchIds(userIds);
-            for (User user : users) {
+            for (User user : userMapper.selectBatchIds(userIds)) {
                 userMap.put(user.getId(), user);
             }
         }
-        
-        // 补充发布者信息
-        for (Partner partner : result.getRecords()) {
-            User user = userMap.get(partner.getUserId());
-            if (user != null) {
-                partner.setCreateBy(user.getId());
-            }
+        List<PartnerVO> list = new ArrayList<>();
+        for (Partner p : partners) {
+            list.add(toPartnerVO(p, userMap.get(p.getUserId())));
         }
+        return list;
+    }
 
-        return result;
+    private PartnerVO toPartnerVO(Partner partner, User author) {
+        PartnerVO vo = new PartnerVO();
+        vo.setId(partner.getId());
+        vo.setUserId(partner.getUserId());
+        vo.setTitle(partner.getTitle());
+        vo.setDescription(partner.getContent());
+        vo.setPreference(partner.getPreference());
+        vo.setCoverImage(partner.getCoverImage());
+        vo.setMaxParticipants(partner.getTargetCount());
+        vo.setCurrentParticipants(partner.getCurrentCount());
+        vo.setScope(partner.getScope());
+        vo.setScopeName(PartnerScopeConstants.labelOf(partner.getScope()));
+        vo.setTypeCode(partner.getType());
+        vo.setTypeName(PartnerTypeConstants.labelOf(partner.getType()));
+        if (partner.getType() != null) {
+            vo.setType(String.valueOf(partner.getType()));
+        }
+        vo.setAddress(partner.getLocation());
+        vo.setLatitude(partner.getLatitude());
+        vo.setLongitude(partner.getLongitude());
+        vo.setPlanTime(partner.getPlanTime());
+        vo.setStatus(partner.getStatus());
+        vo.setCreateTime(partner.getCreateTime());
+        if (author != null) {
+            vo.setNickname(author.getNickname());
+            vo.setAvatar(AvatarUtil.sanitizeForResponse(author.getAvatar()));
+            vo.setGender(author.getGender());
+        }
+        return vo;
     }
 
     @Override
-    public Partner getPartnerDetail(Long partnerId) {
+    public PartnerVO getPartnerDetailVO(Long partnerId) {
         Partner partner = partnerMapper.selectById(partnerId);
         if (partner == null) {
             throw new BusinessException("搭子不存在");
         }
 
-        // 增加浏览量
-        partner.setViewCount(partner.getViewCount() + 1);
+        partner.setViewCount(partner.getViewCount() == null ? 1 : partner.getViewCount() + 1);
         partnerMapper.updateById(partner);
 
-        return partner;
+        User author = partner.getUserId() != null ? userMapper.selectById(partner.getUserId()) : null;
+        return toPartnerVO(partner, author);
     }
 
     @Override
@@ -252,14 +372,10 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
     @Override
-    public List<Partner> getMyPartners(Long userId, String type) {
+    public List<PartnerVO> getMyPartners(Long userId, String type) {
         LambdaQueryWrapper<Partner> wrapper = new LambdaQueryWrapper<>();
-        
-        if ("created".equals(type)) {
-            // 我发布的
-            wrapper.eq(Partner::getUserId, userId);
-        } else if ("joined".equals(type)) {
-            // 我参加的（通过应征记录查询）
+
+        if ("joined".equals(type)) {
             LambdaQueryWrapper<PartnerApply> applyWrapper = new LambdaQueryWrapper<>();
             applyWrapper.eq(PartnerApply::getUserId, userId)
                     .eq(PartnerApply::getStatus, 1);
@@ -270,12 +386,13 @@ public class PartnerServiceImpl implements PartnerService {
             List<Long> partnerIds = applies.stream().map(PartnerApply::getPartnerId).toList();
             wrapper.in(Partner::getId, partnerIds);
         } else {
-            // 默认返回所有
+            // created、published、null：仅我发布的搭子
             wrapper.eq(Partner::getUserId, userId);
         }
-        
+
         wrapper.orderByDesc(Partner::getCreateTime);
-        return partnerMapper.selectList(wrapper);
+        List<Partner> list = partnerMapper.selectList(wrapper);
+        return toPartnerVOList(list);
     }
 
     @Override
@@ -328,5 +445,29 @@ public class PartnerServiceImpl implements PartnerService {
         
         // 删除搭子
         partnerMapper.deleteById(partnerId);
+    }
+
+    /** 与当前用户同公司的用户ID列表（用于同事搭） */
+    private List<Long> userIdsByCompany(Long currentUserId) {
+        User user = userMapper.selectById(currentUserId);
+        if (user == null || user.getCompanyName() == null || user.getCompanyName().isBlank()) {
+            return Collections.emptyList();
+        }
+        String company = user.getCompanyName().trim();
+        LambdaQueryWrapper<User> w = new LambdaQueryWrapper<>();
+        w.eq(User::getCompanyName, company).select(User::getId);
+        return userMapper.selectList(w).stream().map(User::getId).collect(Collectors.toList());
+    }
+
+    /** 与当前用户同学校的用户ID列表（用于校友搭） */
+    private List<Long> userIdsBySchool(Long currentUserId) {
+        User user = userMapper.selectById(currentUserId);
+        if (user == null || user.getSchoolName() == null || user.getSchoolName().isBlank()) {
+            return Collections.emptyList();
+        }
+        String school = user.getSchoolName().trim();
+        LambdaQueryWrapper<User> w = new LambdaQueryWrapper<>();
+        w.eq(User::getSchoolName, school).select(User::getId);
+        return userMapper.selectList(w).stream().map(User::getId).collect(Collectors.toList());
     }
 }

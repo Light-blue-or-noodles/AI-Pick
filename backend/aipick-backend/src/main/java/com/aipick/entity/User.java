@@ -64,6 +64,25 @@ public class User extends BaseEntity implements Serializable {
     /** 学校名称 */
     private String schoolName;
 
+    /** 生日 yyyy-MM-dd */
+    private String birthday;
+
+    /** 兴趣标签 JSON 数组，如 ["游戏","运动"] */
+    private String tags;
+
+    /**
+     * 常驻位置：城市名或经纬度 "lat,lon"（匹配度等逻辑使用）。
+     * 若库表尚未加列，可保持 exist = false，由业务层写入内存对象。
+     */
+    @TableField(exist = false)
+    private String location;
+
+    /**
+     * 活跃时间 JSON：{"start":"09:00","end":"22:00"}（匹配度时间维度使用）。
+     */
+    @TableField(exist = false)
+    private String activeTime;
+
     /** 学校是否已验证 - 数据库暂未包含 */
     @TableField(exist = false)
     private Boolean schoolVerified;
@@ -170,6 +189,38 @@ public class User extends BaseEntity implements Serializable {
 
     public void setSchoolName(String schoolName) {
         this.schoolName = schoolName;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getActiveTime() {
+        return activeTime;
+    }
+
+    public void setActiveTime(String activeTime) {
+        this.activeTime = activeTime;
     }
 
     public Boolean getCompanyVerified() {

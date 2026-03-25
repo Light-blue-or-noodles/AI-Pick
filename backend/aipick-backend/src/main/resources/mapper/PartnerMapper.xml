@@ -4,8 +4,8 @@
 
     <!-- 搭子筛选：按兴趣类型、位置、计划时间、发布者性别 -->
     <select id="selectPageByFilter" resultType="com.aipick.entity.Partner">
-        SELECT p.id, p.user_id, p.title, p.content, p.type, p.target_count, p.current_count,
-               p.location, p.plan_time, p.cover_image, p.status, p.view_count,
+        SELECT p.id, p.user_id, p.title, p.content, p.preference, p.scope, p.type, p.target_count, p.current_count,
+               p.location, p.latitude, p.longitude, p.plan_time, p.cover_image, p.status, p.view_count,
                p.create_time, p.update_time, p.create_by, p.update_by, p.deleted
         FROM t_partner p
         LEFT JOIN t_user u ON p.user_id = u.id

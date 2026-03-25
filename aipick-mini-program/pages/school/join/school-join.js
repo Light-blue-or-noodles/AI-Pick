@@ -10,18 +10,47 @@ Page({
   },
 
   onLoad() {
-    this.checkSchoolStatus();
+    this.refreshStatus();
   },
 
-  // 检查学校已加入状态
-  checkSchoolStatus() {
-    const userInfo = app.globalData.userInfo;
-    if (userInfo && userInfo.schoolName) {
-      this.setData({
-        hasJoined: true,
-        userSchool: userInfo.schoolName
-      });
+  onShow() {
+    this.refreshStatus();
+  },
+
+  refreshStatus() {
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    const name = (userInfo.schoolName && String(userInfo.schoolName).trim()) || '';
+    if (name) {
+      this.setData({ hasJoined: true, userSchool: name });
+    } else {
+      this.setData({ hasJoined: false, userSchool: '' });
     }
+    const token = app.globalData.token || wx.getStorageSync('token');
+    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
+    if (!token || userId == null || userId === '') return;
+    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    wx.request({
+      url: `${baseUrl}/api/user/info`,
+      method: 'GET',
+      header: {
+        Authorization: 'Bearer ' + token,
+        'X-User-Id': String(userId)
+      },
+      success: (res) => {
+        const body = res.data;
+        if (body && body.code === 0 && body.data) {
+          const d = body.data;
+          const sn = (d.schoolName && String(d.schoolName).trim()) || '';
+          app.globalData.userInfo = { ...app.globalData.userInfo, ...d };
+          wx.setStorageSync('userInfo', app.globalData.userInfo);
+          if (sn) {
+            this.setData({ hasJoined: true, userSchool: sn });
+          } else {
+            this.setData({ hasJoined: false, userSchool: '' });
+          }
+        }
+      }
+    });
   },
 
   // 输入学校名称
@@ -46,8 +75,7 @@ Page({
       return;
     }
 
-    // 检查登录状态
-    if (!app.globalData.token) {
+    if (!(app.globalData.token || wx.getStorageSync('token'))) {
       wx.showToast({
         title: '请先登录',
         icon: 'none'
@@ -81,21 +109,23 @@ Page({
   doJoinSchool(schoolName) {
     this.setData({ submitting: true });
 
+    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     wx.request({
       url: `${app.globalData.baseUrl}/api/user/school`,
       method: 'POST',
       header: {
-        'Authorization': `Bearer ${app.globalData.token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${app.globalData.token || wx.getStorageSync('token')}`,
+        'Content-Type': 'application/json',
+        'X-User-Id': userId != null ? String(userId) : ''
       },
       data: {
         schoolName: schoolName
       },
       success: (res) => {
         if (res.data.code === 0) {
-          // 更新全局用户信息
           if (res.data.data) {
-            app.globalData.userInfo = res.data.data;
+            app.globalData.userInfo = { ...app.globalData.userInfo, ...res.data.data };
+            wx.setStorageSync('userInfo', app.globalData.userInfo);
           }
           
           wx.showToast({

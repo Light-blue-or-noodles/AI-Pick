@@ -9,15 +9,19 @@ import com.aipick.dto.LoginResponse;
 import com.aipick.dto.RegisterRequest;
 import com.aipick.dto.UpdateUserRequest;
 import com.aipick.dto.WechatLoginRequest;
+import com.aipick.entity.Activity;
+import com.aipick.entity.ActivityRegistration;
 import com.aipick.entity.Partner;
 import com.aipick.entity.User;
 import com.aipick.entity.UserMessage;
-import com.aipick.entity.Activity;
 import com.aipick.mapper.ActivityMapper;
+import com.aipick.mapper.ActivityRegistrationMapper;
 import com.aipick.mapper.PartnerMapper;
 import com.aipick.mapper.UserMapper;
 import com.aipick.mapper.UserMessageMapper;
 import com.aipick.service.UserService;
+import com.aipick.util.AvatarUtil;
+import com.aipick.util.MediaPathUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -44,6 +48,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtils jwtUtils;
     private final PartnerMapper partnerMapper;
     private final ActivityMapper activityMapper;
+    private final ActivityRegistrationMapper activityRegistrationMapper;
     private final UserMessageMapper userMessageMapper;
     
     /** 公司/学校名称最小长度 */
@@ -69,11 +74,13 @@ public class UserServiceImpl implements UserService {
 
     public UserServiceImpl(UserMapper userMapper, JwtUtils jwtUtils,
                            PartnerMapper partnerMapper, ActivityMapper activityMapper,
+                           ActivityRegistrationMapper activityRegistrationMapper,
                            UserMessageMapper userMessageMapper) {
         this.userMapper = userMapper;
         this.jwtUtils = jwtUtils;
         this.partnerMapper = partnerMapper;
         this.activityMapper = activityMapper;
+        this.activityRegistrationMapper = activityRegistrationMapper;
         this.userMessageMapper = userMessageMapper;
     }
 
@@ -120,7 +127,7 @@ public class UserServiceImpl implements UserService {
         String token = jwtUtils.generateToken(user.getId(), user.getUsername());
 
         return new LoginResponse(token, user.getId(), user.getUsername(),
-                user.getNickname(), user.getAvatar());
+                user.getNickname(), AvatarUtil.sanitizeForResponse(user.getAvatar()));
     }
 
     @Override
@@ -152,7 +159,10 @@ public class UserServiceImpl implements UserService {
                     user.setNickname(request.getUserInfo().getNickname());
                 }
                 if (StringUtils.hasText(request.getUserInfo().getAvatar())) {
-                    user.setAvatar(request.getUserInfo().getAvatar());
+                    String av = MediaPathUtil.normalizeForPersistence(request.getUserInfo().getAvatar().trim());
+                    if (AvatarUtil.isValidAvatarUrl(av)) {
+                        user.setAvatar(av);
+                    }
                 }
                 if (request.getUserInfo().getGender() != null) {
                     user.setGender(request.getUserInfo().getGender());
@@ -175,8 +185,11 @@ public class UserServiceImpl implements UserService {
                     needUpdate = true;
                 }
                 if (StringUtils.hasText(request.getUserInfo().getAvatar())) {
-                    user.setAvatar(request.getUserInfo().getAvatar());
-                    needUpdate = true;
+                    String av = MediaPathUtil.normalizeForPersistence(request.getUserInfo().getAvatar().trim());
+                    if (AvatarUtil.isValidAvatarUrl(av)) {
+                        user.setAvatar(av);
+                        needUpdate = true;
+                    }
                 }
                 if (request.getUserInfo().getGender() != null) {
                     user.setGender(request.getUserInfo().getGender());
@@ -191,9 +204,9 @@ public class UserServiceImpl implements UserService {
         // 生成 Token
         String token = jwtUtils.generateToken(user.getId(), "wechat");
 
-        return new LoginResponse(token, user.getId(), 
+        return new LoginResponse(token, user.getId(),
                 String.valueOf(user.getId()),
-                user.getNickname(), user.getAvatar(), isNew);
+                user.getNickname(), AvatarUtil.sanitizeForResponse(user.getAvatar()), isNew);
     }
 
     /**
@@ -292,7 +305,10 @@ public class UserServiceImpl implements UserService {
             user.setNickname(request.getNickname());
         }
         if (StringUtils.hasText(request.getAvatar())) {
-            user.setAvatar(request.getAvatar());
+            String avatar = MediaPathUtil.normalizeForPersistence(request.getAvatar().trim());
+            if (AvatarUtil.isValidAvatarUrl(avatar)) {
+                user.setAvatar(avatar);
+            }
         }
         if (StringUtils.hasText(request.getPhone())) {
             user.setPhone(request.getPhone());
@@ -305,6 +321,12 @@ public class UserServiceImpl implements UserService {
         }
         if (StringUtils.hasText(request.getBio())) {
             user.setBio(request.getBio());
+        }
+        if (request.getBirthday() != null) {
+            user.setBirthday(request.getBirthday().trim().isEmpty() ? null : request.getBirthday().trim());
+        }
+        if (request.getTags() != null) {
+            user.setTags(request.getTags().trim().isEmpty() ? null : request.getTags().trim());
         }
         if (request.getCompanyName() != null) {
             user.setCompanyName(request.getCompanyName());
@@ -339,9 +361,11 @@ public class UserServiceImpl implements UserService {
         partnerWrapper.eq(Partner::getUserId, userId);
         long partners = partnerMapper.selectCount(partnerWrapper);
 
-        LambdaQueryWrapper<Activity> activityWrapper = new LambdaQueryWrapper<>();
-        activityWrapper.eq(Activity::getUserId, userId);
-        long activities = activityMapper.selectCount(activityWrapper);
+        // 活动数：我报名的活动（报名记录数，status=0 表示已报名）
+        LambdaQueryWrapper<ActivityRegistration> regWrapper = new LambdaQueryWrapper<>();
+        regWrapper.eq(ActivityRegistration::getUserId, userId)
+                .eq(ActivityRegistration::getStatus, 0);
+        long activities = activityRegistrationMapper.selectCount(regWrapper);
 
         LambdaQueryWrapper<UserMessage> messageWrapper = new LambdaQueryWrapper<>();
         messageWrapper.eq(UserMessage::getReceiverId, userId).or().eq(UserMessage::getSenderId, userId);

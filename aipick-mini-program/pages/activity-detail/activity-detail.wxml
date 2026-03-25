@@ -1,17 +1,11 @@
 <!--pages/activity-detail/activity-detail.wxml-->
-<view class="container">
-  <!-- Header -->
+<view class="container activity-detail">
+  <!-- 顶部：仅保留更多（返回、分享使用小程序自带菜单） -->
   <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
     <view class="header-actions">
       <view class="action-btn" bindtap="onShowMore">
         <text class="action-icon">⋮</text>
       </view>
-      <button class="action-btn share-btn" open-type="share">
-        <text class="action-icon">↗</text>
-      </button>
     </view>
   </view>
 
@@ -21,29 +15,17 @@
   </view>
 
   <!-- Content -->
-  <block wx:else>
-    <!-- Image Swiper -->
-    <view class="image-section">
-      <swiper 
-        class="image-swiper" 
-        circular 
-        bindchange="onImageChange"
-      >
-        <swiper-item 
-          wx:for="{{activityInfo.images}}" 
-          wx:key="*this"
-          bindtap="onPreviewImage"
-          data-index="{{index}}"
-        >
-          <image 
-            class="slide-image" 
-            src="{{item}}" 
-            mode="aspectFill" 
-          />
-        </swiper-item>
-      </swiper>
-      <view class="image-indicator">
-        {{currentImage + 1}}/{{activityInfo.images.length}}
+  <block wx:elif="{{!isLoading && activityInfo}}">
+    <!-- 封面图：只展示首图（images[0]） -->
+    <view class="image-section" wx:if="{{activityInfo.images && activityInfo.images.length > 0}}">
+      <view class="slide-image-wrap" bindtap="onPreviewImage" data-index="0">
+        <network-image
+          class="slide-image"
+          customClass="slide-image"
+          url="{{activityInfo.images[0]}}"
+          defaultSrc="/images/empty-activity.png"
+          mode="widthFix"
+        />
       </view>
     </view>
 
@@ -61,7 +43,7 @@
         </view>
         <view class="info-item">
           <text class="info-icon">👥</text>
-          <text class="info-text">人数：{{activityInfo.currentParticipants}}/{{activityInfo.maxParticipants}}人（还剩{{activityInfo.maxParticipants - activityInfo.currentParticipants}}个名额）</text>
+          <text class="info-text">人数：{{activityInfo.currentParticipants}}/{{activityInfo.maxParticipants}}人（还剩{{activityInfo.remainSpots}}个名额）</text>
         </view>
         <view class="info-item">
           <text class="info-icon">💰</text>
@@ -80,43 +62,69 @@
         <text class="section-title">活动详情</text>
       </view>
       <view class="section-content">
-        <text class="detail-text">{{activityInfo.description}}</text>
-      </view>
-    </view>
-
-    <!-- Organizer Section -->
-    <view class="section">
-      <view class="section-header">
-        <text class="section-title">主办方</text>
-      </view>
-      <view class="section-content">
-        <view class="organizer-info" bindtap="onViewOrganizer">
-          <image 
-            class="organizer-avatar" 
-            src="{{activityInfo.organizer.avatar}}" 
-            mode="aspectFill" 
-          />
-          <text class="organizer-name">{{activityInfo.organizer.nickname}}</text>
-          <view class="organizer-rating">
-            <text class="rating-star">⭐</text>
-            <text class="rating-value">{{activityInfo.organizer.rating}}</text>
-          </view>
+        <text class="detail-text">{{activityInfo.description || '暂无详情'}}</text>
+        <!-- 详情配图：封面之外的其它图片（从 images 第二张开始） -->
+        <view class="detail-images" wx:if="{{activityInfo.images && activityInfo.images.length > 1}}">
+          <block wx:for="{{activityInfo.images}}" wx:for-index="idx" wx:key="idx">
+            <view
+              wx:if="{{idx > 0}}"
+              class="detail-image-wrap"
+              bindtap="onPreviewImage"
+              data-index="{{idx}}"
+            >
+              <network-image
+                class="detail-image"
+                customClass="detail-image"
+                url="{{item}}"
+                defaultSrc="/images/empty-activity.png"
+                mode="widthFix"
+              />
+            </view>
+          </block>
         </view>
       </view>
     </view>
 
+    <!-- Organizer Section -->
+    <view class="section" wx:if="{{activityInfo.organizer}}">
+      <view class="section-header">
+        <text class="section-title">主办方</text>
+      </view>
+      <view class="section-content">
+        <view class="organizer-info" bindtap="onViewOrganizer" wx:if="{{activityInfo.organizer.id}}">
+          <view class="organizer-avatar-wrap">
+            <network-image 
+              class="organizer-avatar" 
+              customClass="organizer-avatar-img" 
+              url="{{activityInfo.organizer.avatar}}" 
+              defaultSrc="/images/default-avatar.png" 
+              mode="aspectFill" 
+            />
+          </view>
+          <text class="organizer-name">{{activityInfo.organizer.nickname}}</text>
+          <view class="organizer-rating" wx:if="{{activityInfo.organizer.rating}}">
+            <text class="rating-star">⭐</text>
+            <text class="rating-value">{{activityInfo.organizer.rating}}</text>
+          </view>
+        </view>
+        <text class="detail-text" wx:else>暂无主办方信息</text>
+      </view>
+    </view>
+
     <!-- Participants Section -->
-    <view class="section">
+    <view class="section" wx:if="{{activityInfo.participants && activityInfo.participants.length > 0}}">
       <view class="section-header">
         <text class="section-title">已报名 ({{activityInfo.currentParticipants}})</text>
       </view>
       <view class="section-content">
         <view class="participants-list">
-          <image 
-            class="participant-avatar" 
-            wx:for="{{activityInfo.participants}}" 
+          <network-image
+            class="participant-avatar"
+            customClass="participant-avatar"
+            wx:for="{{activityInfo.participants}}"
             wx:key="id"
-            src="{{item.avatar}}"
+            url="{{item.avatar}}"
+            defaultSrc="/images/default-avatar.png"
             mode="aspectFill"
             bindtap="onViewParticipant"
             data-id="{{item.id}}"
@@ -129,8 +137,13 @@
     </view>
   </block>
 
+  <!-- 无数据 -->
+  <view class="empty-detail" wx:if="{{!isLoading && !activityInfo}}">
+    <text>活动不存在或已删除</text>
+  </view>
+
   <!-- Bottom Actions -->
-  <view class="bottom-actions">
+  <view class="bottom-actions" wx:if="{{activityInfo}}">
     <view class="action-item" bindtap="onToggleCollect">
       <text class="action-icon-bottom">{{isCollected ? '❤️' : '♡'}}</text>
       <text class="action-label">{{isCollected ? '已收藏' : '收藏'}}</text>
@@ -139,8 +152,8 @@
       <text class="action-icon-bottom">↗</text>
       <text class="action-label">分享</text>
     </button>
-    <view class="join-btn" bindtap="onJoin">
-      <text>报名参加</text>
+    <view class="join-btn {{hasRegistered ? 'join-btn-cancel' : ''}}" bindtap="onJoin">
+      <text>{{hasRegistered ? '取消报名' : '报名参加'}}</text>
     </view>
   </view>
 

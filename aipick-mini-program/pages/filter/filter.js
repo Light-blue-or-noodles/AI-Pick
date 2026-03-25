@@ -25,6 +25,11 @@ Page({
   onLoad(options) {
     const pageType = options.type || 'partner';
     this.setData({ pageType });
+
+    // 二级菜单标题展示在顶部导航栏
+    wx.setNavigationBarTitle({
+      title: pageType === 'partner' ? '搭子筛选' : '活动筛选'
+    });
     
     // 读取之前的筛选条件
     const filterKey = `filter_${pageType}`;

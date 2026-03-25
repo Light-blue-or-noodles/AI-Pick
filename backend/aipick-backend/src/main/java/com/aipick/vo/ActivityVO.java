@@ -31,11 +31,17 @@ public class ActivityVO {
     /** 类型 */
     private String type;
 
+    /** 活动分类（如 运动/美食，列表与推荐场景使用） */
+    private String category;
+
     /** 标签 */
     private List<String> tags;
 
     /** 封面图片列表 */
     private List<String> coverImages;
+
+    /** 单张封面图片（兼容旧字段） */
+    private String coverImage;
 
     /** 活动时间 */
     private LocalDateTime eventTime;

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 发布活动请求
@@ -56,8 +57,11 @@ public class CreateActivityRequest {
     @Min(value = 0, message = "人数上限不能为负数")
     private Integer maxParticipants = 0;
 
-    /** 封面图片 */
+    /** 封面图片（可与 imageUrls 首张一致） */
     private String coverImage;
+
+    /** 多图 URL 列表，首张作为封面，其余在详情展示 */
+    private List<String> imageUrls;
 
     public String getTitle() {
         return title;
@@ -161,5 +165,13 @@ public class CreateActivityRequest {
 
     public void setCoverImage(String coverImage) {
         this.coverImage = coverImage;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 }

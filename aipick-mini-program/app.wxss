@@ -70,7 +70,7 @@ page {
 .input-field:focus {
   background-color: var(--bg-white);
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4rpx rgba(74, 144, 217, 0.1);
+  box-shadow: 0 0 0 4rpx rgba(95, 179, 168, 0.15);
 }
 
 /* 标题 */
@@ -102,7 +102,7 @@ page {
 }
 
 .tag-primary {
-  background-color: rgba(74, 144, 217, 0.1);
+  background-color: var(--primary-bg);
   color: var(--primary-color);
 }
 

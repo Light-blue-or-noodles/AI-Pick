@@ -1,5 +1,16 @@
 // pages/index/index.js
 const app = getApp();
+const recommendFeedback = require('../../utils/recommendFeedback.js');
+const { resolveActivityCoverUrl } = require('../../utils/imageUrl.js');
+
+function formatPreferenceDisplay(pref) {
+  if (!pref) return '';
+  return String(pref)
+    .split(/[,，、]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(' · ');
+}
 
 /** 带认证头的请求（登录/测试账号后携带 token 与 X-User-Id，避免 401） */
 const request = (options) => {
@@ -47,11 +58,19 @@ Page({
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 0
-      });
-    }
+    const that = this;
+    setTimeout(function () {
+      if (typeof that.getTabBar === 'function') {
+        const bar = that.getTabBar();
+        if (bar) bar.setData({ selected: 0 });
+      }
+    }, 0);
+  },
+
+  // 底部「首页」tab 被重复点击时刷新首页数据
+  onTabReselect() {
+    this.loadNearbyDynamics();
+    this.loadRecommendations();
   },
 
   // 加载今日运势 - 暂时注释，后期可能恢复使用
@@ -99,6 +118,7 @@ Page({
         // 后端返回 { code: 0, data: { records: [], total, ... } }，每条为活动
         const body = res && res.data;
         const records = (body && body.data && Array.isArray(body.data.records)) ? body.data.records : [];
+        const base = app.globalData.baseUrl || 'http://localhost:8080';
         const list = records.slice(0, 3).map(a => ({
           id: a.id,
           type: 'activity',
@@ -106,7 +126,7 @@ Page({
           content: a.description || '',
           time: a.startTime ? (String(a.startTime).replace('T', ' ').substring(0, 16)) : '',
           location: a.location || '',
-          avatar: a.coverImage || '/images/default-avatar.png',
+          avatar: resolveActivityCoverUrl(a, base) || '/images/default-avatar.png',
           likeCount: a.viewCount != null ? a.viewCount : 0,
           commentCount: 0
         }));
@@ -118,45 +138,65 @@ Page({
       });
   },
 
-  // 加载智能推荐
+  noop() {},
+
+  /**
+   * 提交推荐反馈（搭子帖），复用 utils/recommendFeedback
+   */
+  submitRecommendFeedback(feedbackType, targetId, matchScore, onOk) {
+    recommendFeedback.postRecommendFeedback({
+      feedbackType,
+      targetType: recommendFeedback.TARGET_PARTNER,
+      targetId,
+      matchScore,
+      baseUrl: app.globalData.baseUrl || 'http://localhost:8080',
+      onNeedLogin: () => {
+        wx.showToast({ title: '请先登录后再反馈', icon: 'none' });
+      },
+      onSuccess: () => {
+        if (typeof onOk === 'function') onOk();
+      },
+      showToastOnFail: true
+    });
+  },
+
+  onRecommendSkip(e) {
+    const id = e.currentTarget.dataset.id;
+    const match = e.currentTarget.dataset.match;
+    this.submitRecommendFeedback(recommendFeedback.FEEDBACK_SKIP, id, match, () => {
+      const recommendations = (this.data.recommendations || []).filter((x) => x.id !== id);
+      this.setData({ recommendations });
+      wx.showToast({ title: '已跳过', icon: 'success' });
+    });
+  },
+
+  onRecommendNotCompat(e) {
+    const id = e.currentTarget.dataset.id;
+    const match = e.currentTarget.dataset.match;
+    this.submitRecommendFeedback(recommendFeedback.FEEDBACK_NOT_COMPATIBLE, id, match, () => {
+      const recommendations = (this.data.recommendations || []).filter((x) => x.id !== id);
+      this.setData({ recommendations });
+      wx.showToast({ title: '已记录', icon: 'success' });
+    });
+  },
+
+  onRecommendChat(e) {
+    const id = e.currentTarget.dataset.id;
+    const match = e.currentTarget.dataset.match;
+    this.submitRecommendFeedback(recommendFeedback.FEEDBACK_CHAT, id, match, () => {
+      wx.navigateTo({
+        url: `/pages/partner-detail/partner-detail?id=${id}`
+      });
+    });
+  },
+
+  // 加载智能推荐（携带定位时后端可做距离与 AI 推荐；登录用户 X-User-Id 会参与反馈降权）
   loadRecommendations() {
     const defaultRecommendations = [
-      {
-        id: 1,
-        avatar: '/images/default-avatar.png',
-        name: '小明',
-        tags: ['游戏', '健身'],
-        distance: '500m',
-        match: 95,
-        bio: '周末王者上分，一起吗？'
-      },
-      {
-        id: 2,
-        avatar: '/images/default-avatar.png',
-        name: '小红',
-        tags: ['美食', '探店'],
-        distance: '1.2km',
-        match: 88,
-        bio: '寻找一起探店的伙伴'
-      },
-      {
-        id: 3,
-        avatar: '/images/default-avatar.png',
-        name: '运动达人',
-        tags: ['跑步', '篮球'],
-        distance: '800m',
-        match: 82,
-        bio: '早起跑步搭子来'
-      },
-      {
-        id: 4,
-        avatar: '/images/default-avatar.png',
-        name: '学习控',
-        tags: ['学习', '英语'],
-        distance: '2km',
-        match: 78,
-        bio: '周末图书馆约起'
-      }
+      { id: 1, avatar: '/images/default-avatar.png', cover: '/images/partner-banner.jpg', title: '示例搭子', typeName: '游戏搭子', preference: '排位上分', name: '小明', tags: [], tagsText: '', distance: '', match: 95 },
+      { id: 2, avatar: '/images/default-avatar.png', cover: '/images/partner-banner.jpg', title: '示例搭子', typeName: '干饭搭子', preference: '清淡口味', name: '小红', tags: [], tagsText: '', distance: '', match: 88 },
+      { id: 3, avatar: '/images/default-avatar.png', cover: '/images/partner-banner.jpg', title: '示例搭子', typeName: '运动搭子', preference: '晨跑', name: '运动达人', tags: [], tagsText: '', distance: '', match: 82 },
+      { id: 4, avatar: '/images/default-avatar.png', cover: '/images/partner-banner.jpg', title: '示例搭子', typeName: '聊天搭子', preference: '图书馆', name: '学习控', tags: [], tagsText: '', distance: '', match: 78 }
     ];
 
     this.setData({
@@ -171,24 +211,91 @@ Page({
     };
 
     const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
-    fetchRecommend(`${baseUrl}/api/home/recommend`)
+
+    const loadWithGeo = (lat, lon) => {
+      let url = `${baseUrl}/api/home/recommend`;
+      if (lat != null && lon != null) {
+        url += `?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`;
+      }
+      return fetchRecommend(url);
+    };
+
+    const run = () => {
+      wx.getLocation({
+        type: 'gcj02',
+        success: (loc) => {
+          loadWithGeo(loc.latitude, loc.longitude).then((res) => this.applyRecommendResult(res, defaultRecommendations, baseUrl)).catch((err) => this.fallbackRecommend(err, defaultRecommendations, baseUrl, fetchRecommend));
+        },
+        fail: () => {
+          loadWithGeo(null, null).then((res) => this.applyRecommendResult(res, defaultRecommendations, baseUrl)).catch((err) => this.fallbackRecommend(err, defaultRecommendations, baseUrl, fetchRecommend));
+        }
+      });
+    };
+    run();
+  },
+
+  applyRecommendResult(res, defaultRecommendations, baseUrl) {
+    const toFullUrl = (path) => {
+      if (!path) return '';
+      if (path.startsWith('http')) return (app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path);
+      return baseUrl + '/api' + (path.startsWith('/') ? path : '/' + path);
+    };
+    const body = res && res.data;
+    const data = body && body.data ? body.data : body;
+    const rawPartners = (data && data.partners && Array.isArray(data.partners)) ? data.partners : null;
+    if (rawPartners && rawPartners.length > 0) {
+      const partners = rawPartners.slice(0, 3).map((p) => ({
+        id: p.id,
+        avatar: toFullUrl(p.avatar) || '/images/default-avatar.png',
+        cover: toFullUrl(p.coverImage) || '/images/partner-banner.jpg',
+        title: p.title || '',
+        typeName: p.typeName || '',
+        preference: formatPreferenceDisplay(p.preference),
+        name: p.nickname || '用户',
+        tags: p.tags || [],
+        tagsText: (p.tags && p.tags.length) ? p.tags.join(' · ') : '',
+        distance: p.distance != null && p.distance !== '' ? (p.distance + (String(p.distance).match(/km|m$/) ? '' : 'km')) : '',
+        match: p.matchScore != null ? p.matchScore : null
+      }));
+      this.setData({
+        recommendations: partners,
+        isLoading: false
+      });
+    } else {
+      this.setData({
+        recommendations: defaultRecommendations.slice(0, 3),
+        isLoading: false
+      });
+    }
+  },
+
+  fallbackRecommend(err, defaultRecommendations, baseUrl, fetchRecommend) {
+    console.warn('加载推荐失败，尝试备用接口 /api/partner', err);
+    const toFullUrl = (path) => {
+      if (!path) return '';
+      if (path.startsWith('http')) return (app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path);
+      return baseUrl + '/api' + (path.startsWith('/') ? path : '/' + path);
+    };
+    return fetchRecommend(`${baseUrl}/api/partner`)
       .then((res) => {
-        // 推荐接口返回 { code: 0, data: { partners: [], activities: [] } }
         const body = res && res.data;
-        const data = body && body.data ? body.data : body;
-        const rawPartners = (data && data.partners && Array.isArray(data.partners)) ? data.partners : null;
-        if (rawPartners && rawPartners.length > 0) {
-          const partners = rawPartners.slice(0, 3).map(p => ({
+        const records = (body && body.data && body.data.records) ? body.data.records : (body && Array.isArray(body.records) ? body.records : null);
+        if (records && records.length > 0) {
+          const list = records.slice(0, 3).map((p) => ({
             id: p.id,
-            avatar: p.avatar || '/images/default-avatar.png',
+            avatar: toFullUrl(p.avatar) || '/images/default-avatar.png',
+            cover: toFullUrl(p.coverImage) || '/images/partner-banner.jpg',
+            title: p.title || '',
+            typeName: p.typeName || '',
+            preference: formatPreferenceDisplay(p.preference),
             name: p.nickname || '用户',
             tags: p.tags || [],
-            distance: p.distance != null && p.distance !== '' ? (p.distance + (String(p.distance).match(/km|m$/) ? '' : 'km')) : '',
-            match: p.matchScore != null ? p.matchScore : null,
-            bio: (p.description || p.bio || p.title || '') || '暂无简介'
+            tagsText: (p.tags && p.tags.length) ? p.tags.join(' · ') : '',
+            distance: p.location || '',
+            match: null
           }));
           this.setData({
-            recommendations: partners,
+            recommendations: list,
             isLoading: false
           });
         } else {
@@ -198,41 +305,12 @@ Page({
           });
         }
       })
-      .catch((err) => {
-        console.warn('加载推荐失败，尝试备用接口 /api/partner', err);
-        // 备用接口：直接返回搭子列表
-        return fetchRecommend(`${baseUrl}/api/partner`)
-          .then((res) => {
-            const body = res && res.data;
-            const records = (body && body.data && body.data.records) ? body.data.records : (body && Array.isArray(body.records) ? body.records : null);
-            if (records && records.length > 0) {
-              const list = records.slice(0, 3).map(p => ({
-                id: p.id,
-                avatar: '/images/default-avatar.png',
-                name: p.title || '搭子',
-                tags: [],
-                distance: p.location || '',
-                match: null,
-                bio: (p.content || '') || '暂无简介'
-              }));
-              this.setData({
-                recommendations: list,
-                isLoading: false
-              });
-            } else {
-              this.setData({
-                recommendations: defaultRecommendations.slice(0, 3),
-                isLoading: false
-              });
-            }
-          })
-          .catch((err2) => {
-            console.warn('备用接口也失败，使用本地默认数据', err2);
-            this.setData({
-              recommendations: defaultRecommendations.slice(0, 3),
-              isLoading: false
-            });
-          });
+      .catch((err2) => {
+        console.warn('备用接口也失败，使用本地默认数据', err2);
+        this.setData({
+          recommendations: defaultRecommendations.slice(0, 3),
+          isLoading: false
+        });
       });
   },
 

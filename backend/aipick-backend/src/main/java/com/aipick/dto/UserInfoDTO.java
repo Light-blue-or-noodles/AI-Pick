@@ -36,6 +36,12 @@ public class UserInfoDTO {
     /** 学校名称 */
     private String schoolName;
 
+    /** 生日 yyyy-MM-dd */
+    private String birthday;
+
+    /** 兴趣标签 JSON 数组字符串 */
+    private String tags;
+
     /** 学校是否已验证 */
     private Boolean schoolVerified;
 
@@ -101,6 +107,22 @@ public class UserInfoDTO {
 
     public void setSchoolName(String schoolName) {
         this.schoolName = schoolName;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 
     public Boolean getCompanyVerified() {

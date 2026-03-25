@@ -8,19 +8,8 @@ Page({
   },
 
   onLoad() {
-    // Check if already logged in
-    const token = wx.getStorageSync('token');
-    if (token) {
-      this.checkLoginStatus();
-    }
-  },
-
-  // Check login status
-  checkLoginStatus() {
-    const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo) {
-      this.goToHome();
-    }
+    // 不再在 onLoad 时根据 token 自动跳转首页，避免用户点击「登录」进入本页时闪屏后立刻被切走；
+    // 用户进入登录页后始终展示登录表单，登录成功后再跳转。
   },
 
   // WeChat one-click login

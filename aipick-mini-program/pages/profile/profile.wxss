@@ -12,8 +12,8 @@
 
 .profile-header {
   position: relative;
-  background: linear-gradient(135deg, #4A90D9 0%, #6BA3E0 100%);
-  padding: 60rpx 30rpx 40rpx;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  padding: 60rpx var(--page-horizontal) 40rpx;
 }
 
 .header-bg {
@@ -22,7 +22,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(74, 144, 217, 0.2) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(95, 179, 168, 0.15) 0%, transparent 100%);
 }
 
 /* 用户信息 */
@@ -35,13 +35,19 @@
 
 .avatar-wrap {
   position: relative;
-}
-
-.avatar {
   width: 140rpx;
   height: 140rpx;
   border-radius: 50%;
   border: 6rpx solid rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+
+.avatar-wrap .avatar,
+.avatar-wrap network-image.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: none;
 }
 
 .login-badge {

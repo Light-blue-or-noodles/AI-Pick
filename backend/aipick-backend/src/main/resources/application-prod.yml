@@ -13,8 +13,6 @@ server:
 spring:
   application:
     name: aipick-backend
-  profiles:
-    active: prod
   web:
     locale: zh_CN
     servlet:
@@ -96,3 +94,8 @@ wechat:
 upload:
   dir: uploads
   avatar-subdir: avatars
+
+storage:
+  type: local
+  local:
+    root-dir: ${upload.dir:uploads}

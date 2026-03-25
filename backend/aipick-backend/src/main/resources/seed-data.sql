@@ -26,22 +26,21 @@ INSERT INTO t_user (username, password, nickname, gender, bio, status, create_ti
 -- 后续用 user_id 1,2,3...10 均可
 
 -- ------------------------------------------------------------
--- 2. 搭子（类型 1吃饭 2旅游 3运动 4学习 5游戏 6其他）
---    发布者分散在不同用户，地点/时间/人数 合理
+-- 2. 搭子（type 1～15 见 PartnerTypeConstants：干饭/旅游/运动/游戏/桌游/摄影/聊天等）
 -- ------------------------------------------------------------
 INSERT INTO t_partner (user_id, title, content, type, target_count, current_count, location, plan_time, status, view_count, create_time, update_time, deleted) VALUES
-(1, '周末火锅搭子', '周六晚约海底捞，口味随意，AA 制', 1, 2, 0, '北京朝阳大悦城', DATE_ADD(NOW(), INTERVAL 3 DAY), 0, 12, NOW(), NOW(), 0),
-(2, '三里屯探店二人组', '想找一位姐妹一起逛三里屯、拍照喝下午茶', 1, 2, 0, '北京三里屯', DATE_ADD(NOW(), INTERVAL 2 DAY), 0, 8, NOW(), NOW(), 0),
-(3, '王者五排上分', '晚上 8 点后稳定在线，主玩射手/打野', 5, 5, 2, '线上', DATE_ADD(NOW(), INTERVAL 1 DAY), 0, 25, NOW(), NOW(), 0),
-(4, '奥森晨跑 6 公里', '工作日 6:30 奥森南园一圈，配速 6 分左右', 3, 3, 1, '北京奥林匹克森林公园', DATE_ADD(NOW(), INTERVAL 1 DAY), 0, 15, NOW(), NOW(), 0),
-(5, '国图自习搭子', '周末全天国图，互相监督不玩手机', 4, 2, 0, '国家图书馆', DATE_ADD(NOW(), INTERVAL 4 DAY), 0, 6, NOW(), NOW(), 0),
-(6, '香山一日徒步', '下周六香山-植物园轻徒步，自带干粮', 2, 4, 0, '香山公园', DATE_ADD(NOW(), INTERVAL 7 DAY), 0, 20, NOW(), NOW(), 0),
-(7, '桌游局：阿瓦隆+狼人杀', '周日下午 2 点，已有 4 人，再招 2 人', 6, 6, 4, '海淀五道口某咖啡', DATE_ADD(NOW(), INTERVAL 5 DAY), 0, 18, NOW(), NOW(), 0),
+(1, '周末火锅搭子', '周六晚约海底捞，口味随意，AA 制', 7, 2, 0, '北京朝阳大悦城', DATE_ADD(NOW(), INTERVAL 3 DAY), 0, 12, NOW(), NOW(), 0),
+(2, '三里屯探店二人组', '想找一位姐妹一起逛三里屯、拍照喝下午茶', 4, 2, 0, '北京三里屯', DATE_ADD(NOW(), INTERVAL 2 DAY), 0, 8, NOW(), NOW(), 0),
+(3, '王者五排上分', '晚上 8 点后稳定在线，主玩射手/打野', 13, 5, 2, '线上', DATE_ADD(NOW(), INTERVAL 1 DAY), 0, 25, NOW(), NOW(), 0),
+(4, '奥森晨跑 6 公里', '工作日 6:30 奥森南园一圈，配速 6 分左右', 5, 3, 1, '北京奥林匹克森林公园', DATE_ADD(NOW(), INTERVAL 1 DAY), 0, 15, NOW(), NOW(), 0),
+(5, '国图自习搭子', '周末全天国图，互相监督不玩手机', 14, 2, 0, '国家图书馆', DATE_ADD(NOW(), INTERVAL 4 DAY), 0, 6, NOW(), NOW(), 0),
+(6, '香山一日徒步', '下周六香山-植物园轻徒步，自带干粮', 8, 4, 0, '香山公园', DATE_ADD(NOW(), INTERVAL 7 DAY), 0, 20, NOW(), NOW(), 0),
+(7, '桌游局：阿瓦隆+狼人杀', '周日下午 2 点，已有 4 人，再招 2 人', 11, 6, 4, '海淀五道口某咖啡', DATE_ADD(NOW(), INTERVAL 5 DAY), 0, 18, NOW(), NOW(), 0),
 (8, '颐和园落日约拍', '互拍或我帮你拍，器材不限手机也行', 6, 2, 0, '颐和园', DATE_ADD(NOW(), INTERVAL 2 DAY), 0, 9, NOW(), NOW(), 0),
-(3, '原神日常+周本', '晚上固定清体力，可连麦', 5, 2, 0, '线上', DATE_ADD(NOW(), INTERVAL 1 DAY), 0, 11, NOW(), NOW(), 0),
-(4, '健身房力量训练', '周二四晚 7 点，互相保护+纠正动作', 3, 2, 0, '朝阳某健身房', DATE_ADD(NOW(), INTERVAL 2 DAY), 0, 7, NOW(), NOW(), 0),
-(1, '烤串夜宵局', '周五晚找个串店撸串聊天', 1, 4, 0, '待定朝阳/海淀', DATE_ADD(NOW(), INTERVAL 4 DAY), 0, 5, NOW(), NOW(), 0),
-(5, '英语角练习', '周末上午咖啡馆练口语，主题提前定', 4, 4, 0, '中关村某咖啡馆', DATE_ADD(NOW(), INTERVAL 6 DAY), 0, 4, NOW(), NOW(), 0);
+(3, '原神日常+周本', '晚上固定清体力，可连麦', 13, 2, 0, '线上', DATE_ADD(NOW(), INTERVAL 1 DAY), 0, 11, NOW(), NOW(), 0),
+(4, '健身房力量训练', '周二四晚 7 点，互相保护+纠正动作', 5, 2, 0, '朝阳某健身房', DATE_ADD(NOW(), INTERVAL 2 DAY), 0, 7, NOW(), NOW(), 0),
+(1, '烤串夜宵局', '周五晚找个串店撸串聊天', 7, 4, 0, '待定朝阳/海淀', DATE_ADD(NOW(), INTERVAL 4 DAY), 0, 5, NOW(), NOW(), 0),
+(5, '英语角练习', '周末上午咖啡馆练口语，主题提前定', 14, 4, 0, '中关村某咖啡馆', DATE_ADD(NOW(), INTERVAL 6 DAY), 0, 4, NOW(), NOW(), 0);
 
 -- ------------------------------------------------------------
 -- 3. 活动（类型 1线下 2线上；状态 0待开始 1报名中 2进行中 3已结束 4已取消）
@@ -70,26 +69,13 @@ INSERT INTO t_partner_apply (partner_id, user_id, message, status, create_time, 
 (7, 1, '阿瓦隆我会玩', 1, NOW(), NOW(), 0),
 (8, 2, '可以互拍', 0, NOW(), NOW(), 0);
 
--- ------------------------------------------------------------
 -- 5. 活动报名（activity_id / user_id 引用已存在数据；status 0已报名 1已取消）
 -- ------------------------------------------------------------
-INSERT INTO t_activity_registration (activity_id, user_id, message, status, create_time, update_time, deleted) VALUES
-(1, 1, '报名', 0, NOW(), NOW(), 0),
-(1, 3, '一起逛', 0, NOW(), NOW(), 0),
-(1, 5, null, 0, NOW(), NOW(), 0),
-(2, 1, '参加晨跑', 0, NOW(), NOW(), 0),
-(2, 3, null, 0, NOW(), NOW(), 0),
-(2, 5, '第一次参加', 0, NOW(), NOW(), 0),
-(3, 8, '报名徒步', 0, NOW(), NOW(), 0),
-(4, 1, '狼人杀+1', 0, NOW(), NOW(), 0),
-(4, 2, null, 0, NOW(), NOW(), 0),
-(5, 1, '自习', 0, NOW(), NOW(), 0),
-(5, 3, null, 0, NOW(), NOW(), 0),
-(6, 2, '想学拍照', 0, NOW(), NOW(), 0),
-(7, 2, '想试试飞盘', 0, NOW(), NOW(), 0),
-(7, 5, null, 0, NOW(), NOW(), 0),
-(8, 2, '五排', 0, NOW(), NOW(), 0),
-(8, 4, null, 0, NOW(), NOW(), 0);
+-- 为避免测试账号在所有活动中“默认已报名”，这里暂不插入任何默认报名记录
+-- 如需演示效果，可自行插入示例数据，例如：
+-- INSERT INTO t_activity_registration (activity_id, user_id, message, status, create_time, update_time, deleted) VALUES
+-- (1, 3, '一起逛', 0, NOW(), NOW(), 0),
+-- (2, 5, '第一次参加', 0, NOW(), NOW(), 0);
 
 -- ------------------------------------------------------------
 -- 6. 更新搭子当前人数（与应征通过数一致，仅做示例简化）

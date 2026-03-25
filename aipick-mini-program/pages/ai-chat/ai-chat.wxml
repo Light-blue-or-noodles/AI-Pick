@@ -1,31 +1,19 @@
-<!--pages/ai-chat/ai-chat.wxml-->
+<!--pages/ai-chat/ai-chat.wxml - 标题使用导航栏，返回使用微信默认 -->
 <view class="container">
-  <!-- 顶部标题 -->
-  <view class="header">
-    <view class="header-left" bindtap="goBack">
-      <text class="back-arrow">←</text>
-    </view>
-    <view class="header-title">
-      <image class="ai-avatar" src="/images/ai-icon.png" mode="aspectFit" />
-      <text>AI 助手</text>
-    </view>
-    <view class="header-right"></view>
-  </view>
-
   <!-- 对话区域 -->
   <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollIntoView}}" enhanced show-scrollbar="{{false}}">
     <block wx:for="{{messages}}" wx:key="id">
-      <!-- 用户消息 -->
+      <!-- 用户消息：气泡 + 用户头像（右侧） -->
       <view class="message-item user" id="msg-{{item.id}}">
         <view class="message-content user-content">
           <text>{{item.content}}</text>
         </view>
-        <image class="message-avatar" src="{{userInfo.avatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+        <network-image class="message-avatar user-avatar" customClass="user-avatar" url="{{userInfo.avatar}}" defaultSrc="/images/default-avatar.png" mode="aspectFill" />
       </view>
 
-      <!-- AI 消息 -->
-      <view class="message-item ai" id="msg-{{item.id}}">
-        <image class="message-avatar ai-avatar-img" src="/images/ai-icon.png" mode="aspectFill" />
+      <!-- AI 消息：AI 默认头像（左侧）+ 气泡 -->
+      <view class="message-item ai" id="msg-ai-{{item.id}}">
+        <image class="message-avatar ai-avatar" src="/images/ai-icon.png" mode="aspectFill" />
         <view class="message-content ai-content">
           <text>{{item.reply}}</text>
           <!-- 推荐内容 -->
@@ -33,7 +21,7 @@
             <view class="recommend-title">为你推荐：</view>
             <block wx:for="{{item.recommends}}" wx:for-item="rec" wx:key="id">
               <view class="recommend-card" bindtap="goToDetail" data-type="{{rec.type}}" data-id="{{rec.id}}">
-                <image class="rec-avatar" src="{{rec.avatar}}" mode="aspectFill" />
+                <network-image class="rec-avatar" customClass="rec-avatar" url="{{rec.avatar}}" defaultSrc="/images/activity-banner.jpg" mode="aspectFill" />
                 <view class="rec-info">
                   <text class="rec-name">{{rec.name}}</text>
                   <text class="rec-desc">{{rec.desc}}</text>
@@ -46,22 +34,26 @@
       </view>
     </block>
 
-    <!-- 欢迎提示 -->
+    <!-- 欢迎提示（整块居中） -->
     <view class="welcome-tip" wx:if="{{messages.length === 0}}">
       <image class="welcome-img" src="/images/ai-icon.png" mode="aspectFit" />
-      <text class="welcome-text">你好！我是 AI 助手</text>
-      <text class="welcome-sub">告诉我你想找什么样的搭子或活动</text>
+      <view class="welcome-text-wrap">
+        <text class="welcome-text">你好！我是 AI 助手</text>
+      </view>
+      <view class="welcome-sub-wrap">
+        <text class="welcome-sub">告诉我你想找什么样的搭子或活动</text>
+      </view>
     </view>
 
-    <!-- 快捷入口 -->
+    <!-- 快捷入口（catchtap 避免被 scroll-view 拦截） -->
     <view class="quick-actions" wx:if="{{messages.length === 0}}">
-      <view class="action-btn" bindtap="quickAsk" data-text="推荐一些游戏搭子">
+      <view class="action-btn" catchtap="quickAsk" data-text="推荐一些游戏搭子">
         <text>🎮 游戏搭子</text>
       </view>
-      <view class="action-btn" bindtap="quickAsk" data-text="推荐一些运动活动">
+      <view class="action-btn" catchtap="quickAsk" data-text="推荐一些运动活动">
         <text>🏃 运动活动</text>
       </view>
-      <view class="action-btn" bindtap="quickAsk" data-text="附近有什么活动">
+      <view class="action-btn" catchtap="quickAsk" data-text="附近有什么活动">
         <text>📍 附近动态</text>
       </view>
     </view>

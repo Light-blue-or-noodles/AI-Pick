@@ -6,6 +6,7 @@ import com.aipick.dto.CreatePartnerRequest;
 import com.aipick.dto.PageRequest;
 import com.aipick.entity.Partner;
 import com.aipick.entity.PartnerApply;
+import com.aipick.vo.PartnerVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,11 +30,13 @@ public interface PartnerService {
     /**
      * 分页查询搭子列表
      *
-     * @param pageRequest 分页请求
-     * @param type        搭子类型
+     * @param pageRequest   分页请求
+     * @param type          搭子类型（可选）
+     * @param currentUserId 当前用户ID（可选，用于同事搭/校友搭筛选）
+     * @param scopeType     展示范围：company-同公司，school-同学校，platform-全平台
      * @return 搭子分页列表
      */
-    IPage<Partner> getPartnerList(PageRequest pageRequest, Integer type);
+    IPage<PartnerVO> getPartnerList(PageRequest pageRequest, Integer type, Long currentUserId, String scopeType);
 
     /**
      * 获取搭子详情
@@ -41,7 +44,7 @@ public interface PartnerService {
      * @param partnerId 搭子ID
      * @return 搭子详情
      */
-    Partner getPartnerDetail(Long partnerId);
+    PartnerVO getPartnerDetailVO(Long partnerId);
 
     /**
      * 应征搭子
@@ -80,19 +83,18 @@ public interface PartnerService {
     void rejectApplicant(Long userId, Long partnerId, Long applicantId);
 
     /**
-     * 获取我的搭子
+     * 我的搭子列表
      *
-     * @param userId 用户ID
-     * @param type   类型：joined-我参加的，created-我发布的
-     * @return 搭子列表
+     * @param userId 用户 ID
+     * @param type   created-仅我发布的；joined-我应征通过的；null 或空则同 created
      */
-    List<Partner> getMyPartners(Long userId, String type);
+    List<PartnerVO> getMyPartners(Long userId, String type);
 
     /**
      * 搭子筛选：按兴趣类型、位置、计划时间、发布者性别
      *
      * @param pageRequest   分页参数
-     * @param type          搭子类型 1-吃饭 2-旅游 3-运动 4-学习 5-游戏 6-其他
+     * @param type          搭子类型 1～15，见 PartnerTypeConstants
      * @param location      位置关键词（模糊匹配）
      * @param planTimeStart 计划时间起
      * @param planTimeEnd   计划时间止

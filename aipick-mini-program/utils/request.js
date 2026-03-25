@@ -21,8 +21,10 @@ const request = (options) => {
       header['Content-Type'] = 'application/json';
     }
 
+    const root = options.baseUrl || app.globalData.baseUrl || 'http://localhost:8080';
+
     wx.request({
-      url: options.baseUrl || app.globalData.baseUrl + options.url,
+      url: root + options.url,
       method: options.method || 'GET',
       data: options.data || {},
       header: header,

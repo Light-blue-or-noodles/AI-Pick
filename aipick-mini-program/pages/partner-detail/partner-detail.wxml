@@ -1,131 +1,59 @@
-<!--pages/partner-detail/partner-detail.wxml-->
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
-    <view class="more-btn" bindtap="onShowMore">
-      <text class="more-icon">⋮</text>
-    </view>
-  </view>
-
-  <!-- Loading -->
   <view class="loading" wx:if="{{isLoading}}">
     <text>加载中...</text>
   </view>
 
-  <!-- Content -->
-  <block wx:else>
-    <!-- Avatar & Basic Info -->
-    <view class="user-section">
-      <image 
-        class="avatar" 
-        src="{{partnerInfo.avatar}}" 
-        mode="aspectFill" 
-      />
-      <view class="user-basic">
-        <text class="nickname">{{partnerInfo.nickname}}</text>
-        <text class="user-meta">{{partnerInfo.age}}岁 | {{partnerInfo.constellation}}</text>
+  <block wx:elif="{{!isLoading && partnerInfo}}">
+    <view class="hero">
+      <network-image class="hero-cover" customClass="hero-cover" url="{{partnerInfo.coverImage}}" defaultSrc="/images/partner-banner.jpg" mode="aspectFill" mediaKind="cover" />
+      <view class="hero-mask">
+        <view class="hero-more" bindtap="onShowMore"><text class="more-icon">⋮</text></view>
+        <text class="hero-title">{{partnerInfo.title}}</text>
+        <text class="hero-sub">{{partnerInfo.nickname}}</text>
       </view>
     </view>
 
-    <!-- Action Buttons -->
+    <view class="meta-card">
+      <view class="meta-row"><text class="meta-k">搭子类型</text><text class="meta-v">{{partnerInfo.typeName || '-'}}</text></view>
+      <view class="meta-row meta-row-pref">
+        <text class="meta-k">搭子偏好</text>
+        <view class="pref-chips" wx:if="{{partnerInfo.preferenceTags && partnerInfo.preferenceTags.length}}">
+          <text class="pref-chip" wx:for="{{partnerInfo.preferenceTags}}" wx:key="*this">{{item}}</text>
+        </view>
+        <text class="meta-v" wx:else>-</text>
+      </view>
+      <view class="meta-row"><text class="meta-k">可见范围</text><text class="meta-v">{{partnerInfo.scopeName}}</text></view>
+      <view class="meta-row" wx:if="{{partnerInfo.planTimeDisplay}}"><text class="meta-k">活动时间</text><text class="meta-v">{{partnerInfo.planTimeDisplay}}</text></view>
+      <view class="meta-row" wx:if="{{partnerInfo.location}}"><text class="meta-k">地点</text><text class="meta-v">{{partnerInfo.location}}</text></view>
+    </view>
+
+    <view class="publisher">
+      <network-image class="pub-avatar" customClass="pub-avatar" url="{{partnerInfo.avatar}}" defaultSrc="/images/default-avatar.png" mode="aspectFill" mediaKind="avatar" />
+      <text class="pub-name">{{partnerInfo.nickname}}</text>
+    </view>
+
     <view class="action-buttons">
-      <view 
-        class="btn-action {{isFollowing ? 'btn-following' : ''}}" 
-        bindtap="onToggleFollow"
-      >
-        <text class="btn-icon-text">{{isFollowing ? '已关注' : '+关注'}}</text>
+      <view class="btn-action {{isFollowing ? 'btn-following' : ''}}" bindtap="onToggleFollow">
+        <text>{{isFollowing ? '已关注' : '+关注'}}</text>
       </view>
-      <view class="btn-action btn-chat" bindtap="onStartChat">
-        <text class="btn-icon-text">💬聊天</text>
-      </view>
-      <view class="btn-action btn-match" bindtap="onShowMatch">
-        <text class="btn-icon-text">❤️匹配</text>
-      </view>
+      <view class="btn-action btn-chat" bindtap="onStartChat"><text>💬 聊天</text></view>
+      <view class="btn-action btn-match" bindtap="onShowMatch"><text>❤️ 匹配</text></view>
     </view>
 
-    <!-- Bio Section -->
     <view class="section">
-      <view class="section-header">
-        <text class="section-title">个人简介</text>
-      </view>
-      <view class="section-content">
-        <text class="bio-text">"{{partnerInfo.bio}}"</text>
-      </view>
-    </view>
-
-    <!-- Tags Section -->
-    <view class="section">
-      <view class="section-header">
-        <text class="section-title">兴趣标签</text>
-      </view>
-      <view class="section-content">
-        <view class="tags">
-          <text 
-            class="tag" 
-            wx:for="{{partnerInfo.tags}}" 
-            wx:key="*this"
-          >{{item}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- Circles Section -->
-    <view class="section">
-      <view class="section-header">
-        <text class="section-title">社交圈</text>
-      </view>
-      <view class="section-content">
-        <view class="circle-item" wx:for="{{partnerInfo.circles}}" wx:key="type">
-          <text class="circle-icon">{{item.icon}}</text>
-          <text class="circle-name">
-            {{item.type === 'colleague' ? '同事圈：' : '校友圈：'}}{{item.name}}
-          </text>
-          <text class="circle-status {{item.status}}">
-            {{item.status === 'verified' ? '已认证' : '待认证'}}
-          </text>
-        </view>
-      </view>
-    </view>
-
-    <!-- Published Partners Section -->
-    <view class="section" wx:if="{{partnerInfo.publishedPartners.length > 0}}">
-      <view class="section-header">
-        <text class="section-title">发布搭子</text>
-      </view>
-      <view class="section-content">
-        <view 
-          class="partner-card" 
-          wx:for="{{partnerInfo.publishedPartners}}" 
-          wx:key="id"
-          bindtap="onViewPartner"
-          data-id="{{item.id}}"
-        >
-          <view class="partner-card-header">
-            <text class="partner-card-title">🎯 {{item.title}}</text>
-          </view>
-          <view class="partner-card-info">
-            <text class="partner-card-location">📍 {{item.location}}</text>
-            <text class="partner-card-members">👥 {{item.currentMembers}}/{{item.maxMembers}}人</text>
-          </view>
-          <view class="partner-card-desc">
-            <text>💬 "{{item.description}}"</text>
-          </view>
-        </view>
-      </view>
+      <view class="section-title">详情</view>
+      <text class="section-body">{{partnerInfo.description}}</text>
     </view>
   </block>
 
-  <!-- More Menu Modal -->
+  <view class="empty-detail" wx:if="{{!isLoading && !partnerInfo}}">
+    <text>搭子不存在或已删除</text>
+  </view>
+
   <view class="modal-mask" wx:if="{{showMoreMenu}}" bindtap="onHideMore"></view>
   <view class="more-menu" wx:if="{{showMoreMenu}}">
-    <view class="menu-item" bindtap="onReport">
-      <text>举报用户</text>
-    </view>
-    <view class="menu-item" bindtap="onHideMore">
-      <text>取消</text>
-    </view>
+    <view class="menu-item" bindtap="onNotInterested"><text>不感兴趣</text></view>
+    <view class="menu-item" bindtap="onReport"><text>举报</text></view>
+    <view class="menu-item" bindtap="onHideMore"><text>取消</text></view>
   </view>
 </view>

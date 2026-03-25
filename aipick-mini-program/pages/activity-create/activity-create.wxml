@@ -1,35 +1,29 @@
 <!--pages/activity-create/activity-create.wxml-->
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
-    <text class="header-title">创建活动</text>
-    <view style="width: 72rpx;"></view>
-  </view>
-
-  <!-- Form -->
+  <!-- Form（返回使用小程序自带导航栏） -->
   <view class="form">
-    <!-- Cover Image -->
+    <!-- 多图上传：第一张为封面，其余在详情展示 -->
     <view class="form-item">
-      <text class="form-label">活动封面</text>
-      <view class="cover-upload" bindtap="onChooseCover">
-        <image 
-          wx:if="{{coverImage}}" 
-          class="cover-image" 
-          src="{{coverImage}}" 
-          mode="aspectFill" 
-        />
-        <view class="cover-placeholder" wx:else>
-          <text class="cover-add-icon">+</text>
-          <text class="cover-add-text">添加封面</text>
-          <text class="cover-tip">建议 750x400</text>
+      <text class="form-label">活动图片</text>
+      <text class="form-tip">首张为封面，可上传多张（最多9张）</text>
+      <view class="image-list">
+        <view 
+          class="image-item" 
+          wx:for="{{imageList}}" 
+          wx:key="index"
+        >
+          <image class="image-preview" src="{{item}}" mode="aspectFill" />
+          <view class="image-cover-tag" wx:if="{{index === 0}}">封面</view>
+          <view class="image-delete" bindtap="onRemoveImage" data-index="{{index}}">×</view>
+        </view>
+        <view class="image-add" bindtap="onChooseImages" wx:if="{{imageList.length < 9}}">
+          <text class="image-add-icon">+</text>
+          <text class="image-add-text">添加图片</text>
         </view>
       </view>
     </view>
 
-    <!-- Title -->
+    <!-- 标题 -->
     <view class="form-item">
       <view class="form-label-row">
         <text class="form-label">活动标题</text>
@@ -44,7 +38,7 @@
       />
     </view>
 
-    <!-- Category -->
+    <!-- 活动类型 -->
     <view class="form-item">
       <text class="form-label">活动类型</text>
       <view class="category-tags">
@@ -58,36 +52,51 @@
       </view>
     </view>
 
-    <!-- Date & Time -->
+    <!-- 活动时间 -->
     <view class="form-item">
       <text class="form-label">活动时间</text>
-      <view class="datetime-picker">
-        <picker mode="date" bindchange="onDateChange">
-          <view class="picker-item">
-            <text class="picker-icon">📅</text>
-            <text class="{{date ? 'picker-value' : 'picker-placeholder'}}">
-              {{date || '选择日期'}}
-            </text>
-          </view>
-        </picker>
-        <picker mode="time" bindchange="onTimeChange">
-          <view class="picker-item">
-            <text class="picker-icon">⏰</text>
-            <text class="{{time ? 'picker-value' : 'picker-placeholder'}}">
-              {{time || '选择时间'}}
-            </text>
-          </view>
-        </picker>
+      <view class="datetime-group">
+        <view class="datetime-row">
+          <text class="datetime-row-label">开始时间</text>
+          <picker mode="multiSelector"
+                  range="{{dateTimeRange}}"
+                  value="{{startDateTimeIndex}}"
+                  bindchange="onStartDateTimeChange">
+            <view class="picker-item picker-item-single">
+              <view class="picker-icon picker-icon-calendar"></view>
+              <text class="{{startDateTimeText ? 'picker-value' : 'picker-placeholder'}}">
+                {{startDateTimeText || '选择开始时间'}}
+              </text>
+            </view>
+          </picker>
+        </view>
+        <view class="datetime-row">
+          <text class="datetime-row-label">结束时间</text>
+          <picker mode="multiSelector"
+                  range="{{dateTimeRange}}"
+                  value="{{endDateTimeIndex}}"
+                  bindchange="onEndDateTimeChange">
+            <view class="picker-item picker-item-single">
+              <view class="picker-icon picker-icon-calendar"></view>
+              <text class="{{endDateTimeText ? 'picker-value' : 'picker-placeholder'}}">
+                {{endDateTimeText || '选择结束时间'}}
+              </text>
+            </view>
+          </picker>
+        </view>
       </view>
     </view>
 
-    <!-- Location -->
+    <!-- 活动地点：腾讯地图选点 -->
     <view class="form-item">
       <text class="form-label">活动地点</text>
       <view class="location-input" bindtap="onChooseLocation">
-        <text class="location-icon">📍</text>
+        <view class="location-icon-pin">
+          <view class="location-icon-pin-head"></view>
+          <view class="location-icon-pin-tail"></view>
+        </view>
         <text class="{{location ? 'location-value' : 'location-placeholder'}}">
-          {{location || '点击选择地点...'}}
+          {{location || '点击使用地图选点...'}}
         </text>
       </view>
     </view>
@@ -115,7 +124,7 @@
       </view>
     </view>
 
-    <!-- Price -->
+    <!-- 费用 -->
     <view class="form-item">
       <text class="form-label">费用</text>
       <view class="price-type-tags">
@@ -142,7 +151,7 @@
       </view>
     </view>
 
-    <!-- Description -->
+    <!-- 活动详情 -->
     <view class="form-item">
       <view class="form-label-row">
         <text class="form-label">活动详情</text>
@@ -157,9 +166,12 @@
       />
     </view>
 
-    <!-- AI Help Button -->
+    <!-- AI 帮我完善（统一图标风格） -->
     <view class="ai-btn" bindtap="onAIComplete">
-      <text class="ai-icon">🤖</text>
+      <view class="ai-icon-mark">
+        <view class="ai-icon-circle"></view>
+        <view class="ai-icon-spark"></view>
+      </view>
       <text class="ai-text">AI 帮我完善</text>
     </view>
 

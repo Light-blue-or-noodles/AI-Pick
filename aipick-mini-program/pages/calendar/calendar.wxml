@@ -1,16 +1,5 @@
-<!--pages/calendar/calendar.wxml-->
+<!--pages/calendar/calendar.wxml - 标题使用导航栏，返回使用微信默认 -->
 <view class="container">
-  <!-- 顶部标题 -->
-  <view class="header">
-    <view class="header-left" bindtap="goBack">
-      <text class="back-arrow">←</text>
-    </view>
-    <view class="header-title">
-      <text>活动日历</text>
-    </view>
-    <view class="header-right"></view>
-  </view>
-
   <!-- 月份切换 -->
   <view class="month-switch">
     <view class="switch-btn" bindtap="prevMonth">
@@ -62,7 +51,9 @@
     <scroll-view class="list-content" scroll-y wx:if="{{selectedDateActivities.length > 0}}">
       <block wx:for="{{selectedDateActivities}}" wx:key="id">
         <view class="activity-card" bindtap="goToActivity" data-id="{{item.id}}">
-          <image class="activity-cover" src="{{item.cover}}" mode="aspectFill" />
+          <view class="activity-cover-wrap">
+            <network-image class="activity-cover" customClass="activity-cover" url="{{item.cover}}" defaultSrc="/images/empty-activity.png" mode="aspectFill" />
+          </view>
           <view class="activity-info">
             <view class="activity-name">{{item.name}}</view>
             <view class="activity-meta">

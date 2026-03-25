@@ -1,0 +1,6 @@
+<image
+  class="network-image {{customClass}}"
+  src="{{displaySrc || defaultSrc}}"
+  mode="{{mode}}"
+  binderror="onError"
+/>

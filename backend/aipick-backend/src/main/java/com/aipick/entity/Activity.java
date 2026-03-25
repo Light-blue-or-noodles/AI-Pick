@@ -59,8 +59,11 @@ public class Activity extends BaseEntity implements Serializable {
     /** 当前报名人数 */
     private Integer currentParticipants;
 
-    /** 封面图片 */
+    /** 封面图片（与 images 首张一致，兼容列表展示） */
     private String coverImage;
+
+    /** 多图 JSON 数组，首张为封面，其余在详情展示 */
+    private String images;
 
     /** 状态 0-待开始 1-报名中 2-进行中 3-已结束 4-已取消 */
     private Integer status;
@@ -186,6 +189,14 @@ public class Activity extends BaseEntity implements Serializable {
 
     public void setCoverImage(String coverImage) {
         this.coverImage = coverImage;
+    }
+
+    public String getImages() {
+        return images;
+    }
+
+    public void setImages(String images) {
+        this.images = images;
     }
 
     public Integer getStatus() {

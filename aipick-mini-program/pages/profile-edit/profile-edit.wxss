@@ -5,42 +5,28 @@
   background: #F5F5F5;
 }
 
-/* Header */
+/* Header（标题在导航栏，仅保留右侧保存） */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 88rpx;
-  padding: 0 24rpx;
-  background: #ffffff;
-  border-bottom: 1rpx solid #E5E5E5;
+  padding: 0 var(--page-horizontal, 24rpx);
+  padding-top: env(safe-area-inset-top);
+  background: var(--bg-white);
+  border-bottom: 1rpx solid var(--border-light);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-.back-btn {
-  width: 72rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back-icon {
-  font-size: 40rpx;
-  color: #333333;
-}
-
-.header-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #1A1A1A;
+.header-right-only {
+  justify-content: flex-end;
 }
 
 .save-btn {
   padding: 12rpx 24rpx;
-  color: #FF6B35;
+  color: var(--primary-color);
   font-size: 30rpx;
 }
 
@@ -138,8 +124,8 @@
 }
 
 .gender-option.active {
-  background: #FF6B35;
-  border-color: #FF6B35;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
   color: #ffffff;
 }
 
@@ -202,7 +188,7 @@
   align-items: center;
   gap: 8rpx;
   padding: 12rpx 20rpx;
-  background: #FF6B35;
+  background: var(--primary-color);
   border-radius: 32rpx;
   font-size: 26rpx;
   color: #ffffff;

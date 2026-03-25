@@ -22,11 +22,6 @@ Page({
     }
   },
 
-  onUnload() {
-    // Clear timer if any
-  },
-
-  // Fetch partner detail - GET /api/partner/:id
   fetchPartnerDetail(id) {
     if (id == null || id === '' || String(id) === 'undefined') {
       this.setData({ isLoading: false });
@@ -36,7 +31,7 @@ Page({
     const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
-    const header = {};
+    const header = { 'content-type': 'application/json' };
     if (token) header['Authorization'] = 'Bearer ' + token;
     if (userId) header['X-User-Id'] = String(userId);
     wx.request({
@@ -46,10 +41,47 @@ Page({
       success: (res) => {
         const data = res.data;
         if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
-          const info = data.data != null ? data.data : data;
+          const raw = data.data != null ? data.data : data;
+          const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+          const toFullUrl = (path) => {
+            if (!path || typeof path !== 'string') return '';
+            if (path.startsWith('http')) return (app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path);
+            const p = path.startsWith('/') ? path : '/' + path;
+            if (p.indexOf('/api/') === 0) return baseUrl + p;
+            return baseUrl + '/api' + p;
+          };
+          const prefRaw = raw.preference || '';
+          const preferenceTags = String(prefRaw)
+            .split(/[,，、\s]+/)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+          const planRaw = raw.planTime;
+          const planTimeDisplay = planRaw
+            ? String(planRaw).replace('T', ' ').substring(0, 16)
+            : '';
+          const partnerInfo = {
+            id: raw.id,
+            userId: raw.userId,
+            title: raw.title || '搭子',
+            nickname: raw.nickname || '用户',
+            avatar: toFullUrl(raw.avatar) || '/images/default-avatar.png',
+            coverImage: toFullUrl(raw.coverImage) || '',
+            typeName: raw.typeName || '',
+            preference: prefRaw,
+            preferenceTags,
+            scopeName: raw.scopeName || '公开',
+            description: raw.description || raw.content || '',
+            bio: raw.description || raw.content || '暂无详情',
+            targetCount: raw.maxParticipants != null ? raw.maxParticipants : raw.targetCount,
+            currentCount: raw.currentParticipants != null ? raw.currentParticipants : raw.currentCount,
+            location: raw.address || raw.location || '',
+            planTime: planRaw,
+            planTimeDisplay,
+            matchScore: raw.matchScore
+          };
           this.setData({
-            partnerInfo: info,
-            isFollowing: !!info.isFollowing,
+            partnerInfo,
+            isFollowing: !!raw.isFollowing,
             isLoading: false
           });
         } else {
@@ -57,94 +89,42 @@ Page({
           wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
         }
       },
-      fail: (err) => {
+      fail: () => {
         this.setData({ partnerInfo: null, isLoading: false });
-        wx.showToast({
-          title: err.errMsg && err.errMsg.indexOf('url') !== -1 ? '网络错误' : '加载失败',
-          icon: 'none'
-        });
+        wx.showToast({ title: '加载失败', icon: 'none' });
       }
     });
   },
 
-  // Go back
-  onGoBack() {
-    wx.navigateBack();
-  },
-
-  // Show more menu
   onShowMore() {
     this.setData({ showMoreMenu: true });
   },
 
-  // Hide more menu
   onHideMore() {
     this.setData({ showMoreMenu: false });
   },
 
-  // Toggle follow
   onToggleFollow() {
     const newStatus = !this.data.isFollowing;
     this.setData({ isFollowing: newStatus });
-    
-    wx.showToast({
-      title: newStatus ? '关注成功' : '取消关注',
-      icon: 'success'
-    });
+    wx.showToast({ title: newStatus ? '关注成功' : '取消关注', icon: 'success' });
   },
 
-  // Start chat
   onStartChat() {
-    if (!this.data.partnerInfo) return;
-    const nickname = this.data.partnerInfo.nickname || '';
-    wx.navigateTo({
-      url: `/pages/chat/chat?userId=${this.data.partnerId}&nickname=${encodeURIComponent(nickname)}`
-    });
+    wx.showToast({ title: '敬请期待', icon: 'none' });
   },
 
-  // Show match score
   onShowMatch() {
-    if (!this.data.partnerInfo) return;
-    const name = this.data.partnerInfo.nickname || 'TA';
-    const score = this.data.partnerInfo.matchScore != null ? this.data.partnerInfo.matchScore : 0;
-    wx.showModal({
-      title: '匹配度',
-      content: `您与 ${name} 的匹配度为 ${score}%`,
-      showCancel: false
-    });
+    wx.showToast({ title: '敬请期待', icon: 'none' });
   },
 
-  // View published partner
-  onViewPartner(e) {
-    const partnerId = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/partner-detail/partner-detail?id=${partnerId}`
-    });
+  onNotInterested() {
+    this.setData({ showMoreMenu: false });
+    wx.showToast({ title: '已记录', icon: 'success' });
   },
 
-  // Report user
   onReport() {
-    wx.showActionSheet({
-      itemList: ['举报用户', '拉黑用户'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          wx.showToast({ title: '举报成功', icon: 'success' });
-        } else {
-          wx.showToast({ title: '已拉黑', icon: 'success' });
-        }
-      },
-      complete: () => {
-        this.onHideMore();
-      }
-    });
-  },
-
-  // Share
-  onShareAppMessage() {
-    const name = (this.data.partnerInfo && this.data.partnerInfo.nickname) || '搭子';
-    return {
-      title: `来看看 ${name} 的主页`,
-      path: `/pages/partner-detail/partner-detail?id=${this.data.partnerId}`
-    };
+    this.setData({ showMoreMenu: false });
+    wx.showToast({ title: '已收到', icon: 'none' });
   }
 });

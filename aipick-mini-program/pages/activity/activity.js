@@ -1,20 +1,33 @@
 // pages/activity/activity.js
 const app = getApp();
 
-/** 活动状态：0待开始 1报名中 2进行中 3已结束 4已取消 -> 前端 recruiting/full/ended */
+/** 活动状态：0待开始 1报名中 2进行中 3已结束 4已取消 -> 前端 recruiting/full/ended；已满仅按人数判断 */
 function mapActivityForList(a) {
-  const baseUrl = app.globalData.baseUrl || '';
+  const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+  const norm = app.normalizeImageUrl ? (u) => app.normalizeImageUrl(u, baseUrl) : (u) => (u && u.startsWith('http') ? u : (baseUrl + '/api' + (u && u.startsWith('/') ? u : '/' + (u || ''))));
   const statusNum = a.status != null ? a.status : 1;
-  const statusText = statusNum <= 1 ? 'recruiting' : statusNum === 2 ? 'full' : 'ended';
   const maxP = a.maxParticipants != null && a.maxParticipants > 0 ? a.maxParticipants : 999;
   const curP = a.currentParticipants != null ? a.currentParticipants : 0;
+  const isFull = maxP > 0 && curP >= maxP;
+  const isEnded = statusNum === 3 || statusNum === 4;
+  const statusText = isEnded ? 'ended' : (isFull ? 'full' : 'recruiting');
   const progressPercent = maxP > 0 ? Math.min(100, Math.round((curP / maxP) * 100)) : 0;
   let timeStr = '';
   if (a.startTime) {
     const s = typeof a.startTime === 'string' ? a.startTime : (a.startTime + '');
     timeStr = s.replace('T', ' ').substring(0, 16);
   }
-  const cover = (a.coverImage && (a.coverImage.startsWith('http') ? a.coverImage : (baseUrl + a.coverImage))) || '/images/activity-banner.png';
+  const cover = norm(a.coverImage) || (baseUrl + '/api/static/covers/activity-default.png');
+  const rawAuthorAvatar =
+    (a.organizer && a.organizer.avatar) ||
+    a.organizerAvatar ||
+    a.avatar ||
+    '';
+  const defaultAvatar = rawAuthorAvatar ? norm(rawAuthorAvatar) : (baseUrl + '/api/static/covers/activity-default.png');
+  const hasRegistered =
+    a.hasRegistered === true ||
+    a.hasRegistered === 1 ||
+    a.hasRegistered === '1';
   return {
     ...a,
     status: statusText,
@@ -22,21 +35,20 @@ function mapActivityForList(a) {
     location: a.location || '',
     category: a.category || '活动',
     cover,
-    author: { name: '发起人', avatar: '/images/default-avatar.png' },
+    author: { name: a.organizerName || '发起人', avatar: defaultAvatar },
     currentParticipants: curP,
     maxParticipants: maxP,
     progressPercent,
-    participantLabel: maxP >= 999 ? curP + '人报名' : curP + '/' + maxP + '人'
+    participantLabel: maxP >= 999 ? curP + '人报名' : curP + '/' + maxP + '人',
+    hasRegistered
   };
 }
 
 Page({
   data: {
+    allActivities: [],
     activities: [],
-    categories: ['全部', '运动', '美食', '学习', '娱乐', '社交'],
-    timeFilters: ['全部', '今天', '明天', '周末', '本月'],
-    activeCategory: 0,
-    activeTime: 0,
+    searchKeyword: '',
     isLoading: true,
     showPublishModal: false,
     publishForm: {
@@ -50,28 +62,55 @@ Page({
   },
 
   onLoad() {
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7765/ingest/f4d89e39-b9eb-4a44-9895-809c60c7efc4', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '24c833'
+        },
+        body: JSON.stringify({
+          sessionId: '24c833',
+          runId: 'activity-page-load',
+          hypothesisId: 'H1',
+          location: 'pages/activity/activity.js:onLoad',
+          message: 'activity page loaded',
+          data: {
+            hasGoToCreateFn: typeof this.goToCreate === 'function'
+          },
+          timestamp: Date.now()
+        })
+      }).catch(() => {});
+    } catch (e) {}
+    // #endregion agent log
     this.loadActivities();
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 2
-      });
-    }
+    const that = this;
+    setTimeout(function () {
+      if (typeof that.getTabBar === 'function') {
+        const bar = that.getTabBar();
+        if (bar) bar.setData({ selected: 2 });
+      }
+    }, 0);
   },
 
-  // 封装活动列表请求为 Promise
-  fetchActivities() {
+  // 封装活动列表请求为 Promise（支持按标题关键字模糊搜索）
+  fetchActivities(keyword) {
     const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
     const header = {};
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     if (token) header['Authorization'] = 'Bearer ' + token;
     if (userId) header['X-User-Id'] = String(userId);
+    const query = (keyword && keyword.trim())
+      ? `?keyword=${encodeURIComponent(keyword.trim())}`
+      : '';
     return new Promise((resolve, reject) => {
       wx.request({
-        url: `${baseUrl}/api/activity`,
+        url: `${baseUrl}/api/activity${query}`,
         method: 'GET',
         header,
         success: (res) => {
@@ -107,7 +146,7 @@ Page({
     });
 
     try {
-      const activities = await this.fetchActivities();
+      const activities = await this.fetchActivities(this.data.searchKeyword);
       this.setData({
         activities
       });
@@ -124,25 +163,22 @@ Page({
     }
   },
 
-  // 选择分类
-  selectCategory(e) {
-    const index = e.currentTarget.dataset.index;
-    this.setData({ activeCategory: index });
-    this.loadActivities();
-  },
-
-  // 选择时间
-  selectTime(e) {
-    const index = e.currentTarget.dataset.index;
-    this.setData({ activeTime: index });
-    this.loadActivities();
-  },
-
-  // 跳转筛选页面
-  goToFilter() {
-    wx.navigateTo({
-      url: '/pages/filter/filter?type=activity'
+  // 搜索输入
+  onSearchInput(e) {
+    const value = (e.detail && e.detail.value) || '';
+    this.setData({
+      searchKeyword: value
     });
+  },
+
+  // 键盘搜索
+  onSearchConfirm() {
+    this.loadActivities();
+  },
+
+  // 点击搜索按钮
+  onSearchTap() {
+    this.loadActivities();
   },
 
   // 跳转日历页面
@@ -152,51 +188,27 @@ Page({
     });
   },
 
-  // 显示发布弹窗
-  showPublishModal() {
-    this.setData({ showPublishModal: true });
+  // 跳转筛选页面
+  goToFilter() {
+    wx.navigateTo({
+      url: '/pages/filter/filter?type=activity'
+    });
   },
 
-  // 隐藏发布弹窗
-  hidePublishModal() {
-    this.setData({ showPublishModal: false });
-  },
-
-  // 更新表单
-  updateForm(e) {
-    const field = e.currentTarget.dataset.field;
-    const value = e.detail.value;
-    this.setData({
-      [`publishForm.${field}`]: value
+  // 跳转到创建活动页（使用新版创建流程）
+  goToCreate() {
+    wx.navigateTo({
+      url: '/pages/activity-create/activity-create'
     });
   },
 
   // 报名活动
   joinActivity(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showToast({
-      title: '报名成功',
-      icon: 'success'
+    // 列表页点击报名统一跳转到详情页，在详情页完成真实报名逻辑
+    wx.navigateTo({
+      url: `/pages/activity-detail/activity-detail?id=${id}`
     });
-  },
-
-  // 发布活动
-  submitActivity() {
-    const form = this.data.publishForm;
-    if (!form.title || !form.time || !form.location) {
-      wx.showToast({
-        title: '请填写完整信息',
-        icon: 'none'
-      });
-      return;
-    }
-
-    // 模拟成功
-    wx.showToast({
-      title: '发布成功',
-      icon: 'success'
-    });
-    this.hidePublishModal();
   },
 
   // 查看详情

@@ -1,3 +1,6 @@
 {
-  "usingComponents": {}
+  "navigationBarTitleText": "活动日历",
+  "usingComponents": {
+    "network-image": "/components/network-image/network-image"
+  }
 }

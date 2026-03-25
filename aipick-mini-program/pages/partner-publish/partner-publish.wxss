@@ -1,41 +1,10 @@
 /* pages/partner-publish/partner-publish.wxss */
 
+@import '../../styles/variables.wxss';
+
 .container {
   min-height: 100vh;
-  background: #F5F5F5;
-}
-
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 88rpx;
-  padding: 0 24rpx;
-  background: #ffffff;
-  border-bottom: 1rpx solid #E5E5E5;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.back-btn {
-  width: 72rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back-icon {
-  font-size: 40rpx;
-  color: #333333;
-}
-
-.header-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #1A1A1A;
+  background: var(--bg-color);
 }
 
 /* Form */
@@ -78,6 +47,87 @@
   color: #999999;
 }
 
+.form-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+  margin-bottom: 16rpx;
+}
+
+.form-link {
+  font-size: 26rpx;
+  color: var(--primary-color);
+}
+
+.datetime-row {
+  display: flex;
+  gap: 20rpx;
+}
+
+.picker-box {
+  flex: 1;
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  border: 1rpx solid #e5e5e5;
+  font-size: 28rpx;
+  color: #333333;
+  text-align: center;
+}
+
+.location-row {
+  margin-top: 8rpx;
+}
+
+.location-pick {
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  border: 1rpx solid #e5e5e5;
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 1.45;
+}
+
+.location-placeholder {
+  color: #999999;
+}
+
+/* 搭子偏好标签（多选） */
+.pref-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.pref-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 14rpx 22rpx;
+  background: #ffffff;
+  border: 1rpx solid #E5E5E5;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  color: #555555;
+  box-sizing: border-box;
+}
+
+.pref-tag.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.pref-tag-ico {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.pref-tag-txt {
+  font-size: 26rpx;
+}
+
 /* Type Tags */
 .type-tags {
   display: flex;
@@ -95,8 +145,8 @@
 }
 
 .type-tag.active {
-  background: #FF6B35;
-  border-color: #FF6B35;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
   color: #ffffff;
 }
 
@@ -129,7 +179,7 @@
 .counter-btn {
   width: 80rpx;
   height: 80rpx;
-  background: #FF6B35;
+  background: var(--primary-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -179,9 +229,21 @@
 }
 
 .scope-tag.active {
-  background: #FF6B35;
-  border-color: #FF6B35;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
   color: #ffffff;
+}
+
+.scope-tag.disabled {
+  opacity: 0.45;
+}
+
+.scope-hint {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  line-height: 1.45;
 }
 
 /* Divider */
@@ -219,9 +281,67 @@
   align-items: center;
   justify-content: center;
   height: 96rpx;
-  background: #FF6B35;
+  background: var(--primary-color);
   border-radius: 48rpx;
   font-size: 34rpx;
   color: #ffffff;
   font-weight: 500;
+}
+
+/* 封面单张 */
+.cover-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.cover-preview {
+  position: relative;
+  width: 100%;
+  max-width: 400rpx;
+  height: 220rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #f0f0f0;
+  border: 1rpx solid #E5E5E5;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cover-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12rpx;
+  font-size: 22rpx;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+}
+
+.cover-placeholder {
+  width: 100%;
+  max-width: 400rpx;
+  height: 220rpx;
+  border-radius: 12rpx;
+  border: 2rpx dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #999;
+  background: #fafafa;
+}
+
+.cover-clear {
+  align-self: center;
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: var(--text-tertiary);
 }

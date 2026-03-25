@@ -30,7 +30,7 @@
 }
 
 .message-item.unread {
-  background: rgba(74, 144, 217, 0.03);
+  background: var(--primary-bg);
 }
 
 .message-avatar {

@@ -1,11 +1,6 @@
-<!--pages/my-activity/my-activity.wxml-->
+<!--pages/my-activity/my-activity.wxml - 标题使用导航栏，仅保留顶部右侧菜单 -->
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
-    <text class="header-title">我的活动</text>
+  <view class="header header-right-only">
     <view class="create-btn" bindtap="onGoToCreate">
       <text>发起</text>
     </view>

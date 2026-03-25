@@ -61,7 +61,7 @@ public class MessageServiceImpl implements MessageService {
             User otherUser = userMapper.selectById(otherUserId);
             if (otherUser != null) {
                 vo.setNickname(otherUser.getNickname());
-                vo.setAvatar(otherUser.getAvatar());
+                vo.setAvatar(com.aipick.util.AvatarUtil.sanitizeForResponse(otherUser.getAvatar()));
             }
             
             // 获取最后一条消息
@@ -121,7 +121,7 @@ public class MessageServiceImpl implements MessageService {
             // 发送者头像
             User sender = userMapper.selectById(message.getSenderId());
             if (sender != null) {
-                vo.setSenderAvatar(sender.getAvatar());
+                vo.setSenderAvatar(com.aipick.util.AvatarUtil.sanitizeForResponse(sender.getAvatar()));
             }
             
             result.add(vo);
