@@ -1,19 +1,6 @@
 <!--pages/filter/filter.wxml-->
 <view class="container">
-  <!-- 顶部标题 -->
-  <view class="header">
-    <view class="header-left" bindtap="goBack">
-      <text class="back-arrow">←</text>
-    </view>
-    <view class="header-title">
-      <text>{{pageType === 'partner' ? '搭子筛选' : '活动筛选'}}</text>
-    </view>
-    <view class="header-right" bindtap="resetFilter">
-      <text class="reset-btn">重置</text>
-    </view>
-  </view>
-
-  <!-- 筛选内容 -->
+  <!-- 筛选内容（标题已通过导航栏展示在顶部） -->
   <scroll-view class="filter-content" scroll-y>
     <!-- 距离筛选 -->
     <view class="filter-section">
@@ -146,8 +133,9 @@
     </view>
   </scroll-view>
 
-  <!-- 底部按钮 -->
+  <!-- 底部栏：左下角重置 + 结果数 + 右侧应用筛选 -->
   <view class="bottom-bar">
+    <view class="reset-btn" bindtap="resetFilter">重置</view>
     <view class="result-count">找到 {{resultCount}} 个结果</view>
     <view class="apply-btn" bindtap="applyFilter">
       <text>应用筛选</text>

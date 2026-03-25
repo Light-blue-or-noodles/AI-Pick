@@ -7,11 +7,16 @@ import com.aipick.dto.PageRequest;
 import com.aipick.dto.RegisterActivityRequest;
 import com.aipick.entity.Activity;
 import com.aipick.entity.ActivityRegistration;
+import com.aipick.entity.User;
 import com.aipick.service.ActivityService;
+import com.aipick.service.UserService;
 import com.aipick.vo.ActivityCalendarVO;
+import com.aipick.common.BusinessException;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.aipick.storage.ImageStorageService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +30,42 @@ import java.util.Map;
 @RequestMapping("/activity")
 public class ActivityController {
 
-    private final ActivityService activityService;
+    private static final long IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final String[] IMAGE_ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"};
 
-    public ActivityController(ActivityService activityService) {
+    private final ActivityService activityService;
+    private final UserService userService;
+    private final ImageStorageService imageStorageService;
+
+    public ActivityController(ActivityService activityService, UserService userService,
+                                ImageStorageService imageStorageService) {
         this.activityService = activityService;
+        this.userService = userService;
+        this.imageStorageService = imageStorageService;
+    }
+
+    /**
+     * 上传活动图片（多图时多次调用，发布时传 imageUrls）
+     */
+    @PostMapping("/upload-image")
+    public Result<Map<String, String>> uploadImage(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "file", required = false) MultipartFile filePart,
+            @RequestParam(value = "image", required = false) MultipartFile imagePart) {
+        MultipartFile file = (filePart != null && !filePart.isEmpty()) ? filePart : (imagePart != null && !imagePart.isEmpty() ? imagePart : null);
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("请选择图片");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !java.util.Arrays.asList(IMAGE_ALLOWED).contains(contentType)) {
+            throw new BusinessException("仅支持 JPG/PNG/GIF/WEBP");
+        }
+        if (file.getSize() > IMAGE_MAX_SIZE) {
+            throw new BusinessException("图片大小不能超过 5MB");
+        }
+        Map<String, String> stored = imageStorageService.storeActivityImage(file, userId);
+        String urlPath = stored.get("url");
+        return Result.success("上传成功", Map.of("url", urlPath));
     }
 
     /**
@@ -49,8 +86,9 @@ public class ActivityController {
     public Result<IPage<Activity>> getActivityList(
             @ModelAttribute PageRequest pageRequest,
             @RequestParam(required = false) Integer type,
-            @RequestParam(required = false) String category) {
-        IPage<Activity> list = activityService.getActivityList(pageRequest, type, category);
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword) {
+        IPage<Activity> list = activityService.getActivityList(pageRequest, type, category, keyword);
         return Result.success(list);
     }
 
@@ -69,6 +107,22 @@ public class ActivityController {
         if (userId != null) {
             boolean hasRegistered = activityService.hasRegistered(userId, id);
             result.put("hasRegistered", hasRegistered);
+        }
+
+        // 主办方信息（发起人头像、昵称）
+        if (activity.getUserId() != null) {
+            try {
+                User organizer = userService.getUserInfo(activity.getUserId());
+                if (organizer != null) {
+                    Map<String, Object> organizerMap = new HashMap<>();
+                    organizerMap.put("id", organizer.getId());
+                    organizerMap.put("nickname", organizer.getNickname() != null ? organizer.getNickname() : "发起人");
+                    organizerMap.put("avatar", com.aipick.util.AvatarUtil.sanitizeForResponse(organizer.getAvatar()));
+                    result.put("organizer", organizerMap);
+                }
+            } catch (Exception ignored) {
+                // 无主办方信息时前端使用占位
+            }
         }
 
         return Result.success(result);

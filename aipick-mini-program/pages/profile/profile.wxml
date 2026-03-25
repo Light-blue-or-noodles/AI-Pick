@@ -7,7 +7,7 @@
     <!-- 用户信息 -->
     <view class="user-info" bindtap="onAvatarClick">
       <view class="avatar-wrap">
-        <image class="avatar" src="{{userInfo.avatar}}" mode="aspectFill" />
+        <network-image class="avatar" customClass="avatar" url="{{userInfo.avatar}}" defaultSrc="/images/default-avatar.png" mode="aspectFill" preferDownloadInDevtools="{{true}}" />
         <view class="login-badge" wx:if="{{!userInfo.isLogin}}">登录</view>
       </view>
       <view class="user-detail">

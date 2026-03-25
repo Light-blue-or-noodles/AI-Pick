@@ -1,51 +1,67 @@
 <!--pages/partner/partner.wxml-->
 <view class="container">
-  <!-- 顶部搜索和筛选 -->
-  <view class="top-bar">
-    <view class="search-box" bindtap="goToFilter">
-      <image class="search-icon" src="/images/search.png" mode="aspectFit" />
-      <text>搜索搭子...</text>
+  <!-- 吸顶筛选区：仅保留同事搭/校友搭/Pick搭 -->
+  <view class="partner-header-fixed">
+    <!-- 搜索+筛选小区域暂时注释
+    <view class="top-bar">
+      <view class="search-box" bindtap="goToFilter">
+        <image class="search-icon" src="/images/search.png" mode="aspectFit" />
+        <text>搜索搭子...</text>
+      </view>
+      <view class="filter-btn" bindtap="goToFilter">
+        <text>筛选</text>
+      </view>
     </view>
-    <view class="filter-btn" bindtap="goToFilter">
-      <text>筛选</text>
+    -->
+    <view class="scope-tabs">
+      <view 
+        class="scope-tab {{activeScope === index ? 'active' : ''}}"
+        wx:for="{{scopeTabs}}"
+        wx:key="key"
+        bindtap="selectScope"
+        data-index="{{index}}"
+      >
+        <text class="scope-tab-text">{{item.label}}</text>
+        <view class="scope-tab-underline" wx:if="{{activeScope === index}}"></view>
+      </view>
     </view>
   </view>
+  <view class="partner-header-placeholder"></view>
 
-  <!-- 分类导航 -->
-  <scroll-view class="category-nav" scroll-x>
-    <view 
-      class="category-item {{activeCategory === index ? 'active' : ''}}"
-      wx:for="{{categories}}"
-      wx:key="*this"
-      bindtap="selectCategory"
-      data-index="{{index}}"
-    >
-      {{item}}
-    </view>
-  </scroll-view>
-
-  <!-- 搭子列表 -->
-  <scroll-view class="partner-list" scroll-y wx:if="{{!isLoading}}">
+  <!-- 搭子列表：和首页一样用整页滚动，不用固定高度 scroll-view，避免底部白块遮挡 -->
+  <view class="partner-list" wx:if="{{!isLoading}}">
     <block wx:for="{{partners}}" wx:key="id">
       <view class="partner-card" bindtap="goToDetail" data-id="{{item.id}}">
         <view class="partner-cover-wrap">
-          <image class="partner-cover" src="{{item.cover}}" mode="aspectFill" />
+          <network-image
+            class="partner-cover"
+            customClass="partner-cover"
+            url="{{item.cover}}"
+            defaultSrc="/images/partner-banner.jpg"
+            mode="aspectFill"
+          />
           <view class="partner-status-tag {{item.status}}">
             {{item.statusLabel || (item.status === 'recruiting' ? '招募中' : (item.status === 'full' ? '已满' : '已结束'))}}
           </view>
         </view>
         <view class="partner-body">
           <view class="partner-header">
-            <view class="partner-category">{{item.category}}</view>
+            <view class="partner-category">{{item.typeName || item.category}}</view>
           </view>
           <view class="partner-title">{{item.title}}</view>
+          <view class="partner-pref" wx:if="{{item.preference}}">偏好：{{item.preference}}</view>
           <view class="partner-tags">
             <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
           </view>
-          <view class="partner-desc">{{item.description}}</view>
           <view class="partner-footer">
             <view class="author-info">
-              <image class="author-avatar" src="{{item.author.avatar}}" mode="aspectFill" />
+              <network-image
+                class="author-avatar"
+                customClass="author-avatar"
+                url="{{item.author.avatar}}"
+                defaultSrc="/images/default-avatar.png"
+                mode="aspectFill"
+              />
               <text class="author-name">{{item.author.name}}</text>
               <text class="author-distance" wx:if="{{item.distance}}">| {{item.distance}}</text>
             </view>
@@ -67,49 +83,15 @@
       <image src="/images/empty-partner.png" mode="aspectFit" />
       <text>暂无搭子信息</text>
     </view>
-  </scroll-view>
+  </view>
 
   <!-- 加载中 -->
   <view class="loading" wx:else>
     <text>加载中...</text>
   </view>
 
-  <!-- 发布按钮 -->
-  <view class="publish-btn" bindtap="showPublishModal">
-    <image src="/images/add.png" mode="aspectFit" />
-  </view>
-
-  <!-- 发布弹窗 -->
-  <view class="modal-mask" wx:if="{{showPublishModal}}" bindtap="hidePublishModal"></view>
-  <view class="modal-content" wx:if="{{showPublishModal}}">
-    <view class="modal-header">
-      <text class="modal-title">发布搭子</text>
-      <image class="modal-close" src="/images/close.png" bindtap="hidePublishModal" />
-    </view>
-    <view class="modal-body">
-      <view class="form-item">
-        <text class="form-label">标题</text>
-        <input class="form-input" placeholder="请输入标题" data-field="title" bindinput="updateForm" />
-      </view>
-      <view class="form-item">
-        <text class="form-label">分类</text>
-        <picker bindchange="onCategoryChange" value="{{categoryIndex}}" range="{{categories}}">
-          <view class="picker-value">{{publishForm.category}}</view>
-        </picker>
-      </view>
-      <view class="form-item">
-        <text class="form-label">描述</text>
-        <textarea class="form-textarea" placeholder="请输入详细描述" data-field="description" bindinput="updateForm" />
-      </view>
-      <view class="form-item">
-        <text class="form-label">要求</text>
-        <input class="form-input" placeholder="请输入要求" data-field="requirements" bindinput="updateForm" />
-      </view>
-      <view class="form-item">
-        <text class="form-label">联系方式</text>
-        <input class="form-input" placeholder="请输入联系方式" data-field="contact" bindinput="updateForm" />
-      </view>
-      <view class="submit-btn" bindtap="submitPartner">发布</view>
-    </view>
+  <!-- 发布按钮：跳转到发布搭子二级页 -->
+  <view class="publish-btn" bindtap="goToPublish">
+    <text class="publish-btn-icon">+</text>
   </view>
 </view>

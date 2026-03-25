@@ -12,11 +12,13 @@ Page({
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 3
-      });
-    }
+    const that = this;
+    setTimeout(function () {
+      if (typeof that.getTabBar === 'function') {
+        const bar = that.getTabBar();
+        if (bar) bar.setData({ selected: 3 });
+      }
+    }, 0);
   },
 
   // 加载消息列表 GET /api/message

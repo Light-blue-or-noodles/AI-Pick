@@ -4,9 +4,12 @@ import com.aipick.common.Result;
 import com.aipick.dto.AiRecommendRequest;
 import com.aipick.dto.ChatRequest;
 import com.aipick.dto.ChatResponse;
+import com.aipick.dto.NaturalLanguageSearchRequest;
 import com.aipick.service.AiService;
+import com.aipick.service.NaturalLanguageSearchService;
 import com.aipick.util.PromptSanitizer;
 import com.aipick.vo.AiRecommendVO;
+import com.aipick.vo.NaturalLanguageSearchVO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AiController {
 
     private final AiService aiService;
+    private final NaturalLanguageSearchService naturalLanguageSearchService;
 
-    public AiController(AiService aiService) {
+    public AiController(AiService aiService, NaturalLanguageSearchService naturalLanguageSearchService) {
         this.aiService = aiService;
+        this.naturalLanguageSearchService = naturalLanguageSearchService;
     }
 
     /**
@@ -51,5 +56,15 @@ public class AiController {
         request.setMessage(PromptSanitizer.sanitize(request.getMessage()));
         ChatResponse response = aiService.chat(request);
         return Result.success("对话成功", response);
+    }
+
+    /**
+     * 自然语言搜索：解析地点、时间、类型等槽位并查询活动/搭子
+     */
+    @PostMapping("/nl-search")
+    public Result<NaturalLanguageSearchVO> nlSearch(@Valid @RequestBody NaturalLanguageSearchRequest request) {
+        request.setQuery(PromptSanitizer.sanitize(request.getQuery()));
+        NaturalLanguageSearchVO vo = naturalLanguageSearchService.search(request);
+        return Result.success("搜索成功", vo);
     }
 }

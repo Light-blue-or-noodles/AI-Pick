@@ -6,7 +6,7 @@ version: '3.8'
 
 services:
   mysql:
-    image: mysql:8.0
+    image: docker.m.daocloud.io/library/mysql:8.0
     container_name: aipick-mysql
     restart: always
     environment:
@@ -28,7 +28,7 @@ services:
       - --default-authentication-plugin=mysql_native_password
 
   redis:
-    image: redis:7-alpine
+    image: docker.m.daocloud.io/library/redis:7-alpine
     container_name: aipick-redis
     restart: always
     ports:

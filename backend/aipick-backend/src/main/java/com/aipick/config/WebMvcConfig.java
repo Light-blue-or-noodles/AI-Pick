@@ -21,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final JwtInterceptor jwtInterceptor;
 
-    @Value("${upload.dir:uploads}")
+    @Value("${storage.local.root-dir:${upload.dir:uploads}}")
     private String uploadDir;
 
     @Value("${upload.avatar-subdir:avatars}")
@@ -39,7 +39,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 默认封面图：从 classpath 提供，供数据库中 cover_image 引用
         registry.addResourceHandler("/static/covers/**")
                 .addResourceLocations("classpath:/static/covers/");
-        String location = "file:" + uploadDir + "/";
+        // 与上传使用同一绝对路径，避免 Tomcat 工作目录下相对路径不一致
+        java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir).toAbsolutePath().normalize();
+        String location = "file:" + uploadPath.toString() + "/";
         registry.addResourceHandler("/static/**")
                 .addResourceLocations(location);
     }

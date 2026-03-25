@@ -1,11 +1,6 @@
-<!--pages/profile-edit/profile-edit.wxml-->
+<!--pages/profile-edit/profile-edit.wxml - 标题使用导航栏，仅保留顶部右侧保存 -->
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
-    <text class="header-title">编辑资料</text>
+  <view class="header header-right-only">
     <view class="save-btn" bindtap="onSave">
       <text>保存</text>
     </view>
@@ -16,7 +11,7 @@
     <!-- Avatar -->
     <view class="form-item avatar-item">
       <view class="avatar-section" bindtap="onChooseAvatar">
-        <image class="avatar" src="{{avatar}}" mode="aspectFill" />
+        <network-image class="avatar" customClass="avatar" url="{{avatar}}" defaultSrc="/images/default-avatar.png" mode="aspectFill" />
         <text class="avatar-tip">点击更换</text>
       </view>
     </view>

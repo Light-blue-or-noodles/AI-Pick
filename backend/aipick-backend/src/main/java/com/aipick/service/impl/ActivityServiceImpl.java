@@ -28,6 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * 活动服务实现
  *
@@ -39,9 +43,47 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityMapper activityMapper;
     private final ActivityRegistrationMapper registrationMapper;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public ActivityServiceImpl(ActivityMapper activityMapper, ActivityRegistrationMapper registrationMapper) {
         this.activityMapper = activityMapper;
         this.registrationMapper = registrationMapper;
+    }
+
+    private String buildImagesJson(List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(imageUrls);
+        } catch (JsonProcessingException e) {
+            return "[]";
+        }
+    }
+
+    /**
+     * 列表/日历展示用封面：cover_image 为空时取 images JSON 首张
+     */
+    private String effectiveCoverImage(Activity a) {
+        String c = a.getCoverImage();
+        if (c != null && !c.isBlank()) {
+            return c;
+        }
+        String raw = a.getImages();
+        if (raw == null || raw.isBlank()) {
+            return c;
+        }
+        try {
+            List<String> list = objectMapper.readValue(raw, new TypeReference<List<String>>() {
+            });
+            if (list != null && !list.isEmpty()) {
+                String first = list.get(0);
+                if (first != null && !first.isBlank()) {
+                    return first;
+                }
+            }
+        } catch (JsonProcessingException ignored) {
+            // ignore
+        }
+        return c;
     }
 
     @Override
@@ -62,11 +104,18 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setFee(request.getFee() != null ? request.getFee() : BigDecimal.ZERO);
         activity.setMaxParticipants(request.getMaxParticipants() != null ? request.getMaxParticipants() : 0);
         activity.setCurrentParticipants(0);
+        List<String> imageUrls = request.getImageUrls();
         String coverImage = request.getCoverImage();
-        if (coverImage == null || coverImage.isBlank()) {
-            coverImage = defaultCoverByCategory(request.getCategory());
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            coverImage = imageUrls.get(0);
+            activity.setCoverImage(coverImage);
+            activity.setImages(buildImagesJson(imageUrls));
+        } else {
+            if (coverImage == null || coverImage.isBlank()) {
+                coverImage = defaultCoverByCategory(request.getCategory());
+            }
+            activity.setCoverImage(coverImage);
         }
-        activity.setCoverImage(coverImage);
         activity.setViewCount(0);
 
         // 设置状态
@@ -83,13 +132,7 @@ public class ActivityServiceImpl implements ActivityService {
 
         activityMapper.insert(activity);
 
-        // 创建者自动报名
-        ActivityRegistration registration = new ActivityRegistration();
-        registration.setActivityId(activity.getId());
-        registration.setUserId(userId);
-        registration.setMessage("发起者");
-        registration.setStatus(0);
-        registrationMapper.insert(registration);
+        // 新建活动不自动给创建人报名，报名人数保持为 0，创建人需自行点击报名
 
         return activity;
     }
@@ -110,7 +153,7 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
-    public IPage<Activity> getActivityList(PageRequest pageRequest, Integer type, String category) {
+    public IPage<Activity> getActivityList(PageRequest pageRequest, Integer type, String category, String keyword) {
         Page<Activity> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
         LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
         // 只查询非取消的活动
@@ -120,6 +163,9 @@ public class ActivityServiceImpl implements ActivityService {
         }
         if (category != null && !category.isEmpty()) {
             wrapper.eq(Activity::getCategory, category);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.like(Activity::getTitle, keyword.trim());
         }
         wrapper.orderByDesc(Activity::getCreateTime);
 
@@ -318,6 +364,7 @@ public class ActivityServiceImpl implements ActivityService {
             vo.setFee(a.getFee() != null ? a.getFee().doubleValue() : 0.0);
             vo.setStatus(a.getStatus());
             vo.setCreateTime(a.getCreateTime());
+            vo.setCoverImage(effectiveCoverImage(a));
             map.computeIfAbsent(d, k -> new ArrayList<>()).add(vo);
         }
 

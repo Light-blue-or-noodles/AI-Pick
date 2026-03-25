@@ -1,14 +1,25 @@
 // pages/activity-create/activity-create.js
 const app = getApp();
+const { post } = require('../../utils/request');
 
 Page({
   data: {
-    coverImage: '',
+    imageList: [],
     title: '',
     category: '',
     date: '',
     time: '',
+    endDate: '',
+    endTime: '',
+    // 多列时间选择器数据与当前选中索引
+    dateTimeRange: [],
+    startDateTimeIndex: [0, 18, 0],
+    endDateTimeIndex: [0, 20, 0],
+    startDateTimeText: '',
+    endDateTimeText: '',
     location: '',
+    latitude: null,
+    longitude: null,
     maxParticipants: 20,
     price: '',
     priceType: 'free',
@@ -16,47 +27,68 @@ Page({
     titleLength: 0,
     descLength: 0,
     categories: [
-      { value: 'offline', label: '线下' },
-      { value: 'online', label: '线上' },
-      { value: 'team', label: '组队' },
-      { value: 'social', label: '交友' }
+      { value: '运动', label: '运动' },
+      { value: '美食', label: '美食' },
+      { value: '学习', label: '学习' },
+      { value: '娱乐', label: '娱乐' },
+      { value: '社交', label: '社交' }
     ],
     isPublishing: false
   },
 
   onLoad() {
-    // Initialize
+    this.initDateTimeRange();
   },
 
-  // Go back
-  onGoBack() {
-    if (this.data.title || this.data.description) {
-      wx.showModal({
-        title: '提示',
-        content: '确定要放弃创建吗？',
-        success: (res) => {
-          if (res.confirm) {
-            wx.navigateBack();
-          }
-        }
-      });
-    } else {
-      wx.navigateBack();
+  // 构建「日期 + 小时 + 分钟」多列选择器数据
+  initDateTimeRange() {
+    const dates = [];
+    const dateValues = [];
+    const now = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const label = `${m}-${day}`;
+      dates.push(label);
+      dateValues.push(`${y}-${m}-${day}`);
     }
+    const hours = [];
+    for (let h = 0; h < 24; h++) {
+      hours.push(String(h).padStart(2, '0') + '时');
+    }
+    const minutes = ['00分', '30分'];
+    this._dateValues = dateValues;
+    this._hourValues = hours.map((h, idx) => String(idx).padStart(2, '0'));
+    this._minuteValues = ['00', '30'];
+    this.setData({
+      dateTimeRange: [dates, hours, minutes]
+    });
   },
 
-  // Choose cover image
-  onChooseCover() {
-    wx.chooseImage({
-      count: 1,
+  // 多图选择（首张为封面，最多9张）
+  onChooseImages() {
+    const remain = 9 - this.data.imageList.length;
+    if (remain <= 0) return;
+    wx.chooseMedia({
+      count: remain,
+      mediaType: ['image'],
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: (res) => {
+        const newPaths = (res.tempFiles || []).map(f => f.tempFilePath);
         this.setData({
-          coverImage: res.tempFilePaths[0]
+          imageList: this.data.imageList.concat(newPaths)
         });
       }
     });
+  },
+
+  onRemoveImage(e) {
+    const index = e.currentTarget.dataset.index;
+    const imageList = this.data.imageList.filter((_, i) => i !== index);
+    this.setData({ imageList });
   },
 
   // Input title
@@ -76,14 +108,36 @@ Page({
     this.setData({ category: value });
   },
 
-  // Choose date
-  onDateChange(e) {
-    this.setData({ date: e.detail.value });
+  // 多列选择开始时间
+  onStartDateTimeChange(e) {
+    const indices = e.detail.value || [0, 0, 0];
+    const [dIdx, hIdx, mIdx] = indices;
+    const date = this._dateValues[dIdx];
+    const hour = this._hourValues[hIdx] || '00';
+    const minute = this._minuteValues[mIdx] || '00';
+    const text = `${date} ${hour}:${minute}`;
+    this.setData({
+      startDateTimeIndex: indices,
+      date,
+      time: `${hour}:${minute}`,
+      startDateTimeText: text
+    });
   },
 
-  // Choose time
-  onTimeChange(e) {
-    this.setData({ time: e.detail.value });
+  // 多列选择结束时间
+  onEndDateTimeChange(e) {
+    const indices = e.detail.value || [0, 0, 0];
+    const [dIdx, hIdx, mIdx] = indices;
+    const date = this._dateValues[dIdx];
+    const hour = this._hourValues[hIdx] || '00';
+    const minute = this._minuteValues[mIdx] || '00';
+    const text = `${date} ${hour}:${minute}`;
+    this.setData({
+      endDateTimeIndex: indices,
+      endDate: date,
+      endTime: `${hour}:${minute}`,
+      endDateTimeText: text
+    });
   },
 
   // Input location
@@ -91,13 +145,20 @@ Page({
     this.setData({ location: e.detail.value });
   },
 
-  // Choose location on map
+  // 腾讯地图选点（小程序内为腾讯地图）
   onChooseLocation() {
     wx.chooseLocation({
       success: (res) => {
         this.setData({
-          location: res.name || res.address
+          location: res.name || res.address,
+          latitude: res.latitude,
+          longitude: res.longitude
         });
+      },
+      fail: (err) => {
+        if (err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+          wx.showToast({ title: '请授权位置或稍后重试', icon: 'none' });
+        }
       }
     });
   },
@@ -141,75 +202,148 @@ Page({
     }
   },
 
-  // AI help to complete
+  // 调用后端 Spring AI Alibaba 服务，生成/优化活动详情
   onAIComplete() {
-    wx.showLoading({ title: 'AI 生成中...' });
-    
-    setTimeout(() => {
-      wx.hideLoading();
-      this.setData({
-        title: '周末桌游交友派对',
-        titleLength: 7,
-        description: '这是一个轻松愉快的周末桌游活动，旨在让大家在忙碌的工作之余放松身心，结识新朋友。活动涵盖狼人杀、三国杀、卡坦岛等多种经典桌游，无论新手还是老手都欢迎参与！',
-        descLength: 56,
-        maxParticipants: 20,
-        price: '0',
-        priceType: 'free'
+    const { title, category, location, date, time, description } = this.data;
+    if (!title || !title.trim()) {
+      wx.showToast({ title: '请先填写活动标题', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: 'AI 优化中...' });
+
+    const timeText = date && time ? `${date} ${time}` : '';
+
+    post('/api/activity/ai/description', {
+      title,
+      category,
+      location,
+      timeText,
+      currentDesc: description
+    })
+      .then((res) => {
+        const text = res.data || '';
+        this.setData({
+          description: text,
+          descLength: text.length
+        });
+        wx.hideLoading();
+        wx.showToast({ title: 'AI 已优化', icon: 'success' });
+      })
+      .catch((err) => {
+        wx.hideLoading();
+        wx.showToast({
+          title: (err && (err.msg || err.message)) || 'AI 优化失败，请稍后重试',
+          icon: 'none'
+        });
       });
-      wx.showToast({ title: 'AI 帮你完善啦', icon: 'success' });
-    }, 1500);
   },
 
-  // Validate form
   validateForm() {
     if (!this.data.title || this.data.title.trim() === '') {
       wx.showToast({ title: '请输入活动标题', icon: 'none' });
       return false;
     }
-
     if (!this.data.category) {
       wx.showToast({ title: '请选择活动类型', icon: 'none' });
       return false;
     }
-
     if (!this.data.date || !this.data.time) {
-      wx.showToast({ title: '请选择活动时间', icon: 'none' });
+      wx.showToast({ title: '请选择开始时间', icon: 'none' });
       return false;
     }
-
+    if (!this.data.endDate || !this.data.endTime) {
+      wx.showToast({ title: '请选择结束时间', icon: 'none' });
+      return false;
+    }
     if (!this.data.location) {
-      wx.showToast({ title: '请输入活动地点', icon: 'none' });
+      wx.showToast({ title: '请选择活动地点', icon: 'none' });
       return false;
     }
-
     if (!this.data.description || this.data.description.trim() === '') {
       wx.showToast({ title: '请输入活动详情', icon: 'none' });
       return false;
     }
-
+    if (!this.data.imageList || this.data.imageList.length === 0) {
+      wx.showToast({ title: '请至少上传一张图片（首张为封面）', icon: 'none' });
+      return false;
+    }
     return true;
   },
 
-  // Submit activity
+  // 上传单张图片，返回 URL
+  uploadOneImage(filePath) {
+    const baseUrl = (app.globalData.baseUrl || 'http://localhost:8080').replace(/\/$/, '');
+    const userId = app.globalData.userId || wx.getStorageSync('userId');
+    return new Promise((resolve, reject) => {
+      wx.uploadFile({
+        url: baseUrl + '/api/activity/upload-image',
+        filePath: filePath,
+        name: 'file',
+        header: {
+          'X-User-Id': String(userId || '')
+        },
+        success: (res) => {
+          try {
+            const data = JSON.parse(res.data);
+            if (data.code === 0 && data.data && data.data.url) {
+              resolve(data.data.url);
+            } else {
+              reject(new Error(data.msg || '上传失败'));
+            }
+          } catch (e) {
+            reject(e);
+          }
+        },
+        fail: reject
+      });
+    });
+  },
+
   onSubmit() {
     if (!this.validateForm()) return;
 
     this.setData({ isPublishing: true });
-    wx.showLoading({ title: '发布中...' });
+    wx.showLoading({ title: '上传图片中...' });
 
-    setTimeout(() => {
-      wx.hideLoading();
-      this.setData({ isPublishing: false });
-      
-      wx.showToast({
-        title: '发布成功',
-        icon: 'success',
-        duration: 1500
+    const imageList = this.data.imageList;
+    const uploadPromises = imageList.map(path => this.uploadOneImage(path));
+
+    Promise.all(uploadPromises)
+      .then((imageUrls) => {
+        wx.showLoading({ title: '发布中...' });
+        const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+        const startTime = this.data.date + 'T' + (this.data.time || '00:00') + ':00';
+        const endTime = this.data.endDate + 'T' + (this.data.endTime || '00:00') + ':00';
+        const registerEndTime = startTime;
+        const fee = this.data.priceType === 'free' ? 0 : (parseFloat(this.data.price) || 0);
+        const payload = {
+          title: this.data.title.trim(),
+          description: this.data.description.trim(),
+          type: 1,
+          category: this.data.category,
+          startTime: startTime,
+          endTime: endTime,
+          registerEndTime: registerEndTime,
+          location: this.data.location,
+          latitude: this.data.latitude,
+          longitude: this.data.longitude,
+          fee: fee,
+          maxParticipants: this.data.maxParticipants,
+          imageUrls: imageUrls
+        };
+        return post('/api/activity', payload);
+      })
+      .then(() => {
+        wx.hideLoading();
+        this.setData({ isPublishing: false });
+        wx.showToast({ title: '发布成功', icon: 'success', duration: 1500 });
+        setTimeout(() => wx.navigateBack(), 1500);
+      })
+      .catch((err) => {
+        wx.hideLoading();
+        this.setData({ isPublishing: false });
+        wx.showToast({ title: err.msg || err.message || '发布失败', icon: 'none' });
       });
-
-      setTimeout(() => {
-        wx.navigateBack();
-      }, 1500);
-    }, 1500);
   }
 });

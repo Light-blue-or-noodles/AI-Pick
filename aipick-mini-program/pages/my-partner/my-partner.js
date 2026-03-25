@@ -1,166 +1,107 @@
 // pages/my-partner/my-partner.js
 const app = getApp();
+const { mapPartnerForList } = require('../../utils/partnerListMap.js');
 
 Page({
   data: {
-    activeTab: 0,
-    tabs: ['进行中', '已结束', '我发出的'],
     partners: [],
-    myPublished: [],
     isLoading: true
   },
 
   onLoad() {
-    this.fetchMyPartners();
+    this.fetchList();
   },
 
   onShow() {
-    // Refresh data when page shows
-    if (this.data.activeTab === 2) {
-      this.fetchMyPublished();
+    this.fetchList();
+  },
+
+  onPullDownRefresh() {
+    this.fetchList().finally(() => {
+      wx.stopPullDownRefresh();
+    });
+  },
+
+  fetchList() {
+    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const token = app.globalData.token || wx.getStorageSync('token');
+    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
+    if (!token || userId == null || userId === '') {
+      this.setData({ partners: [], isLoading: false });
+      return Promise.resolve();
     }
-  },
-
-  // Switch tab
-  onSwitchTab(e) {
-    const index = e.currentTarget.dataset.index;
-    this.setData({ activeTab: index, isLoading: true });
-    
-    if (index === 0) {
-      this.fetchMyPartners();
-    } else if (index === 1) {
-      this.fetchEndedPartners();
-    } else {
-      this.fetchMyPublished();
-    }
-  },
-
-  // Fetch my partners (active) - GET /api/user/partners
-  fetchMyPartners() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
-    wx.request({
-      url: `${baseUrl}/api/user/partners`,
-      method: 'GET',
-      header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
-      },
-      data: { status: 'active' },
-      success: (res) => {
-        const data = res.data;
-        if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
-          const list = data.data != null ? (Array.isArray(data.data) ? data.data : []) : [];
-          this.setData({ partners: list, isLoading: false });
-        } else {
+    this.setData({ isLoading: true });
+    return new Promise((resolve) => {
+      wx.request({
+        url: `${baseUrl}/api/partner/my`,
+        method: 'GET',
+        header: {
+          Authorization: 'Bearer ' + token,
+          'X-User-Id': String(userId)
+        },
+        data: { type: 'created' },
+        success: (res) => {
+          const data = res.data;
+          if (res.statusCode >= 200 && res.statusCode < 300 && data && (data.code === 0 || data.code === 200)) {
+            const raw = Array.isArray(data.data) ? data.data : [];
+            const list = raw.map((p) => mapPartnerForList(p, baseUrl));
+            this.setData({ partners: list, isLoading: false });
+          } else {
+            this.setData({ partners: [], isLoading: false });
+            wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
+          }
+          resolve();
+        },
+        fail: () => {
           this.setData({ partners: [], isLoading: false });
-          wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
+          wx.showToast({ title: '网络错误', icon: 'none' });
+          resolve();
         }
-      },
-      fail: (err) => {
-        this.setData({ partners: [], isLoading: false });
-        wx.showToast({
-          title: err.errMsg && err.errMsg.indexOf('url') !== -1 ? '网络错误' : '加载失败',
-          icon: 'none'
-        });
-      }
+      });
     });
   },
 
-  // Fetch ended partners
-  fetchEndedPartners() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
-    wx.request({
-      url: `${baseUrl}/api/user/partners`,
-      method: 'GET',
-      header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
-      },
-      data: { status: 'ended' },
-      success: (res) => {
-        const data = res.data;
-        if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
-          const list = data.data != null ? (Array.isArray(data.data) ? data.data : []) : [];
-          this.setData({ partners: list, isLoading: false });
-        } else {
-          this.setData({ partners: [], isLoading: false });
-          wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
-        }
-      },
-      fail: (err) => {
-        this.setData({ partners: [], isLoading: false });
-        wx.showToast({
-          title: err.errMsg && err.errMsg.indexOf('url') !== -1 ? '网络错误' : '加载失败',
-          icon: 'none'
-        });
-      }
-    });
-  },
-
-  // Fetch my published partners
-  fetchMyPublished() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
-    wx.request({
-      url: `${baseUrl}/api/user/partners`,
-      method: 'GET',
-      header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
-      },
-      data: { status: 'published' },
-      success: (res) => {
-        const data = res.data;
-        if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
-          const list = data.data != null ? (Array.isArray(data.data) ? data.data : []) : [];
-          this.setData({ myPublished: list, isLoading: false });
-        } else {
-          this.setData({ myPublished: [], isLoading: false });
-          wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
-        }
-      },
-      fail: (err) => {
-        this.setData({ myPublished: [], isLoading: false });
-        wx.showToast({
-          title: err.errMsg && err.errMsg.indexOf('url') !== -1 ? '网络错误' : '加载失败',
-          icon: 'none'
-        });
-      }
-    });
-  },
-
-  // Go to publish
-  onGoToPublish() {
-    wx.navigateTo({
-      url: '/pages/partner-publish/partner-publish'
-    });
-  },
-
-  // View partner detail
-  onViewDetail(e) {
+  goToDetail(e) {
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({
       url: `/pages/partner-detail/partner-detail?id=${id}`
     });
   },
 
-  // Quit partner
-  onQuit(e) {
+  noop() {},
+
+  onDeletePartner(e) {
     const id = e.currentTarget.dataset.id;
-    
+    if (!id) return;
     wx.showModal({
-      title: '提示',
-      content: '确定要退出该搭子吗？',
-      success: (res) => {
-        if (res.confirm) {
-          wx.showToast({ title: '已退出', icon: 'success' });
-          
-          // Remove from list
-          const partners = this.data.partners.filter(item => item.id !== id);
-          this.setData({ partners });
-        }
+      title: '删除搭子',
+      content: '确定删除该搭子？删除后无法恢复。',
+      success: (modalRes) => {
+        if (!modalRes.confirm) return;
+        const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+        const token = app.globalData.token || wx.getStorageSync('token');
+        const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
+        wx.request({
+          url: `${baseUrl}/api/partner/${id}`,
+          method: 'DELETE',
+          header: {
+            Authorization: 'Bearer ' + token,
+            'X-User-Id': String(userId)
+          },
+          success: (res) => {
+            const body = res.data;
+            if (res.statusCode >= 200 && res.statusCode < 300 && body && (body.code === 0 || body.code === 200)) {
+              wx.showToast({ title: '已删除', icon: 'success' });
+              this.fetchList();
+            } else {
+              wx.showToast({ title: (body && body.message) || '删除失败', icon: 'none' });
+            }
+          },
+          fail: () => {
+            wx.showToast({ title: '网络错误', icon: 'none' });
+          }
+        });
       }
     });
-  },
-
-  // Go back
-  onGoBack() {
-    wx.navigateBack();
   }
 });

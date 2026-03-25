@@ -6,7 +6,44 @@
     data-index="{{index}}"
     bindtap="switchTab"
   >
-    <view class="tab-icon">{{item.icon}}</view>
+    <view class="tab-icon-wrap">
+      <!-- 首页：小房子 -->
+      <view wx:if="{{item.key === 'home'}}" class="icon icon-home">
+        <view class="icon-home-roof"></view>
+        <view class="icon-home-body"></view>
+        <view class="icon-home-door"></view>
+      </view>
+
+      <!-- 搭子：两个人 -->
+      <view wx:elif="{{item.key === 'partner'}}" class="icon icon-partner">
+        <view class="icon-partner-head icon-partner-head-left"></view>
+        <view class="icon-partner-head icon-partner-head-right"></view>
+        <view class="icon-partner-body icon-partner-body-left"></view>
+        <view class="icon-partner-body icon-partner-body-right"></view>
+      </view>
+
+      <!-- 活动：日历 -->
+      <view wx:elif="{{item.key === 'activity'}}" class="icon icon-calendar">
+        <view class="icon-calendar-top"></view>
+        <view class="icon-calendar-body"></view>
+        <view class="icon-calendar-dot"></view>
+      </view>
+
+      <!-- 消息：气泡 -->
+      <view wx:elif="{{item.key === 'message'}}" class="icon icon-message">
+        <view class="icon-message-bubble">
+          <view class="icon-message-dot dot-1"></view>
+          <view class="icon-message-dot dot-2"></view>
+          <view class="icon-message-dot dot-3"></view>
+        </view>
+      </view>
+
+      <!-- 我的：单个人 -->
+      <view wx:elif="{{item.key === 'profile'}}" class="icon icon-profile">
+        <view class="icon-profile-head"></view>
+        <view class="icon-profile-body"></view>
+      </view>
+    </view>
     <text class="tab-text">{{item.text}}</text>
   </view>
 </view>

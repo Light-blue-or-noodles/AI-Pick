@@ -53,11 +53,13 @@ Page({
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 4
-      });
-    }
+    const that = this;
+    setTimeout(function () {
+      if (typeof that.getTabBar === 'function') {
+        const bar = that.getTabBar();
+        if (bar) bar.setData({ selected: 4 });
+      }
+    }, 0);
     this.loadUserInfo();
   },
 
@@ -73,12 +75,19 @@ Page({
 
       if (res.data && res.data.code === 0) {
         const data = res.data.data || {};
-        this.setData({
-          userInfo: {
-            ...data,
-            isLogin: true
-          }
-        });
+        const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+        let avatar = data.avatar;
+        if (avatar && typeof avatar === 'string' && (avatar.indexOf('__tmp__') !== -1 || avatar.indexOf('://tmp/') !== -1 || (avatar.indexOf('127.0.0.1') !== -1 && avatar.indexOf(':8080') === -1))) {
+          avatar = '/images/default-avatar.png';
+        }
+        if (avatar && typeof avatar === 'string' && !avatar.startsWith('http') && !avatar.startsWith('data:') && !avatar.startsWith('/images')) {
+          avatar = baseUrl + (avatar.startsWith('/') ? avatar : '/' + avatar);
+        }
+        const rawAvatar = avatar || data.avatar || '/images/default-avatar.png';
+        const finalAvatar = (rawAvatar && rawAvatar.startsWith('/images')) ? rawAvatar : (app.normalizeImageUrl ? app.normalizeImageUrl(rawAvatar) : rawAvatar);
+        const userInfo = { ...data, avatar: finalAvatar, isLogin: true };
+        this.setData({ userInfo });
+        wx.setStorageSync('userInfo', userInfo);
       } else {
         // 接口返回非成功码，视为未登录状态
         this.setData({
@@ -148,6 +157,14 @@ Page({
     }
   },
 
+  // 头像加载失败时回退默认图（如真机网络图片被拦截时）
+  onAvatarError() {
+    const u = this.data.userInfo || {};
+    if (u.avatar && u.avatar !== '/images/default-avatar.png') {
+      this.setData({ 'userInfo.avatar': '/images/default-avatar.png' });
+    }
+  },
+
   // 点击头像登录
   onAvatarClick() {
     if (!this.data.userInfo || !this.data.userInfo.isLogin) {
@@ -193,12 +210,12 @@ Page({
         break;
       case 'my-partners':
         wx.navigateTo({
-          url: '/pages/my-partners/my-partners'
+          url: '/pages/my-partner/my-partner'
         });
         break;
       case 'my-activities':
         wx.navigateTo({
-          url: '/pages/my-activities/my-activities'
+          url: '/pages/my-activity/my-activity'
         });
         break;
       case 'my-favorites':

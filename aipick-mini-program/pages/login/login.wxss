@@ -1,8 +1,8 @@
-/* pages/login/login.wxss */
+/* pages/login/login.wxss - 暖白色背景 */
 
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #667EEA 0%, #764BA2 100%);
+  background: linear-gradient(180deg, #FDF8F5 0%, #FAF6F2 50%, #F8F4F0 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,12 +22,12 @@
 .logo {
   width: 160rpx;
   height: 160rpx;
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   border-radius: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8rpx 32rpx rgba(95, 179, 168, 0.25);
 }
 
 .logo-icon {
@@ -37,13 +37,13 @@
 .app-name {
   font-size: 56rpx;
   font-weight: bold;
-  color: #ffffff;
+  color: #333333;
   margin-top: 32rpx;
 }
 
 .app-slogan {
   font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.8);
+  color: #666666;
   margin-top: 16rpx;
 }
 
@@ -72,12 +72,12 @@
 }
 
 .btn-phone {
-  background: #FF6B35;
+  background: var(--primary-color);
   color: #ffffff;
 }
 
 .btn-phone:active {
-  background: #E85A25;
+  background: var(--primary-dark);
 }
 
 .btn-wechat {
@@ -118,7 +118,7 @@
 .checkbox {
   width: 36rpx;
   height: 36rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.6);
+  border: 2rpx solid rgba(0, 0, 0, 0.18);
   border-radius: 8rpx;
   display: flex;
   align-items: center;
@@ -128,8 +128,8 @@
 }
 
 .checkbox.checked {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: #ffffff;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .check-icon {
@@ -140,14 +140,14 @@
 
 .agreement-text {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.7);
+  color: #666666;
   line-height: 1.6;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .link {
-  color: #FFB800;
+  color: var(--primary-color);
   text-decoration: underline;
 }
 

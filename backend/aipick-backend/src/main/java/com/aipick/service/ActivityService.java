@@ -32,9 +32,10 @@ public interface ActivityService {
      * @param pageRequest 分页请求
      * @param type        活动类型
      * @param category    分类
+     * @param keyword     标题关键字（模糊匹配）
      * @return 活动分页列表
      */
-    IPage<Activity> getActivityList(PageRequest pageRequest, Integer type, String category);
+    IPage<Activity> getActivityList(PageRequest pageRequest, Integer type, String category, String keyword);
 
     /**
      * 获取活动详情

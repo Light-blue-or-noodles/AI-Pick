@@ -1,16 +1,37 @@
 // app.js
+// 局域网真机调试：改为 true 并填写电脑的局域网 IP
+const USE_LAN = true;
+const LAN_IP = '192.168.1.173';
+
+function getBaseUrl() {
+  if (USE_LAN && LAN_IP) return `http://${LAN_IP}:8080`;
+  return 'http://localhost:8080';
+}
+
+const mediaUrl = require('./utils/mediaUrl.js');
+
+/**
+ * 将图片 URL 转为当前环境可访问的地址（与 utils/mediaUrl.resolveMediaUrl 一致，供旧代码调用）
+ */
+function normalizeImageUrl(url, baseUrl) {
+  if (!url || typeof url !== 'string') return url;
+  return mediaUrl.resolveMediaUrl(url, { baseUrl: baseUrl || getBaseUrl(), kind: 'general' });
+}
+
 App({
   globalData: {
     userInfo: null,
-    baseUrl: 'http://localhost:8080',
+    baseUrl: getBaseUrl(),
     token: null
   },
-  
+
+  normalizeImageUrl,
+
   onLaunch() {
     // 检查登录状态
     this.checkLoginStatus();
   },
-  
+
   checkLoginStatus() {
     const token = wx.getStorageSync('token');
     const userId = wx.getStorageSync('userId');

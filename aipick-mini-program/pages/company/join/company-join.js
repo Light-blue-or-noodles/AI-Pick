@@ -10,18 +10,48 @@ Page({
   },
 
   onLoad() {
-    this.checkCompanyStatus();
+    this.refreshStatus();
   },
 
-  // 检查公司已加入状态
-  checkCompanyStatus() {
-    const userInfo = app.globalData.userInfo;
-    if (userInfo && userInfo.companyName) {
-      this.setData({
-        hasJoined: true,
-        userCompany: userInfo.companyName
-      });
+  onShow() {
+    this.refreshStatus();
+  },
+
+  /** 从本地与接口同步是否已加入公司 */
+  refreshStatus() {
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    const name = (userInfo.companyName && String(userInfo.companyName).trim()) || '';
+    if (name) {
+      this.setData({ hasJoined: true, userCompany: name });
+    } else {
+      this.setData({ hasJoined: false, userCompany: '' });
     }
+    const token = app.globalData.token || wx.getStorageSync('token');
+    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
+    if (!token || userId == null || userId === '') return;
+    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    wx.request({
+      url: `${baseUrl}/api/user/info`,
+      method: 'GET',
+      header: {
+        Authorization: 'Bearer ' + token,
+        'X-User-Id': String(userId)
+      },
+      success: (res) => {
+        const body = res.data;
+        if (body && body.code === 0 && body.data) {
+          const d = body.data;
+          const cn = (d.companyName && String(d.companyName).trim()) || '';
+          app.globalData.userInfo = { ...app.globalData.userInfo, ...d };
+          wx.setStorageSync('userInfo', app.globalData.userInfo);
+          if (cn) {
+            this.setData({ hasJoined: true, userCompany: cn });
+          } else {
+            this.setData({ hasJoined: false, userCompany: '' });
+          }
+        }
+      }
+    });
   },
 
   // 输入公司名称
@@ -46,8 +76,7 @@ Page({
       return;
     }
 
-    // 检查登录状态
-    if (!app.globalData.token) {
+    if (!(app.globalData.token || wx.getStorageSync('token'))) {
       wx.showToast({
         title: '请先登录',
         icon: 'none'
@@ -81,21 +110,23 @@ Page({
   doJoinCompany(companyName) {
     this.setData({ submitting: true });
 
+    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     wx.request({
       url: `${app.globalData.baseUrl}/api/user/company`,
       method: 'POST',
       header: {
-        'Authorization': `Bearer ${app.globalData.token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${app.globalData.token || wx.getStorageSync('token')}`,
+        'Content-Type': 'application/json',
+        'X-User-Id': userId != null ? String(userId) : ''
       },
       data: {
         companyName: companyName
       },
       success: (res) => {
         if (res.data.code === 0) {
-          // 更新全局用户信息
           if (res.data.data) {
-            app.globalData.userInfo = res.data.data;
+            app.globalData.userInfo = { ...app.globalData.userInfo, ...res.data.data };
+            wx.setStorageSync('userInfo', app.globalData.userInfo);
           }
           
           wx.showToast({

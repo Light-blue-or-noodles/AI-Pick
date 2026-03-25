@@ -6,36 +6,6 @@
   padding-bottom: 40rpx;
 }
 
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 88rpx;
-  padding: 0 24rpx;
-  background: #ffffff;
-  border-bottom: 1rpx solid #E5E5E5;
-}
-
-.back-btn {
-  width: 72rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back-icon {
-  font-size: 40rpx;
-  color: #333333;
-}
-
-.header-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #1A1A1A;
-}
-
 /* Section */
 .section {
   margin-top: 20rpx;

@@ -16,7 +16,7 @@ END
 WHERE (cover_image IS NULL OR cover_image = '');
 
 -- 搭子：按类型(type)分配对应配图
--- type: 1-吃饭 2-旅游 3-运动 4-学习 5-游戏 6-其他
+-- type: 1～15 见 PartnerTypeConstants
 UPDATE t_partner
 SET cover_image = CASE
     WHEN type = 1 THEN '/static/covers/partner-food.png'

@@ -23,7 +23,7 @@ public class AiRecommendRequest {
     /** 经度（可选，用于距离排序） */
     private Double longitude;
 
-    /** 兴趣类型列表（搭子类型 1-吃饭 2-旅游 3-运动 4-学习 5-游戏 6-其他） */
+    /** 兴趣类型列表（搭子类型 1～15，见 PartnerTypeConstants） */
     private List<Integer> interestTypes;
 
     /** 活动分类（如 运动/美食/学习/娱乐） */

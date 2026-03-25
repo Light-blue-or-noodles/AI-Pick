@@ -1,84 +1,140 @@
-/* pages/activity-detail/activity-detail.wxss */
+/* pages/activity-detail/activity-detail.wxss - 薄荷青 + 柔和留白 */
+
+@import '../../styles/variables.wxss';
 
 .container {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding-bottom: 140rpx;
+  background: var(--bg-color);
+  /* 预留更多底部空间，避免主办方头像等被底部操作栏遮挡 */
+  padding-bottom: 200rpx;
 }
 
-/* Header */
-.header {
+/* ========== 活动详情页顶部栏（更多 / 分享，返回用小程序自带）========== */
+.activity-detail .header,
+.container.activity-detail .header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 88rpx;
+  padding-top: env(safe-area-inset-top);
+  padding-left: 24rpx;
+  padding-right: 24rpx;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24rpx;
+  justify-content: flex-end;
   z-index: 100;
+  background: transparent;
 }
 
-.back-btn,
-.action-btn {
-  width: 72rpx;
-  height: 72rpx;
+.activity-detail .action-btn,
+.container.activity-detail .action-btn {
+  width: 64rpx;
+  height: 64rpx;
+  min-width: 64rpx;
+  min-height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 50%;
   border: none;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
 }
 
-.action-btn::after {
+.container.activity-detail .action-btn::after {
   border: none;
 }
 
-.header-actions {
-  display: flex;
-  gap: 16rpx;
+.container.activity-detail .header .share-btn {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  width: 64rpx;
+  height: 64rpx;
+  min-width: 64rpx;
+  min-height: 64rpx;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  border: none;
+  font-size: 0;
+}
+.container.activity-detail .header .share-btn::after {
+  border: none;
 }
 
-.action-icon {
+.activity-detail .header-actions,
+.container.activity-detail .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.activity-detail .action-icon,
+.container.activity-detail .header .action-icon {
   color: #ffffff;
   font-size: 36rpx;
+  font-weight: 500;
 }
 
-.share-btn {
-  padding: 0;
+.container.activity-detail .header .share-btn .action-icon {
+  font-size: 36rpx;
 }
 
 /* Image Section */
 .image-section {
   position: relative;
+  width: 100%;
+  margin-top: 88rpx;
+  background-color: var(--bg-gray);
 }
 
-.image-swiper {
-  height: 500rpx;
+.slide-image-wrap {
+  width: 100%;
+  line-height: 0;
 }
 
 .slide-image {
   width: 100%;
-  height: 100%;
+  display: block;
+}
+
+/* Detail Images */
+.detail-images {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.detail-image-wrap {
+  width: 100%;
+  border-radius: 12rpx;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.detail-image {
+  width: 100%;
+  display: block;
 }
 
 .image-indicator {
   position: absolute;
-  right: 24rpx;
-  bottom: 24rpx;
+  right: var(--spacing-md);
+  bottom: var(--spacing-md);
   padding: 8rpx 16rpx;
   background: rgba(0, 0, 0, 0.5);
-  border-radius: 16rpx;
+  border-radius: var(--radius-md);
   color: #ffffff;
-  font-size: 24rpx;
+  font-size: var(--font-sm);
 }
 
 /* Info Section */
 .info-section {
-  background: #ffffff;
-  padding: 32rpx;
+  background: var(--bg-white);
+  padding: var(--card-inner);
 }
 
 .activity-title {
@@ -112,9 +168,9 @@
 
 /* Section */
 .section {
-  margin-top: 20rpx;
-  background: #ffffff;
-  padding: 32rpx;
+  margin-top: var(--block-gap);
+  background: var(--bg-white);
+  padding: var(--card-inner);
 }
 
 .section-header {
@@ -140,20 +196,30 @@
 /* Organizer */
 .organizer-info {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-.organizer-avatar {
+.organizer-avatar-wrap {
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
+  overflow: hidden;
   margin-right: 20rpx;
+}
+
+.organizer-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
 }
 
 .organizer-name {
   flex: 1;
   font-size: 30rpx;
   color: #333333;
+  word-break: break-all;
+  white-space: normal;
 }
 
 .organizer-rating {
@@ -202,12 +268,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 120rpx;
-  background: #ffffff;
+  height: calc(120rpx + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-white);
   display: flex;
   align-items: center;
-  padding: 0 24rpx;
-  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
+  padding: 0 var(--page-horizontal);
+  box-shadow: var(--shadow-md);
   box-sizing: border-box;
 }
 
@@ -241,16 +308,32 @@
 
 .join-btn {
   flex: 1;
-  height: 80rpx;
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
-  border-radius: 40rpx;
+  height: 88rpx;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 24rpx;
-  font-size: 32rpx;
+  margin-left: var(--spacing-md);
+  font-size: var(--font-lg);
   color: #ffffff;
   font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.join-btn:active {
+  opacity: 0.95;
+}
+
+.join-btn-disabled {
+  background: var(--text-disabled);
+  color: var(--text-tertiary);
+}
+
+/* 已报名时的「取消报名」按钮：浅灰底 + 深色文字 */
+.join-btn-cancel {
+  background: #f5f5f5;
+  color: var(--text-primary);
 }
 
 /* Loading */
@@ -279,8 +362,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border-radius: 24rpx 24rpx 0 0;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   z-index: 201;
   overflow: hidden;
 }
@@ -297,4 +380,11 @@
 
 .menu-item:last-child {
   color: #999999;
+}
+
+.empty-detail {
+  padding: 80rpx 40rpx;
+  text-align: center;
+  color: var(--text-tertiary, #999);
+  font-size: var(--font-base, 28rpx);
 }

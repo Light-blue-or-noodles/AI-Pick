@@ -1,89 +1,96 @@
-/* variables.wxss - CSS 变量定义 */
+/* variables.wxss - 薄荷青配色 + 柔和圆角/留白（参考 FRONTEND-REDESIGN-SCHEMES） */
 
-/* 主题色 - 活力橙配色方案 */
 page {
-  /* 主色调 */
-  --primary-color: #FF6B35;
-  --primary-light: #FF8C42;
-  --primary-dark: #E85A2A;
-  
-  /* 辅助色 */
-  --secondary-color: #FFB347;
-  --secondary-light: #FFD699;
-  --secondary-dark: #FF9957;
-  
-  /* 强调色 - 粉红 */
-  --accent-color: #FF4081;
-  --accent-light: #FF6B9D;
-  --accent-dark: #E83A7A;
-  
+  /* ========== 主色 - 薄荷青 ========== */
+  --primary-color: #5FB3A8;
+  --primary-light: #7FC4BA;
+  --primary-dark: #4A9A90;
+  --primary-bg: #E8F6F5;
+
+  /* 辅助色（与主色协调） */
+  --secondary-color: #8FCDc5;
+  --secondary-light: #B8E0DA;
+  --secondary-dark: #6BB8AD;
+
+  /* 强调色（用于匹配、价格等） */
+  --accent-color: #7FBFB5;
+  --accent-light: #9DCFC7;
+  --accent-dark: #5FA89E;
+
   /* 功能色 */
   --success-color: #52C41A;
   --warning-color: #FA8C16;
   --error-color: #FF4D4F;
   --info-color: #1890FF;
-  
-  /* 背景色 */
-  --bg-color: #FFF8F5;
+
+  /* ========== 背景色 ========== */
+  --bg-color: #F5FAF9;
   --bg-white: #FFFFFF;
   --bg-gray: #F5F5F5;
   --bg-overlay: rgba(0, 0, 0, 0.5);
-  
-  /* 文字色 */
+
+  /* ========== 文字色 ========== */
   --text-primary: #333333;
   --text-secondary: #666666;
   --text-tertiary: #999999;
   --text-disabled: #CCCCCC;
   --text-inverse: #FFFFFF;
-  
-  /* 边框色 */
+
+  /* ========== 边框色 ========== */
   --border-color: #EEEEEE;
   --border-light: #F0F0F0;
   --border-dark: #DDDDDD;
-  
-  /* 阴影 */
-  --shadow-sm: 0 2rpx 8rpx rgba(74, 144, 217, 0.08);
-  --shadow-md: 0 4rpx 16rpx rgba(74, 144, 217, 0.12);
-  --shadow-lg: 0 8rpx 24rpx rgba(74, 144, 217, 0.16);
-  --shadow-xl: 0 12rpx 48rpx rgba(74, 144, 217, 0.20);
-  
-  /* 圆角 */
-  --radius-sm: 8rpx;
-  --radius-md: 12rpx;
-  --radius-lg: 16rpx;
-  --radius-xl: 24rpx;
+
+  /* ========== 阴影（柔和、中性灰） ========== */
+  --shadow-sm: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8rpx 28rpx rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 12rpx 48rpx rgba(0, 0, 0, 0.12);
+
+  /* ========== 圆角（自然柔和） ========== */
+  --radius-sm: 12rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 24rpx;
+  --radius-xl: 32rpx;
   --radius-full: 9999rpx;
-  
-  /* 间距 */
-  --spacing-xs: 8rpx;
-  --spacing-sm: 16rpx;
-  --spacing-md: 24rpx;
-  --spacing-lg: 32rpx;
+
+  /* ========== 间距（加大留白） ========== */
+  --spacing-xs: 12rpx;
+  --spacing-sm: 20rpx;
+  --spacing-md: 28rpx;
+  --spacing-lg: 36rpx;
   --spacing-xl: 48rpx;
-  
-  /* 字体大小 */
+  --page-horizontal: 32rpx;
+  --card-inner: 28rpx;
+  --card-gap: 28rpx;
+  --block-gap: 28rpx;
+
+  /* ========== 字体 ========== */
   --font-xs: 22rpx;
   --font-sm: 24rpx;
   --font-base: 28rpx;
   --font-lg: 32rpx;
   --font-xl: 36rpx;
   --font-xxl: 40rpx;
-  
-  /* 高度 */
+  --line-tight: 1.4;
+  --line-normal: 1.5;
+  --line-relaxed: 1.6;
+
+  /* ========== 高度 ========== */
   --height-sm: 60rpx;
   --height-md: 80rpx;
   --height-lg: 96rpx;
   --height-xl: 120rpx;
 
-  /* 底部 Tab 栏预留高度，避免内容被遮挡（与 custom-tab-bar 一致） */
-  --tab-bar-padding: calc(120rpx + env(safe-area-inset-bottom));
+  /* 底部 Tab 栏预留高度（悬浮栏：留足空隙，避免内容被遮挡） */
+  --tab-bar-padding: calc(200rpx + env(safe-area-inset-bottom));
 }
 
-/* 主题渐变 */
+/* 主题渐变 - 薄荷青 */
 .theme-gradient {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  background: linear-gradient(135deg, #5FB3A8 0%, #7FC4BA 100%);
 }
 
 .accent-gradient {
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8FB3 100%);
+  background: linear-gradient(135deg, #7FBFB5 0%, #9DCFC7 100%);
 }

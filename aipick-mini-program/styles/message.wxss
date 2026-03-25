@@ -2,7 +2,7 @@
 
 /* 页面头部 */
 .message-header {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   padding: 40rpx 30rpx;
 }
 

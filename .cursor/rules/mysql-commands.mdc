@@ -1,0 +1,42 @@
+---
+description: 本机 MySQL 客户端路径与连接方式，执行数据库相关操作时使用
+alwaysApply: true
+---
+
+# MySQL 命令行操作约定
+
+在本项目中执行 MySQL 相关操作（执行 SQL、迁移、查询等）时，统一使用以下方式。
+
+## 客户端路径
+
+本机 MySQL 客户端随 MySQL Workbench 安装，不使用系统 PATH 中的 `mysql`，而使用：
+
+```
+/Applications/MySQLWorkbench.app/Contents/MacOS/mysql
+```
+
+## 连接方式
+
+- 使用 **TCP** 连接，避免 socket 连接失败：`-h 127.0.0.1 -P 3306`
+- 不使用 `-h localhost`（会走 socket `/tmp/mysql.sock`，可能报 Can't connect）
+
+## 默认库与账号
+
+- 库名：`aipick`（与 `backend/aipick-backend/src/main/resources/application.yml` 中 `spring.datasource.url` 一致）
+- 用户名/密码：优先从 `application.yml` 读取（默认 `root` / `root`），或由用户指定
+
+## 命令模板
+
+```bash
+/Applications/MySQLWorkbench.app/Contents/MacOS/mysql -h 127.0.0.1 -P 3306 -u root -proot aipick -e "你的SQL;"
+```
+
+执行多行或从迁移文件执行时：
+
+```bash
+/Applications/MySQLWorkbench.app/Contents/MacOS/mysql -h 127.0.0.1 -P 3306 -u root -proot aipick < path/to/migration.sql
+```
+
+## 注意
+
+- 命令行传密码会触发 `Using a password on the command line interface can be insecure` 的警告，可忽略，或由用户自行改为环境变量等方式。

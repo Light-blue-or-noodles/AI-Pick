@@ -15,6 +15,8 @@
 7. [域名和 HTTPS 配置](#域名和 https 配置)
 8. [生产环境检查清单](#生产环境检查清单)
 9. [常见问题](#常见问题)
+10. [本地与 ECS 数据库结构同步](#本地与-ecs-数据库结构同步)
+11. [运维脚本](#运维脚本)
 
 ---
 
@@ -745,6 +747,51 @@ kill -9 <PID>
 - 检查 Nginx CORS 配置
 - 确保后端配置了正确的跨域头
 - 检查小程序域名白名单
+
+---
+
+## 本地与 ECS 数据库结构同步
+
+本地开发时做过多次 MySQL 表结构变更，若 ECS 上的库是用较早的 `init.sql` 建的，会少列，导致接口 500 或字段缺失。需要把「本地已执行、ECS 未执行」的变更在 ECS 上执行一次。
+
+### 本地与云端的结构差异（本次已纳入的变更）
+
+| 表 | 变更内容 | 说明 |
+|----|----------|------|
+| `t_user` | 新增 `company_name`、`school_name` | 用户资料公司/学校，修复接口缺少 companyName、schoolName |
+| `t_activity` | 新增 `images`（TEXT） | 活动多图 JSON 数组，首张为封面，解决 Unknown column 'images' 导致 500 |
+
+当前仓库里的 `init.sql` 已包含 `company_name`、`school_name`；**不包含** `t_activity.images`。因此若 ECS 曾用旧版 init 或从未跑过迁移，至少需要补上 `images`，必要时补用户表两列。
+
+### 在 ECS 上执行同步（推荐）
+
+使用**幂等同步脚本**（可重复执行，已有列会跳过）：
+
+1. 将脚本传到 ECS（与后端同机或能连 ECS MySQL 的机器）：
+   - 脚本路径：`backend/aipick-backend/src/main/resources/migration/sync-schema-to-ecs.sql`
+2. 在 ECS 上连接 MySQL 执行（按你实际账号、密码、库名修改）：
+
+```bash
+# 若 MySQL 在 ECS 本机
+mysql -h 127.0.0.1 -P 3306 -u root -p aipick < /path/to/sync-schema-to-ecs.sql
+```
+
+若 MySQL 在 Docker 中：
+
+```bash
+docker exec -i <mysql容器名> mysql -u root -p<密码> aipick < /path/to/sync-schema-to-ecs.sql
+```
+
+3. 执行后重启后端，使应用使用新表结构。
+
+### 单独迁移脚本（可选）
+
+若你希望分步执行或只补某一部分，可单独执行：
+
+- `migration/add-company-school-columns.sql`：仅用户表 `company_name`、`school_name`
+- `migration/add-activity-images.sql`：仅活动表 `images`
+
+注意：单独执行时若列已存在可能报 `Duplicate column name`，可忽略。
 
 ---
 

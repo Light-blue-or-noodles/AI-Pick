@@ -29,7 +29,7 @@ public class HomeController {
      */
     @GetMapping("/recommend")
     public Result<HomeRecommendVO> getRecommend(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @RequestParam(value = "latitude", required = false) Double latitude,
             @RequestParam(value = "longitude", required = false) Double longitude) {
         HomeRecommendVO result = homeService.getRecommend(userId, latitude, longitude);

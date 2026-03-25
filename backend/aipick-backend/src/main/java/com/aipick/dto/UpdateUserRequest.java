@@ -27,8 +27,14 @@ public class UpdateUserRequest {
     @NotNull(message = "性别不能为空")
     private Integer gender;
 
+    /** 生日 yyyy-MM-dd */
+    private String birthday;
+
     /** 个性签名 */
     private String bio;
+
+    /** 兴趣标签 JSON 数组字符串，如 ["游戏","运动"] */
+    private String tags;
 
     /** 公司名称（可选） */
     private String companyName;
@@ -76,8 +82,24 @@ public class UpdateUserRequest {
         this.gender = gender;
     }
 
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
     public String getBio() {
         return bio;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 
     public void setBio(String bio) {

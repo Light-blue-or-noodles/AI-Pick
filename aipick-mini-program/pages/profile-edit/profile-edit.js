@@ -19,29 +19,77 @@ Page({
     this.fetchUserProfile();
   },
 
-  // Fetch user profile（本地 + 可选的接口拉取最新）
+  // 先请求接口拉取最新个人信息，再填充表单（避免编辑资料显示错误）
   fetchUserProfile() {
-    const userInfo = wx.getStorageSync('userInfo') || {};
+    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const token = app.globalData.token || wx.getStorageSync('token');
+    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
+    const fallback = () => {
+      const userInfo = wx.getStorageSync('userInfo') || {};
+      this.fillFormFromUserInfo(userInfo);
+    };
+    if (!userId || !token) {
+      fallback();
+      return;
+    }
+    wx.request({
+      url: `${baseUrl}/api/user/info`,
+      method: 'GET',
+      header: {
+        'Authorization': token ? 'Bearer ' + token : '',
+        'X-User-Id': String(userId)
+      },
+      success: (res) => {
+        if (res.statusCode === 200 && res.data && res.data.code === 0 && res.data.data) {
+          const data = res.data.data;
+          const merged = { ...wx.getStorageSync('userInfo') || {}, ...data };
+          wx.setStorageSync('userInfo', merged);
+          this.fillFormFromUserInfo(merged);
+        } else {
+          fallback();
+        }
+      },
+      fail: () => fallback()
+    });
+  },
+
+  fillFormFromUserInfo(userInfo) {
     const genderMap = { 0: '保密', 1: '男', 2: '女' };
     const rawGender = userInfo.gender;
     const genderText = (typeof rawGender === 'number' && genderMap[rawGender]) ? genderMap[rawGender] : (userInfo.gender || '');
+    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    let avatar = userInfo.avatar || '/images/default-avatar.png';
+    if (avatar && (avatar.indexOf('__tmp__') !== -1 || avatar.indexOf('://tmp/') !== -1 || (avatar.indexOf('127.0.0.1') !== -1 && avatar.indexOf(':8080') === -1))) {
+      avatar = '/images/default-avatar.png';
+    }
+    if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:') && !avatar.startsWith('/images')) {
+      avatar = baseUrl + (avatar.startsWith('/') ? avatar : '/' + avatar);
+    }
+    if (avatar && avatar.startsWith('http') && /localhost|127\.0\.0\.1/.test(avatar) && app.normalizeImageUrl) {
+      avatar = app.normalizeImageUrl(avatar, baseUrl);
+    }
+    // 兴趣标签：接口返回为 JSON 字符串或已解析数组，保证历史保存的标签能回显
+    let tags = userInfo.tags;
+    if (!Array.isArray(tags)) {
+      if (typeof tags === 'string' && tags.trim()) {
+        try { tags = JSON.parse(tags); } catch (e) { tags = []; }
+      } else {
+        tags = [];
+      }
+    }
     this.setData({
-      avatar: userInfo.avatar || '/images/default-avatar.png',
+      avatar,
       nickname: userInfo.nickname || '',
       gender: genderText,
       birthday: userInfo.birthday || '',
       bio: userInfo.bio || '',
-      tags: userInfo.tags || [],
+      tags,
       bioLength: (userInfo.bio || '').length,
       _userInfo: userInfo
     });
   },
 
   // Go back
-  onGoBack() {
-    wx.navigateBack();
-  },
-
   // Choose avatar：选图后上传到后端，用返回的 URL 作为头像
   onChooseAvatar() {
     wx.chooseImage({
@@ -76,7 +124,12 @@ Page({
       success: (res) => {
         wx.hideLoading();
         if (res.statusCode !== 200) {
-          wx.showToast({ title: '上传失败', icon: 'none' });
+          let errMsg = '上传失败';
+          try {
+            const errData = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || {});
+            if (errData.message) errMsg = errData.message;
+          } catch (e) {}
+          wx.showToast({ title: errMsg, icon: 'none' });
           return;
         }
         let data;
@@ -91,7 +144,7 @@ Page({
           this.setData({ avatar: avatarUrl });
           wx.showToast({ title: '上传成功', icon: 'success' });
         } else {
-          wx.showToast({ title: (data && data.message) || '上传失败', icon: 'none' });
+          wx.showToast({ title: (data && data.message) || '头像上传失败', icon: 'none' });
         }
       },
       fail: () => {
@@ -190,11 +243,23 @@ Page({
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     const existing = this.data._userInfo || wx.getStorageSync('userInfo') || {};
 
+    const base = app.globalData.baseUrl || 'http://localhost:8080';
+    let avatarVal = this.data.avatar || existing.avatar || '';
+    // 不保存本地临时地址（开发者工具 __tmp__、wxfile 等），只保存已上传或后端返回的 URL
+    const isTempLocalUrl = (url) => !url || typeof url !== 'string' || url.startsWith('wxfile://') ||
+      (url.indexOf('__tmp__') !== -1) || (url.indexOf('://tmp/') !== -1) || (url.indexOf('127.0.0.1') !== -1 && url.indexOf(':8080') === -1);
+    if (isTempLocalUrl(avatarVal)) {
+      avatarVal = existing.avatar || '';
+    } else if (avatarVal && !avatarVal.startsWith('http') && !avatarVal.startsWith('data:') && avatarVal !== '/images/default-avatar.png') {
+      avatarVal = base + (avatarVal.startsWith('/') ? avatarVal : '/' + avatarVal);
+    }
     const payload = {
       nickname: (this.data.nickname || '').trim(),
       gender: this._genderToCode(),
-      avatar: (this.data.avatar && (this.data.avatar.startsWith('http') || this.data.avatar.startsWith('/api'))) ? this.data.avatar : (existing.avatar || ''),
+      avatar: avatarVal,
+      birthday: (this.data.birthday || '').trim() || null,
       bio: this.data.bio || '',
+      tags: (this.data.tags && this.data.tags.length) ? JSON.stringify(this.data.tags) : null,
       companyName: existing.companyName || null,
       schoolName: existing.schoolName || null
     };
@@ -218,9 +283,9 @@ Page({
             ...existing,
             ...updated,
             nickname: this.data.nickname,
-            avatar: this.data.avatar,
+            avatar: payload.avatar || this.data.avatar,
             bio: this.data.bio,
-            birthday: this.data.birthday,
+            birthday: this.data.birthday || null,
             tags: this.data.tags
           };
           wx.setStorageSync('userInfo', merged);

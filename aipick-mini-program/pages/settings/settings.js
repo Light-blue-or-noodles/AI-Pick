@@ -36,10 +36,6 @@ Page({
   },
 
   // Go back
-  onGoBack() {
-    wx.navigateBack();
-  },
-
   // Edit profile (avatar + nickname 等)
   onEditProfile() {
     wx.navigateTo({

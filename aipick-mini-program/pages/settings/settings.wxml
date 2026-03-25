@@ -1,15 +1,6 @@
 <!--pages/settings/settings.wxml-->
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
-    <text class="header-title">设置</text>
-    <view style="width: 72rpx;"></view>
-  </view>
-
-  <!-- Account Settings -->
+  <!-- Account Settings（返回使用小程序自带导航栏） -->
   <view class="section">
     <view class="section-title">账号设置</view>
     <view class="setting-item" bindtap="onEditProfile">

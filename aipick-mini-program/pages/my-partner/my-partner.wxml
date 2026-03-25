@@ -1,95 +1,66 @@
-<!--pages/my-partner/my-partner.wxml-->
+<!-- 我的搭子：与搭子列表卡片一致，仅展示本人发布，支持删除 -->
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="back-btn" bindtap="onGoBack">
-      <text class="back-icon">←</text>
-    </view>
-    <text class="header-title">我的搭子</text>
-    <view class="publish-btn" bindtap="onGoToPublish">
-      <text>发起</text>
+  <view class="partner-list" wx:if="{{!isLoading}}">
+    <block wx:for="{{partners}}" wx:key="id">
+      <view class="partner-card" bindtap="goToDetail" data-id="{{item.id}}">
+        <view class="partner-cover-wrap">
+          <network-image
+            class="partner-cover"
+            customClass="partner-cover"
+            url="{{item.cover}}"
+            defaultSrc="/images/partner-banner.jpg"
+            mode="aspectFill"
+            mediaKind="cover"
+          />
+          <view class="partner-status-tag {{item.status}}">
+            {{item.statusLabel || (item.status === 'recruiting' ? '招募中' : (item.status === 'full' ? '已满' : '已结束'))}}
+          </view>
+        </view>
+        <view class="partner-body">
+          <view class="partner-header">
+            <view class="partner-category">{{item.typeName || item.category}}</view>
+          </view>
+          <view class="partner-title">{{item.title}}</view>
+          <view class="partner-pref" wx:if="{{item.preference}}">偏好：{{item.preference}}</view>
+          <view class="partner-tags">
+            <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+          <view class="partner-footer">
+            <view class="author-info">
+              <network-image
+                class="author-avatar"
+                customClass="author-avatar"
+                url="{{item.author.avatar}}"
+                defaultSrc="/images/default-avatar.png"
+                mode="aspectFill"
+                mediaKind="avatar"
+              />
+              <text class="author-name">{{item.author.name}}</text>
+              <text class="author-distance" wx:if="{{item.distance}}">| {{item.distance}}</text>
+            </view>
+            <view class="match-display" wx:if="{{item.match}}">
+              <text class="match-num">{{item.match}}%</text>
+              <text class="match-label">匹配</text>
+            </view>
+          </view>
+          <view class="member-info">
+            <text class="member-count">👥 {{item.members}}/{{item.maxMembers}}人</text>
+            <text class="partner-time">{{item.createTime}}</text>
+          </view>
+          <view class="my-partner-actions" catchtap="noop">
+            <view class="btn-delete-partner" catchtap="onDeletePartner" data-id="{{item.id}}">删除</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{partners.length === 0}}">
+      <image src="/images/empty-partner.png" mode="aspectFit" />
+      <text>暂无发布的搭子</text>
     </view>
   </view>
 
-  <!-- Tabs -->
-  <view class="tabs">
-    <view 
-      class="tab {{activeTab === index ? 'active' : ''}}"
-      wx:for="{{tabs}}"
-      wx:key="*this"
-      bindtap="onSwitchTab"
-      data-index="{{index}}"
-    >
-      <text>{{item}}</text>
-    </view>
-  </view>
-
-  <!-- Loading -->
-  <view class="loading" wx:if="{{isLoading}}">
+  <view class="loading" wx:else>
     <text>加载中...</text>
-  </view>
-
-  <!-- Partner List -->
-  <view class="list" wx:else>
-    <!-- Active / Ended Tab -->
-    <block wx:if="{{activeTab !== 2}}">
-      <view 
-        class="partner-card"
-        wx:for="{{partners}}"
-        wx:key="id"
-        bindtap="onViewDetail"
-        data-id="{{item.id}}"
-      >
-        <view class="partner-header">
-          <text class="partner-title">🎯 {{item.title}}</text>
-          <text class="partner-status {{item.status}}">{{item.statusText}}</text>
-        </view>
-        <view class="partner-info">
-          <text class="info-item">📍 {{item.location}}</text>
-          <text class="info-item">👥 {{item.currentMembers}}/{{item.maxMembers}}人</text>
-        </view>
-        <view class="partner-footer">
-          <text class="partner-time">{{item.createTime}}</text>
-          <view class="action-btns">
-            <view class="btn-view" bindtap="onViewDetail" data-id="{{item.id}}">查看</view>
-            <view class="btn-quit" catchtap="onQuit" data-id="{{item.id}}">退出</view>
-          </view>
-        </view>
-      </view>
-      
-      <view class="empty-state" wx:if="{{partners.length === 0}}">
-        <text>暂无搭子</text>
-      </view>
-    </block>
-
-    <!-- My Published Tab -->
-    <block wx:else>
-      <view 
-        class="partner-card"
-        wx:for="{{myPublished}}"
-        wx:key="id"
-        bindtap="onViewDetail"
-        data-id="{{item.id}}"
-      >
-        <view class="partner-header">
-          <text class="partner-title">🎯 {{item.title}}</text>
-          <text class="partner-status {{item.status}}">{{item.statusText}}</text>
-        </view>
-        <view class="partner-info">
-          <text class="info-item">📍 {{item.location}}</text>
-          <text class="info-item">👥 {{item.currentMembers}}/{{item.maxMembers}}人</text>
-        </view>
-        <view class="partner-footer">
-          <text class="partner-time">{{item.createTime}}</text>
-          <view class="action-btns">
-            <view class="btn-view" bindtap="onViewDetail" data-id="{{item.id}}">查看</view>
-          </view>
-        </view>
-      </view>
-      
-      <view class="empty-state" wx:if="{{myPublished.length === 0}}">
-        <text>暂无发布的搭子</text>
-      </view>
-    </block>
   </view>
 </view>

@@ -1,5 +1,6 @@
 // pages/calendar/calendar.js
 const { get } = require('../../utils/request');
+const { resolveActivityCoverUrl } = require('../../utils/imageUrl.js');
 
 Page({
   data: {
@@ -45,6 +46,8 @@ Page({
     const t = a.eventTime || a.startTime;
     const timeStr = t ? (typeof t === 'string' ? t.replace('T', ' ').substring(0, 16) : '') : '';
     const statusText = (a.status === 0 && '待开始') || (a.status === 1 && '报名中') || (a.status === 2 && '进行中') || (a.status === 3 && '已结束') || '已结束';
+    const app = getApp();
+    const base = app.globalData.baseUrl || 'http://localhost:8080';
     return {
       ...a,
       date,
@@ -54,7 +57,7 @@ Page({
       statusText,
       currentPeople: a.currentParticipants != null ? a.currentParticipants : 0,
       totalPeople: a.maxParticipants != null ? a.maxParticipants : 0,
-      cover: a.coverImage || '/images/default-avatar.png'
+      cover: resolveActivityCoverUrl(a, base)
     };
   },
 
@@ -149,10 +152,6 @@ Page({
       calendarDays,
       selectedDateActivities: activities
     });
-  },
-
-  goBack() {
-    wx.navigateBack();
   },
 
   goToActivity(e) {

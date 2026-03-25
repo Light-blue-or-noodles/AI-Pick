@@ -8,6 +8,10 @@ server:
 spring:
   application:
     name: aipick-backend
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
   web:
     locale: zh_CN
     servlet:
@@ -83,7 +87,13 @@ wechat:
   appid: ${WECHAT_APPID:}
   secret: ${WECHAT_SECRET:}
 
-# 头像等上传文件保存目录（相对项目运行目录）
+# 头像等上传文件保存目录。代码中会转为绝对路径，与静态资源访问一致；若仍报 FileNotFoundException，可改为绝对路径如 ${user.dir}/uploads
 upload:
   dir: uploads
   avatar-subdir: avatars
+
+# 图片存储：local 为默认（写入 upload 目录）；后续可改为 oss 并接入 ImageStorageService 的 OSS 实现
+storage:
+  type: local
+  local:
+    root-dir: ${upload.dir:uploads}

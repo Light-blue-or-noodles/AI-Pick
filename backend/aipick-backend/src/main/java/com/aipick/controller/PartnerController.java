@@ -7,6 +7,7 @@ import com.aipick.dto.PageRequest;
 import com.aipick.entity.Partner;
 import com.aipick.entity.PartnerApply;
 import com.aipick.service.PartnerService;
+import com.aipick.vo.PartnerVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -59,12 +60,15 @@ public class PartnerController {
 
     /**
      * 搭子列表
+     * @param scopeType 列表主题：platform-仅含勾选「公开」的帖；company-含「同事」且发布者同公司；school-含「校友」且发布者同校
      */
     @GetMapping
-    public Result<IPage<Partner>> getPartnerList(
+    public Result<IPage<PartnerVO>> getPartnerList(
             @ModelAttribute PageRequest pageRequest,
-            @RequestParam(required = false) Integer type) {
-        IPage<Partner> list = partnerService.getPartnerList(pageRequest, type);
+            @RequestParam(required = false) Integer type,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestParam(required = false) String scopeType) {
+        IPage<PartnerVO> list = partnerService.getPartnerList(pageRequest, type, userId, scopeType);
         return Result.success(list);
     }
 
@@ -72,9 +76,9 @@ public class PartnerController {
      * 搭子详情
      */
     @GetMapping("/{id}")
-    public Result<Partner> getPartnerDetail(@PathVariable Long id) {
-        Partner partner = partnerService.getPartnerDetail(id);
-        return Result.success(partner);
+    public Result<PartnerVO> getPartnerDetail(@PathVariable Long id) {
+        PartnerVO vo = partnerService.getPartnerDetailVO(id);
+        return Result.success(vo);
     }
 
     /**
@@ -123,13 +127,13 @@ public class PartnerController {
     }
 
     /**
-     * 我的搭子
+     * 我的搭子：默认仅返回当前用户发布的搭子（type=created 或 published）；type=joined 返回应征通过的
      */
     @GetMapping("/my")
-    public Result<List<Partner>> getMyPartners(
+    public Result<List<PartnerVO>> getMyPartners(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam(required = false) String type) {
-        List<Partner> list = partnerService.getMyPartners(userId, type);
+        List<PartnerVO> list = partnerService.getMyPartners(userId, type);
         return Result.success(list);
     }
 

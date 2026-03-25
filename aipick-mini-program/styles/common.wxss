@@ -76,8 +76,8 @@ page {
 .card {
   background: var(--bg-white);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  margin: var(--spacing-sm) var(--spacing-md);
+  padding: var(--card-inner, var(--spacing-md));
+  margin: var(--spacing-sm) var(--page-horizontal, var(--spacing-md));
   box-shadow: var(--shadow-sm);
 }
 
@@ -104,7 +104,7 @@ page {
 .input-field:focus {
   background: var(--bg-white);
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4rpx rgba(74, 144, 217, 0.1);
+  box-shadow: 0 0 0 4rpx rgba(95, 179, 168, 0.15);
 }
 
 .input-field::placeholder {
@@ -150,7 +150,7 @@ page {
 }
 
 .tag-primary {
-  background: rgba(74, 144, 217, 0.1);
+  background: var(--primary-bg);
   color: var(--primary-color);
 }
 

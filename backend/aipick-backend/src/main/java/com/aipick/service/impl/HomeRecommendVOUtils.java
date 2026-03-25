@@ -64,7 +64,7 @@ public class HomeRecommendVOUtils {
             User user = userMap.get(partner.getUserId());
             if (user != null) {
                 vo.setNickname(user.getNickname());
-                vo.setAvatar(user.getAvatar());
+                vo.setAvatar(com.aipick.util.AvatarUtil.sanitizeForResponse(user.getAvatar()));
             }
             
             result.add(vo);

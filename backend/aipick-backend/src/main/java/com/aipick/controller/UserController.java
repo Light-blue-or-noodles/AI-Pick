@@ -4,13 +4,9 @@ import com.aipick.common.BusinessException;
 import com.aipick.common.Result;
 import com.aipick.dto.LoginRequest;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
-import java.util.UUID;
 
+import com.aipick.storage.ImageStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,14 +34,11 @@ public class UserController {
 
     private final UserService userService;
 
-    @Value("${upload.dir:uploads}")
-    private String uploadDir;
+    private final ImageStorageService imageStorageService;
 
-    @Value("${upload.avatar-subdir:avatars}")
-    private String avatarSubdir;
-
-    public UserController(UserService userService) {
+    public UserController(UserService userService, ImageStorageService imageStorageService) {
         this.userService = userService;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -109,11 +102,14 @@ public class UserController {
 
     /**
      * 上传头像（临时保存到项目目录 uploads/avatars，返回可访问 URL）
+     * 兼容 form 字段名 file 或 image（部分客户端上传使用 image）
      */
     @PostMapping("/avatar")
     public Result<Map<String, String>> uploadAvatar(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam(value = "file", required = false) MultipartFile filePart,
+            @RequestParam(value = "image", required = false) MultipartFile imagePart) {
+        MultipartFile file = (filePart != null && !filePart.isEmpty()) ? filePart : (imagePart != null && !imagePart.isEmpty() ? imagePart : null);
         if (file == null || file.isEmpty()) {
             throw new BusinessException("请选择图片");
         }
@@ -124,22 +120,8 @@ public class UserController {
         if (file.getSize() > AVATAR_MAX_SIZE) {
             throw new BusinessException("图片大小不能超过 2MB");
         }
-        String ext = "jpg";
-        if (contentType != null) {
-            if (contentType.contains("png")) ext = "png";
-            else if (contentType.contains("gif")) ext = "gif";
-            else if (contentType.contains("webp")) ext = "webp";
-        }
-        String filename = userId + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + ext;
-        Path dir = Paths.get(uploadDir, avatarSubdir);
-        try {
-            Files.createDirectories(dir);
-            Path target = dir.resolve(filename);
-            file.transferTo(target.toFile());
-        } catch (IOException e) {
-            throw new BusinessException("保存失败：" + e.getMessage());
-        }
-        String urlPath = "/static/" + avatarSubdir + "/" + filename;
+        Map<String, String> stored = imageStorageService.storeAvatar(file, userId);
+        String urlPath = stored.get("url");
         return Result.success("上传成功", Map.of("url", urlPath));
     }
 
@@ -194,13 +176,16 @@ public class UserController {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setNickname(user.getNickname());
-        dto.setAvatar(user.getAvatar());
+        dto.setAvatar(com.aipick.util.AvatarUtil.sanitizeForResponse(user.getAvatar()));
         dto.setGender(user.getGender());
         dto.setBio(user.getBio());
         dto.setCompanyName(user.getCompanyName());
         dto.setCompanyVerified(user.getCompanyVerified());
         dto.setSchoolName(user.getSchoolName());
         dto.setSchoolVerified(user.getSchoolVerified());
+        dto.setBirthday(user.getBirthday());
+        // 保证前端总能拿到 tags 字段（空时返回空字符串，便于编辑页回显）
+        dto.setTags(user.getTags() != null ? user.getTags() : "");
         return dto;
     }
 }

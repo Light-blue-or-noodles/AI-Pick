@@ -1,6 +1,17 @@
 // pages/my-activity/my-activity.js
 const app = getApp();
 
+function toCoverUrl(coverImage) {
+  if (!coverImage) return '/images/activity-banner.jpg';
+  if (coverImage.startsWith('http')) return coverImage;
+  const base = app.globalData.baseUrl || 'http://localhost:8080';
+  return base + '/api' + (coverImage.startsWith('/') ? coverImage : '/' + coverImage);
+}
+
+function mapActivityCover(list) {
+  return (list || []).map(a => ({ ...a, cover: toCoverUrl(a.coverImage) }));
+}
+
 Page({
   data: {
     activeTab: 0,
@@ -53,7 +64,7 @@ Page({
         const data = res.data;
         if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
           const list = data.data != null ? (Array.isArray(data.data) ? data.data : []) : [];
-          this.setData({ allActivities: list, isLoading: false });
+          this.setData({ allActivities: mapActivityCover(list), isLoading: false });
         } else {
           this.setData({ allActivities: [], isLoading: false });
           wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
@@ -83,7 +94,7 @@ Page({
         const data = res.data;
         if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
           const list = data.data != null ? (Array.isArray(data.data) ? data.data : []) : [];
-          this.setData({ joinedActivities: list, isLoading: false });
+          this.setData({ joinedActivities: mapActivityCover(list), isLoading: false });
         } else {
           this.setData({ joinedActivities: [], isLoading: false });
           wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
@@ -113,7 +124,7 @@ Page({
         const data = res.data;
         if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
           const list = data.data != null ? (Array.isArray(data.data) ? data.data : []) : [];
-          this.setData({ publishedActivities: list, isLoading: false });
+          this.setData({ publishedActivities: mapActivityCover(list), isLoading: false });
         } else {
           this.setData({ publishedActivities: [], isLoading: false });
           wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
@@ -145,7 +156,4 @@ Page({
   },
 
   // Go back
-  onGoBack() {
-    wx.navigateBack();
-  }
 });

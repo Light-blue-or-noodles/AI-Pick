@@ -1,7 +1,7 @@
 <!--pages/index/index.wxml-->
 <view class="container">
-  <!-- 顶部欢迎区 -->
-  <view class="header">
+  <!-- 顶部欢迎区已隐藏 -->
+  <view class="header header-hidden" wx:if="{{false}}">
     <view class="welcome-text">
       <text class="greeting">你好，</text>
       <text class="username">{{userInfo.nickname || '朋友'}}</text>
@@ -9,7 +9,7 @@
     <view class="header-subtitle">今天想找谁一起玩？</view>
   </view>
 
-  <!-- AI 对话入口 - 突出显示 -->
+  <!-- AI 智能助手入口 - 放大突出 -->
   <view class="ai-entry" bindtap="goToAIChat">
     <view class="ai-icon">
       <image src="/images/ai-icon.png" mode="aspectFit" />
@@ -23,23 +23,40 @@
     </view>
   </view>
 
-  <!-- 快捷入口 -->
+  <!-- 快捷入口：找搭子、找活动、日历 -->
   <view class="quick-links">
     <view class="link-item" bindtap="goToPartner">
-      <view class="link-icon">🎯</view>
+      <view class="link-icon">
+        <view class="link-icon-inner icon-home-partner">
+          <view class="home-partner-head home-partner-head-left"></view>
+          <view class="home-partner-head home-partner-head-right"></view>
+          <view class="home-partner-body home-partner-body-left"></view>
+          <view class="home-partner-body home-partner-body-right"></view>
+        </view>
+      </view>
       <text class="link-text">找搭子</text>
     </view>
+    <!-- 找活动入口暂时下线
     <view class="link-item" bindtap="goToActivity">
-      <view class="link-icon">🎪</view>
+      <view class="link-icon">
+        <view class="link-icon-inner icon-home-activity">
+          <view class="home-activity-top"></view>
+          <view class="home-activity-body"></view>
+          <view class="home-activity-flag"></view>
+        </view>
+      </view>
       <text class="link-text">找活动</text>
     </view>
-    <view class="link-item" bindtap="goToAIMatch">
-      <view class="link-icon">🤖</view>
-      <text class="link-text">AI匹配</text>
-    </view>
+    -->
     <view class="link-item" bindtap="goToCalendar">
-      <view class="link-icon">📅</view>
-      <text class="link-text">今日</text>
+      <view class="link-icon">
+        <view class="link-icon-inner icon-home-calendar">
+          <view class="home-calendar-top"></view>
+          <view class="home-calendar-body"></view>
+          <view class="home-calendar-dot"></view>
+        </view>
+      </view>
+      <text class="link-text">活动日历</text>
     </view>
   </view>
 
@@ -72,7 +89,7 @@
     <view class="nearby-list">
       <block wx:for="{{nearbyDynamics}}" wx:key="id">
         <view class="nearby-item" bindtap="goToDetail" data-type="{{item.type}}" data-id="{{item.id}}">
-          <image class="nearby-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <network-image class="nearby-avatar" customClass="nearby-avatar" url="{{item.avatar}}" defaultSrc="/images/default-avatar.png" mode="aspectFill" />
           <view class="nearby-content">
             <view class="nearby-header">
               <text class="nearby-name">{{item.name}}</text>
@@ -80,7 +97,7 @@
             </view>
             <text class="nearby-text">{{item.content}}</text>
             <view class="nearby-images" wx:if="{{item.images && item.images.length > 0}}">
-              <image class="nearby-img" src="{{img}}" mode="aspectFill" wx:for="{{item.images}}" wx:key="*this" wx:for-item="img" />
+              <network-image class="nearby-img" customClass="nearby-img" url="{{img}}" defaultSrc="/images/empty-activity.png" mode="aspectFill" wx:for="{{item.images}}" wx:key="*this" wx:for-item="img" />
             </view>
             <view class="nearby-meta">
               <text class="meta-location">📍 {{item.location}}</text>
@@ -93,33 +110,51 @@
     </view>
   </view>
 
-  <!-- 为你推荐标题 -->
+  <!-- 快来Pick 你的搭子 -->
   <view class="section-header">
-    <text class="section-title">为你推荐</text>
+    <text class="section-title">快来Pick 你的搭子</text>
     <text class="section-more" bindtap="refreshRecommend">换一批</text>
   </view>
 
-  <!-- 推荐列表 -->
+  <!-- 推荐列表：左侧小图 + 右侧文案，与活动卡片一致 -->
   <view class="recommend-list" wx:if="{{!isLoading}}">
     <block wx:for="{{recommendations}}" wx:key="id">
-      <view class="recommend-card" bindtap="goToPartnerDetail" data-id="{{item.id}}">
-        <image class="recommend-avatar" src="{{item.avatar || '/images/default-avatar.png'}}" mode="aspectFill" />
-        <view class="recommend-info">
-          <view class="recommend-header">
-            <text class="recommend-name">{{item.name}}</text>
-            <view class="match-badge" wx:if="{{item.match}}">
-              <text class="match-num">{{item.match}}%</text>
-              <text class="match-label">匹配</text>
+      <view class="recommend-card">
+        <view class="recommend-card-main" bindtap="goToPartnerDetail" data-id="{{item.id}}">
+          <network-image class="recommend-thumb" customClass="recommend-thumb" url="{{item.cover}}" defaultSrc="/images/partner-banner.jpg" mode="aspectFill" mediaKind="cover" />
+          <view class="recommend-body">
+            <view class="recommend-info">
+              <view class="recommend-header">
+                <text class="recommend-name">{{item.title || item.name}}</text>
+                <view class="match-badge" wx:if="{{item.match}}">
+                  <text class="match-num">{{item.match}}%</text>
+                  <text class="match-label">匹配</text>
+                </view>
+              </view>
+              <view class="recommend-line" wx:if="{{item.typeName}}"><text class="rec-label">类型</text> {{item.typeName}}</view>
+              <view class="recommend-line" wx:if="{{item.preference}}"><text class="rec-label">偏好</text> {{item.preference}}</view>
+              <view class="recommend-line nick-line"><text class="rec-label">发布者</text> {{item.name}}</view>
+              <view class="recommend-tags">
+                <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+                <text class="distance-tag" wx:if="{{item.distance}}">{{item.distance}}</text>
+              </view>
+              <view class="recommend-meta">
+                <view class="meta-item" wx:if="{{item.distance}}">
+                  <image class="meta-icon" src="/images/location.png" mode="aspectFit" />
+                  <text>地理位置 约 {{item.distance}}</text>
+                </view>
+                <view class="meta-item" wx:if="{{item.tagsText}}">
+                  <text class="meta-tag-icon">🏷</text>
+                  <text>活动标签 {{item.tagsText}}</text>
+                </view>
+              </view>
             </view>
           </view>
-          <view class="recommend-tags">
-            <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
-            <text class="distance-tag" wx:if="{{item.distance}}">{{item.distance}}</text>
-          </view>
-          <text class="recommend-bio">{{item.bio || '暂无简介'}}</text>
         </view>
-        <view class="recommend-action">
-          <view class="btn-chat">聊聊</view>
+        <view class="recommend-action" catchtap="noop">
+          <view class="btn-rec btn-skip" bindtap="onRecommendSkip" data-id="{{item.id}}" data-match="{{item.match}}">跳过</view>
+          <view class="btn-rec btn-incompat" bindtap="onRecommendNotCompat" data-id="{{item.id}}" data-match="{{item.match}}">不合</view>
+          <view class="btn-rec btn-chat" bindtap="onRecommendChat" data-id="{{item.id}}" data-match="{{item.match}}">聊聊</view>
         </view>
       </view>
     </block>

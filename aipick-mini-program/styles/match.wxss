@@ -2,7 +2,7 @@
 
 /* 页面头部 */
 .match-header {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   padding: 40rpx 30rpx 60rpx;
 }
 
@@ -168,7 +168,7 @@
 .action-btn.like {
   width: 100rpx;
   height: 100rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8FB3 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
 }
 
 .action-btn.like image {
@@ -349,7 +349,7 @@
 }
 
 .modal-btn {
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8FB3 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   color: var(--text-inverse);
   border-radius: var(--radius-full);
   padding: 24rpx 60rpx;

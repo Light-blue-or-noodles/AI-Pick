@@ -11,7 +11,13 @@
         data-id="{{item.id}}"
       >
         <view class="message-avatar">
-          <image src="{{item.user.avatar}}" mode="aspectFill" />
+          <network-image
+            class="message-avatar-img"
+            customClass="message-avatar-img"
+            url="{{item.user.avatar}}"
+            defaultSrc="/images/default-avatar.png"
+            mode="aspectFill"
+          />
           <view class="online-status" wx:if="{{item.isOnline}}"></view>
         </view>
         <view class="message-content">
