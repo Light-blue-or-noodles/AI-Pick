@@ -15,6 +15,7 @@
     "pages/my-activity/my-activity",
     "pages/my-favorites/my-favorites",
     "pages/my-following/my-following",
+    "pages/user-profile/user-profile",
     "pages/filter/filter",
     "pages/calendar/calendar",
     "pages/message/message",

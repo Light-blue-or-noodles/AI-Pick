@@ -1,18 +1,28 @@
 <!--pages/chat/chat.wxml-->
 <view class="container">
+  <!-- 聊天头部 - 用户聊天时显示对方信息 -->
+  <view class="chat-header" wx:if="{{!isAI}}">
+    <image class="header-avatar" src="{{targetUser.avatar}}" mode="aspectFill" />
+    <text class="header-nickname">{{targetUser.nickname}}</text>
+  </view>
+
   <!-- 聊天内容 -->
-  <scroll-view class="chat-content" scroll-y scroll-into-view="{{scrollIntoView}}">
+  <scroll-view class="chat-content {{!isAI ? 'user-chat' : ''}}" scroll-y scroll-into-view="{{scrollIntoView}}">
     <block wx:for="{{messages}}" wx:key="id">
       <view class="message-wrapper {{item.type}}" id="msg-{{item.id}}">
         <!-- AI 头像 -->
         <image class="message-avatar ai-avatar" wx:if="{{item.type === 'ai'}}" src="/images/ai-icon.png" />
         
+        <!-- 对方用户头像 -->
+        <image class="message-avatar other-avatar" wx:if="{{item.type === 'other'}}" src="{{item.avatar || '/images/default-avatar.png'}}" />
+        
         <view class="message-bubble">
           <text class="message-text">{{item.content}}</text>
+          <text class="message-time" wx:if="{{!isAI}}">{{item.time}}</text>
         </view>
         
-        <!-- 用户头像 -->
-        <image class="message-avatar user-avatar" wx:if="{{item.type === 'user'}}" src="/images/default-avatar.png" />
+        <!-- 当前用户头像 -->
+        <image class="message-avatar user-avatar" wx:if="{{item.type === 'user'}}" src="{{item.avatar || currentUser.avatar || '/images/default-avatar.png'}}" />
       </view>
     </block>
 
@@ -24,8 +34,8 @@
     </view>
   </scroll-view>
 
-  <!-- 快捷回复 -->
-  <view class="quick-replies" wx:if="{{messages.length <= 1}}">
+  <!-- 快捷回复 - 仅AI聊天时显示 -->
+  <view class="quick-replies" wx:if="{{isAI && messages.length <= 1}}">
     <view class="quick-reply" bindtap="onQuickReply" data-reply="帮我找游戏搭子">🎮 帮我找游戏搭子</view>
     <view class="quick-reply" bindtap="onQuickReply" data-reply="推荐一些活动">📍 推荐一些活动</view>
     <view class="quick-reply" bindtap="onQuickReply" data-reply="我想认识新朋友">👋 我想认识新朋友</view>

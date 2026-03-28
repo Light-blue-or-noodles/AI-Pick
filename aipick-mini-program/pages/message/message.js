@@ -1,14 +1,23 @@
 // pages/message/message.js
 const app = getApp();
+const IMService = require('../../utils/im');
 
 Page({
   data: {
     messages: [],
-    isLoading: true
+    isLoading: true,
+    needLogin: false,
+    imReady: false,
+    refresherTriggered: false
   },
 
   onLoad() {
-    this.loadMessages();
+    if (!wx.getStorageSync('token')) {
+      this.setData({ needLogin: true, isLoading: false });
+      return;
+    }
+    this.setData({ needLogin: false });
+    this.initIMAndLoadMessages();
   },
 
   onShow() {
@@ -19,73 +28,164 @@ Page({
         if (bar) bar.setData({ selected: 3 });
       }
     }, 0);
+
+    const token = wx.getStorageSync('token');
+    if (!token) {
+      this.setData({ needLogin: true, isLoading: false, messages: [], imReady: false });
+      return;
+    }
+    if (this.data.needLogin) {
+      this.setData({ needLogin: false });
+      this.initIMAndLoadMessages();
+      return;
+    }
+    if (this.data.imReady) {
+      this.loadMessages().catch(() => {});
+    }
   },
 
-  // 加载消息列表 GET /api/message
-  loadMessages() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
-    wx.request({
-      url: `${baseUrl}/api/message`,
-      method: 'GET',
-      header: {
-        'X-User-Id': wx.getStorageSync('userId') || '',
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
-      },
-      success: (res) => {
-        const data = res.data;
-        if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
-          const list = data.data != null ? data.data : (Array.isArray(data) ? data : []);
-          this.setData({ messages: list, isLoading: false });
-        } else {
-          this.setData({ messages: [], isLoading: false });
-          wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
-        }
-        wx.stopPullDownRefresh();
-      },
-      fail: (err) => {
-        this.setData({ messages: [], isLoading: false });
-        wx.showToast({
-          title: err.errMsg && err.errMsg.indexOf('url') !== -1 ? '网络错误' : '加载失败',
-          icon: 'none'
-        });
-        wx.stopPullDownRefresh();
+  /** 自定义 TabBar 重复点击当前 tab 时刷新 */
+  onTabReselect() {
+    if (this.data.needLogin || !wx.getStorageSync('token')) return;
+    this.setData({ refresherTriggered: true });
+    this.initIMAndLoadMessages()
+      .finally(() => {
+        this.setData({ refresherTriggered: false });
+      });
+  },
+
+  goLogin() {
+    wx.navigateTo({ url: '/pages/login/login' });
+  },
+
+  resolveAvatar(url) {
+    if (!url || typeof url !== 'string') return '';
+    const resolved = app.normalizeImageUrl
+      ? app.normalizeImageUrl(url, app.globalData.baseUrl)
+      : url;
+    return resolved || url;
+  },
+
+  async initIMAndLoadMessages() {
+    try {
+      this.setData({ isLoading: true });
+      await IMService.initAndLogin();
+      IMService.syncUnreadBadgeFromSdk();
+      await this.loadMessages();
+      IMService.syncUnreadBadgeFromSdk();
+      this.setData({ imReady: true });
+    } catch (error) {
+      console.error('初始化 IM 失败:', error);
+      this.setData({ messages: [], imReady: false });
+      wx.showToast({
+        title: '消息服务连接失败',
+        icon: 'none',
+        duration: 2500
+      });
+    } finally {
+      this.setData({ isLoading: false, refresherTriggered: false });
+    }
+  },
+
+  formatMessageTime(lastTime) {
+    if (!lastTime) return '';
+    const timestamp = Number(lastTime) * 1000;
+    if (!Number.isFinite(timestamp)) return '';
+    const date = new Date(timestamp);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${month}-${day} ${hour}:${minute}`;
+  },
+
+  peerUserIdFromConversation(conversation) {
+    const userProfile = conversation.userProfile || {};
+    let userId = userProfile.userID || '';
+    const cid = conversation.conversationID || '';
+    if (!userId && cid.indexOf('C2C') === 0) {
+      userId = cid.slice(3);
+    }
+    return userId;
+  },
+
+  async loadMessages() {
+    try {
+      const conversationList = await IMService.getConversationList();
+      const messages = (conversationList || []).map((conversation) => {
+        const userProfile = conversation.userProfile || {};
+        const lastMessage = conversation.lastMessage || {};
+        const userId = this.peerUserIdFromConversation(conversation);
+        const nick = userProfile.nick || '';
+        const preview = (lastMessage.messageForShow || '').trim();
+        const displayName = nick || (userId ? `用户 ${userId}` : '陌生人');
+        const avatarRaw = userProfile.avatar || '';
+        return {
+          id: conversation.conversationID,
+          conversationID: conversation.conversationID,
+          userId,
+          nickname: nick,
+          displayName,
+          avatar: this.resolveAvatar(avatarRaw) || avatarRaw,
+          preview: preview || '[暂无预览]',
+          time: this.formatMessageTime(lastMessage.lastTime),
+          unreadCount: conversation.unreadCount || 0
+        };
+      });
+      this.setData({
+        messages,
+        isLoading: false
+      });
+      IMService.syncUnreadBadgeFromSdk();
+    } catch (error) {
+      console.error('加载会话列表失败:', error);
+      this.setData({ messages: [], isLoading: false });
+      wx.showToast({
+        title: '加载会话失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  async onRefresherRefresh() {
+    if (this.data.needLogin) {
+      this.setData({ refresherTriggered: false });
+      return;
+    }
+    this.setData({ refresherTriggered: true });
+    try {
+      if (this.data.imReady) {
+        await IMService.initAndLogin();
+        await this.loadMessages();
+      } else {
+        await this.initIMAndLoadMessages();
       }
-    });
+    } finally {
+      this.setData({ refresherTriggered: false });
+    }
   },
 
-  // 跳转聊天页面
   goToChat(e) {
-    const userId = e.currentTarget.dataset.id;
+    const item = e.currentTarget.dataset.item;
+    if (!item) return;
+
+    const userId = item.userId || item.targetUserId;
+    if (!userId) {
+      wx.showToast({ title: '无法打开会话', icon: 'none' });
+      return;
+    }
+    const nickname = item.nickname || item.displayName || '';
+    const avatar = item.avatar || '';
+
     wx.navigateTo({
-      url: `/pages/chat/chat?userId=${userId}`
+      url: `/pages/chat/chat?userId=${encodeURIComponent(userId)}&nickname=${encodeURIComponent(nickname)}&avatar=${encodeURIComponent(avatar)}`
     });
   },
 
-  // 标记已读
-  markAsRead(e) {
-    const conversationId = e.currentTarget.dataset.id;
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/message/read`,
-      method: 'POST',
-      header: {
-        'X-User-Id': '1'
-      },
-      data: { conversationId },
-      success: () => {
-        this.loadMessages();
-      }
-    });
-  },
-
-  // 删除消息（模拟）
-  deleteMessage(e) {
+  deleteMessage() {
     wx.showToast({
-      title: '删除功能待实现',
+      title: '删除会话请使用长按（功能待接入）',
       icon: 'none'
     });
-  },
-
-  onPullDownRefresh() {
-    this.loadMessages();
   }
 });

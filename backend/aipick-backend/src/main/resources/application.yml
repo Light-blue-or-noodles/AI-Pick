@@ -5,6 +5,12 @@ server:
   tomcat:
     uri-encoding: UTF-8
 
+# 小程序「测试账号」登录：需真实 JWT 才能调用 /api/im/usersig；生产环境务必关闭（见 application-prod.yml）
+# IM 批量导入：POST /api/im/admin/batch-import-users，请求头 X-Im-Batch-Secret；生产务必设强密钥（勿提交仓库）
+app:
+  allow-test-login: ${ALLOW_TEST_LOGIN:true}
+  im-batch-import-secret: ${IM_BATCH_IMPORT_SECRET:}
+
 spring:
   application:
     name: aipick-backend
@@ -82,9 +88,11 @@ logging:
   level:
     com.aipick: debug
     org.springframework: info
-# 微信小程序登录（使用真实 openid/session_key，需配置 appid 与 secret）
+# 微信小程序登录（code2Session 需 AppID + AppSecret）
+# AppSecret 只在微信公众平台查看，务必用环境变量 WECHAT_SECRET 注入，勿写入仓库
+# 与本仓库小程序 project.config.json 中 appid 保持一致时可不设置 WECHAT_APPID
 wechat:
-  appid: ${WECHAT_APPID:}
+  appid: ${WECHAT_APPID:wx4bdbaf380a183caa}
   secret: ${WECHAT_SECRET:}
 
 # 头像等上传文件保存目录。代码中会转为绝对路径，与静态资源访问一致；若仍报 FileNotFoundException，可改为绝对路径如 ${user.dir}/uploads
@@ -97,3 +105,16 @@ storage:
   type: local
   local:
     root-dir: ${upload.dir:uploads}
+
+# 腾讯云即时通信 IM（UserSig 仅在后端签发；密钥勿提交公开仓库，生产务必用环境变量覆盖）
+tencent:
+  im:
+    sdk-app-id: ${TENCENT_IM_SDK_APP_ID:1600133993}
+    # 控制台「账号管理」中设为管理员(App 管理员)的 UserID，用于 REST 导入账号；须与控制台一致
+    identifier: ${TENCENT_IM_IDENTIFIER:administrator}
+    key: ${TENCENT_IM_KEY:8806e0cd94d52d2d5a1d6d3f9e47253b8274de8cf262ee66961dcbe154cead64}
+    expire-seconds: ${TENCENT_IM_EXPIRE_SECONDS:604800}
+    rest-api-host: ${TENCENT_IM_REST_HOST:https://console.tim.qq.com}
+    # 库内相对路径 /static/... 拼 FaceUrl 时使用；须与小程序访问后端的本机 IP 一致（见 app.js LAN_IP）。
+    # 微信头像等为 https 完整链时可直接同步到 IM；腾讯云服务器无法访问纯内网 IP 时本站上传头像仅小程序端可见。
+    avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:http://192.168.1.173:8080/api}

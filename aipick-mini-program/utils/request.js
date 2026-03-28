@@ -1,32 +1,103 @@
 // utils/request.js
-const app = getApp();
+// 注意：禁止在模块顶层调用 getApp()。require 顺序可能导致 App() 尚未执行，getApp() 为 undefined。
+const envConfig = require('../config/env.js');
+
+function getAppSafe() {
+  try {
+    return getApp();
+  } catch (e) {
+    return undefined;
+  }
+}
+
+function hydrateAuthFromStorage() {
+  try {
+    const a = getAppSafe();
+    if (!a || !a.globalData) {
+      return;
+    }
+    if (!a.globalData.token) {
+      const t = wx.getStorageSync('token');
+      if (t) {
+        a.globalData.token = t;
+      }
+    }
+    if (a.globalData.userId == null || a.globalData.userId === '') {
+      const u = wx.getStorageSync('userId');
+      if (u != null && u !== '') {
+        a.globalData.userId = u;
+      }
+    }
+  } catch (e) {
+    console.warn('hydrateAuthFromStorage', e);
+  }
+}
+
+/** 当前请求用的鉴权与 baseUrl（不依赖模块加载时刻的 getApp 结果） */
+function resolveRequestContext() {
+  hydrateAuthFromStorage();
+  const appInst = getAppSafe();
+  const gd = appInst && appInst.globalData ? appInst.globalData : {};
+  const token =
+    (gd.token != null && gd.token !== '' ? gd.token : null) ||
+    wx.getStorageSync('token') ||
+    '';
+  const rawUid =
+    gd.userId != null && gd.userId !== ''
+      ? gd.userId
+      : wx.getStorageSync('userId');
+  const userId = rawUid != null && rawUid !== '' ? rawUid : '';
+  const baseUrl =
+    (gd.baseUrl && String(gd.baseUrl).trim()) || envConfig.baseUrl || '';
+  return { token, userId, baseUrl };
+}
 
 // 请求封装
 const request = (options) => {
   return new Promise((resolve, reject) => {
+    const ctx = resolveRequestContext();
     const header = options.header || {};
-    
+
     // 添加 token
-    if (app.globalData.token) {
-      header['Authorization'] = `Bearer ${app.globalData.token}`;
+    if (ctx.token) {
+      header['Authorization'] = `Bearer ${ctx.token}`;
     }
-    
+
     // 添加 X-User-Id
-    if (app.globalData.userId) {
-      header['X-User-Id'] = app.globalData.userId;
+    if (ctx.userId !== '') {
+      header['X-User-Id'] = String(ctx.userId);
     }
-    
+
     // 添加 Content-Type
     if (!header['Content-Type']) {
       header['Content-Type'] = 'application/json';
     }
 
-    const root = options.baseUrl || app.globalData.baseUrl || 'http://localhost:8080';
+    const method = (options.method || 'GET').toUpperCase();
+    let payload = options.data;
+    if (payload == null || payload === undefined) {
+      payload = {};
+    }
+    const ct = String(header['Content-Type'] || '').toLowerCase();
+    if (
+      method !== 'GET' &&
+      ct.includes('application/json') &&
+      typeof payload === 'object' &&
+      !(payload instanceof ArrayBuffer)
+    ) {
+      try {
+        payload = JSON.stringify(payload);
+      } catch (e) {
+        console.warn('request JSON.stringify', e);
+      }
+    }
+
+    const root = options.baseUrl || ctx.baseUrl || envConfig.baseUrl;
 
     wx.request({
       url: root + options.url,
       method: options.method || 'GET',
-      data: options.data || {},
+      data: payload,
       header: header,
       success: (res) => {
         if (res.data.code === 0) {
@@ -39,10 +110,13 @@ const request = (options) => {
           // });
           reject(res.data);
         } else {
-          wx.showToast({
-            title: res.data.msg || '请求失败',
-            icon: 'none'
-          });
+          const errText = res.data.message || res.data.msg || '请求失败';
+          if (!options.suppressErrorToast) {
+            wx.showToast({
+              title: errText,
+              icon: 'none'
+            });
+          }
           reject(res.data);
         }
       },

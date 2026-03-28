@@ -54,4 +54,22 @@ public final class AvatarUtil {
         String n = MediaPathUtil.normalizeForResponse(avatar.trim());
         return isValidAvatarUrl(n) ? n : null;
     }
+
+    /**
+     * 是否为本站 {@code /static/...} 头像（含用户上传、资料里保存的相对路径或带 /static/ 的完整 URL）。
+     * 用于微信登录时不让 getUserProfile 的 CDN 头像覆盖用户已改过的头像。
+     */
+    public static boolean isSiteStaticAvatarRef(String url) {
+        if (!StringUtils.hasText(url)) {
+            return false;
+        }
+        String s = url.trim();
+        if (s.startsWith("/static/")) {
+            return true;
+        }
+        if (s.startsWith("http://") || s.startsWith("https://")) {
+            return s.contains("/static/");
+        }
+        return s.contains("/static/avatars/") || s.contains("/static/covers/");
+    }
 }

@@ -68,6 +68,11 @@ Page({
     this.setData({ loadingUser: true });
     try {
       const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+      const toFullUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http')) return path;
+        return baseUrl + '/api' + (path.startsWith('/') ? path : '/' + path);
+      };
       const res = await request({
         url: `${baseUrl}/api/user/info`,
         method: 'GET'
@@ -75,16 +80,12 @@ Page({
 
       if (res.data && res.data.code === 0) {
         const data = res.data.data || {};
-        const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
         let avatar = data.avatar;
         if (avatar && typeof avatar === 'string' && (avatar.indexOf('__tmp__') !== -1 || avatar.indexOf('://tmp/') !== -1 || (avatar.indexOf('127.0.0.1') !== -1 && avatar.indexOf(':8080') === -1))) {
           avatar = '/images/default-avatar.png';
         }
-        if (avatar && typeof avatar === 'string' && !avatar.startsWith('http') && !avatar.startsWith('data:') && !avatar.startsWith('/images')) {
-          avatar = baseUrl + (avatar.startsWith('/') ? avatar : '/' + avatar);
-        }
         const rawAvatar = avatar || data.avatar || '/images/default-avatar.png';
-        const finalAvatar = (rawAvatar && rawAvatar.startsWith('/images')) ? rawAvatar : (app.normalizeImageUrl ? app.normalizeImageUrl(rawAvatar) : rawAvatar);
+        const finalAvatar = (rawAvatar && rawAvatar.startsWith('/images')) ? rawAvatar : toFullUrl(rawAvatar);
         const userInfo = { ...data, avatar: finalAvatar, isLogin: true };
         this.setData({ userInfo });
         wx.setStorageSync('userInfo', userInfo);

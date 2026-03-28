@@ -1,48 +1,63 @@
 <!--pages/message/message.wxml-->
 <view class="container">
-  <!-- 消息列表 -->
-  <scroll-view class="message-list" scroll-y wx:if="{{!isLoading}}">
-    <block wx:for="{{messages}}" wx:key="id">
-      <view 
-        class="message-item {{item.unreadCount > 0 ? 'unread' : ''}}" 
-        bindtap="goToChat" 
-        data-id="{{item.user.id}}"
-        bindlongpress="deleteMessage"
-        data-id="{{item.id}}"
-      >
-        <view class="message-avatar">
-          <network-image
-            class="message-avatar-img"
-            customClass="message-avatar-img"
-            url="{{item.user.avatar}}"
-            defaultSrc="/images/default-avatar.png"
-            mode="aspectFill"
-          />
-          <view class="online-status" wx:if="{{item.isOnline}}"></view>
-        </view>
-        <view class="message-content">
-          <view class="message-header">
-            <text class="message-name">{{item.user.name}}</text>
-            <text class="message-time">{{item.time}}</text>
+  <!-- 未登录 -->
+  <view class="auth-gate" wx:if="{{needLogin}}">
+    <image class="auth-gate-icon" src="/images/message.png" mode="aspectFit" />
+    <text class="auth-gate-title">登录后查看消息</text>
+    <text class="auth-gate-desc">与搭子聊天、接收即时消息</text>
+    <button class="auth-gate-btn" bindtap="goLogin">去登录</button>
+  </view>
+
+  <block wx:else>
+    <scroll-view
+      class="message-list"
+      scroll-y
+      wx:if="{{!isLoading}}"
+      refresher-enabled="{{true}}"
+      refresher-triggered="{{refresherTriggered}}"
+      bindrefresherrefresh="onRefresherRefresh"
+    >
+      <block wx:for="{{messages}}" wx:key="id">
+        <view
+          class="message-item {{item.unreadCount > 0 ? 'unread' : ''}}"
+          bindtap="goToChat"
+          data-item="{{item}}"
+          bindlongpress="deleteMessage"
+          data-id="{{item.id}}"
+        >
+          <view class="message-avatar">
+            <network-image
+              class="message-avatar-img"
+              customClass="message-avatar-img"
+              url="{{item.avatar}}"
+              defaultSrc="/images/default-avatar.png"
+              mode="aspectFill"
+            />
           </view>
-          <view class="message-body">
-            <text class="message-text">{{item.lastMessage}}</text>
-            <view class="unread-badge" wx:if="{{item.unreadCount > 0}}">
-              {{item.unreadCount > 99 ? '99+' : item.unreadCount}}
+          <view class="message-content">
+            <view class="message-header">
+              <text class="message-name">{{item.displayName}}</text>
+              <text class="message-time">{{item.time}}</text>
+            </view>
+            <view class="message-body">
+              <text class="message-text">{{item.preview}}</text>
+              <view class="unread-badge" wx:if="{{item.unreadCount > 0}}">
+                {{item.unreadCount > 99 ? '99+' : item.unreadCount}}
+              </view>
             </view>
           </view>
         </view>
+      </block>
+
+      <view class="empty-state" wx:if="{{messages.length === 0}}">
+        <image src="/images/empty-message.png" mode="aspectFit" />
+        <text>暂无会话</text>
+        <text class="empty-hint">在搭子详情或用户主页发起聊天</text>
       </view>
-    </block>
+    </scroll-view>
 
-    <view class="empty-state" wx:if="{{messages.length === 0}}">
-      <image src="/images/empty-message.png" mode="aspectFit" />
-      <text>暂无消息</text>
+    <view class="loading" wx:else>
+      <text>连接消息服务…</text>
     </view>
-  </scroll-view>
-
-  <!-- 加载中 -->
-  <view class="loading" wx:else>
-    <text>加载中...</text>
-  </view>
+  </block>
 </view>

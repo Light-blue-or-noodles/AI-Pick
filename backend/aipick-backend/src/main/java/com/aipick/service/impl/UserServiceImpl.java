@@ -19,6 +19,7 @@ import com.aipick.mapper.ActivityRegistrationMapper;
 import com.aipick.mapper.PartnerMapper;
 import com.aipick.mapper.UserMapper;
 import com.aipick.mapper.UserMessageMapper;
+import com.aipick.service.IMService;
 import com.aipick.service.UserService;
 import com.aipick.util.AvatarUtil;
 import com.aipick.util.MediaPathUtil;
@@ -50,6 +51,7 @@ public class UserServiceImpl implements UserService {
     private final ActivityMapper activityMapper;
     private final ActivityRegistrationMapper activityRegistrationMapper;
     private final UserMessageMapper userMessageMapper;
+    private final IMService imService;
     
     /** 公司/学校名称最小长度 */
     private static final int MIN_NAME_LENGTH = 2;
@@ -72,16 +74,26 @@ public class UserServiceImpl implements UserService {
     @Value("${wechat.secret:}")
     private String secret;
 
+    @Value("${app.allow-test-login:false}")
+    private boolean allowTestLogin;
+
+    /**
+     * 微信侧未拿到真实昵称或隐私策略时，getUserProfile 常见占位，不可用来覆盖库里已完善的资料。
+     */
+    private static final String WECHAT_PLACEHOLDER_NICKNAME = "微信用户";
+
     public UserServiceImpl(UserMapper userMapper, JwtUtils jwtUtils,
                            PartnerMapper partnerMapper, ActivityMapper activityMapper,
                            ActivityRegistrationMapper activityRegistrationMapper,
-                           UserMessageMapper userMessageMapper) {
+                           UserMessageMapper userMessageMapper,
+                           IMService imService) {
         this.userMapper = userMapper;
         this.jwtUtils = jwtUtils;
         this.partnerMapper = partnerMapper;
         this.activityMapper = activityMapper;
         this.activityRegistrationMapper = activityRegistrationMapper;
         this.userMessageMapper = userMessageMapper;
+        this.imService = imService;
     }
 
     @Override
@@ -102,6 +114,8 @@ public class UserServiceImpl implements UserService {
         user.setCreateTime(LocalDateTime.now());
 
         userMapper.insert(user);
+        imService.importUserToIm(user.getId(), user.getNickname(),
+                AvatarUtil.sanitizeForResponse(user.getAvatar()));
         return user;
     }
 
@@ -125,6 +139,9 @@ public class UserServiceImpl implements UserService {
 
         // 生成 Token
         String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+
+        imService.importUserToIm(user.getId(), user.getNickname(),
+                AvatarUtil.sanitizeForResponse(user.getAvatar()));
 
         return new LoginResponse(token, user.getId(), user.getUsername(),
                 user.getNickname(), AvatarUtil.sanitizeForResponse(user.getAvatar()));
@@ -155,8 +172,8 @@ public class UserServiceImpl implements UserService {
             
             // 如果有传入用户信息
             if (request.getUserInfo() != null) {
-                if (StringUtils.hasText(request.getUserInfo().getNickname())) {
-                    user.setNickname(request.getUserInfo().getNickname());
+                if (shouldApplyWechatProfileNickname(request.getUserInfo().getNickname())) {
+                    user.setNickname(request.getUserInfo().getNickname().trim());
                 }
                 if (StringUtils.hasText(request.getUserInfo().getAvatar())) {
                     String av = MediaPathUtil.normalizeForPersistence(request.getUserInfo().getAvatar().trim());
@@ -177,26 +194,31 @@ public class UserServiceImpl implements UserService {
                 throw new BusinessException("账号已被禁用");
             }
             
-            // 更新用户信息
+            /* 更新用户信息：若本次仅带回微信占位昵称，则整块 userInfo 视为不可信，避免头像/性别也被错误同步 */
             if (request.getUserInfo() != null) {
-                boolean needUpdate = false;
-                if (StringUtils.hasText(request.getUserInfo().getNickname())) {
-                    user.setNickname(request.getUserInfo().getNickname());
-                    needUpdate = true;
-                }
-                if (StringUtils.hasText(request.getUserInfo().getAvatar())) {
-                    String av = MediaPathUtil.normalizeForPersistence(request.getUserInfo().getAvatar().trim());
-                    if (AvatarUtil.isValidAvatarUrl(av)) {
-                        user.setAvatar(av);
+                WechatLoginRequest.UserInfo ui = request.getUserInfo();
+                boolean nickIsOnlyWechatPlaceholder = StringUtils.hasText(ui.getNickname())
+                        && isWechatPlaceholderNickname(ui.getNickname());
+                if (!nickIsOnlyWechatPlaceholder) {
+                    boolean needUpdate = false;
+                    if (shouldApplyWechatProfileNickname(ui.getNickname())) {
+                        user.setNickname(ui.getNickname().trim());
                         needUpdate = true;
                     }
-                }
-                if (request.getUserInfo().getGender() != null) {
-                    user.setGender(request.getUserInfo().getGender());
-                    needUpdate = true;
-                }
-                if (needUpdate) {
-                    userMapper.updateById(user);
+                    if (shouldApplyWechatLoginAvatarToExistingUser(user.getAvatar(), ui.getAvatar())) {
+                        String av = MediaPathUtil.normalizeForPersistence(ui.getAvatar().trim());
+                        if (AvatarUtil.isValidAvatarUrl(av)) {
+                            user.setAvatar(av);
+                            needUpdate = true;
+                        }
+                    }
+                    if (ui.getGender() != null) {
+                        user.setGender(ui.getGender());
+                        needUpdate = true;
+                    }
+                    if (needUpdate) {
+                        userMapper.updateById(user);
+                    }
                 }
             }
         }
@@ -204,9 +226,61 @@ public class UserServiceImpl implements UserService {
         // 生成 Token
         String token = jwtUtils.generateToken(user.getId(), "wechat");
 
+        imService.importUserToIm(user.getId(), user.getNickname(),
+                AvatarUtil.sanitizeForResponse(user.getAvatar()));
+
         return new LoginResponse(token, user.getId(),
                 String.valueOf(user.getId()),
                 user.getNickname(), AvatarUtil.sanitizeForResponse(user.getAvatar()), isNew);
+    }
+
+    @Override
+    public LoginResponse testLogin() {
+        if (!allowTestLogin) {
+            throw new BusinessException("测试登录未开启");
+        }
+        final Long testUserId = 1L;
+        User user = userMapper.selectById(testUserId);
+        if (user == null) {
+            throw new BusinessException("测试用户不存在，请保证数据库中存在 id=1 的用户");
+        }
+        if (user.getStatus() != null && user.getStatus() == 1) {
+            throw new BusinessException("账号已被禁用");
+        }
+        String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+        imService.importUserToIm(user.getId(), user.getNickname(),
+                AvatarUtil.sanitizeForResponse(user.getAvatar()));
+        return new LoginResponse(token, user.getId(), user.getUsername(),
+                user.getNickname(), AvatarUtil.sanitizeForResponse(user.getAvatar()));
+    }
+
+    private static boolean isWechatPlaceholderNickname(String nickname) {
+        if (!StringUtils.hasText(nickname)) {
+            return true;
+        }
+        return WECHAT_PLACEHOLDER_NICKNAME.equals(nickname.trim());
+    }
+
+    /**
+     * 仅非空且非微信默认占位昵称时写入昵称，避免 getUserProfile 返回「微信用户」覆盖老用户资料。
+     */
+    private static boolean shouldApplyWechatProfileNickname(String nickname) {
+        return StringUtils.hasText(nickname) && !isWechatPlaceholderNickname(nickname);
+    }
+
+    /**
+     * 老用户微信登录：库里已是本站上传的 static 头像时，不要用 getUserProfile 的 thirdwx 地址覆盖。
+     * （库不会被 IM 回写；覆盖来源是每次 wechat-login 请求的 userInfo.avatar。）
+     */
+    private static boolean shouldApplyWechatLoginAvatarToExistingUser(String currentDbAvatar, String incomingWechatAvatar) {
+        if (!StringUtils.hasText(incomingWechatAvatar)) {
+            return false;
+        }
+        if (AvatarUtil.isSiteStaticAvatarRef(currentDbAvatar)) {
+            return false;
+        }
+        String av = MediaPathUtil.normalizeForPersistence(incomingWechatAvatar.trim());
+        return AvatarUtil.isValidAvatarUrl(av);
     }
 
     /**
@@ -300,14 +374,18 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("用户不存在");
         }
 
+        boolean syncImProfile = false;
+
         // 更新非空字段
         if (StringUtils.hasText(request.getNickname())) {
             user.setNickname(request.getNickname());
+            syncImProfile = true;
         }
         if (StringUtils.hasText(request.getAvatar())) {
             String avatar = MediaPathUtil.normalizeForPersistence(request.getAvatar().trim());
             if (AvatarUtil.isValidAvatarUrl(avatar)) {
                 user.setAvatar(avatar);
+                syncImProfile = true;
             }
         }
         if (StringUtils.hasText(request.getPhone())) {
@@ -336,6 +414,35 @@ public class UserServiceImpl implements UserService {
         }
 
         userMapper.updateById(user);
+        if (syncImProfile) {
+            imService.importUserToIm(user.getId(), user.getNickname(),
+                    AvatarUtil.sanitizeForResponse(user.getAvatar()));
+        }
+        user.setPassword(null);
+        user.setOpenid(null);
+        return user;
+    }
+
+    @Override
+    public User saveUploadedAvatarAndSyncIm(Long userId, String storedUrlPath) {
+        if (userId == null || userId <= 0) {
+            throw new BusinessException("用户ID无效");
+        }
+        if (!StringUtils.hasText(storedUrlPath)) {
+            throw new BusinessException("头像路径无效");
+        }
+        String normalized = MediaPathUtil.normalizeForPersistence(storedUrlPath.trim());
+        if (!AvatarUtil.isValidAvatarUrl(normalized)) {
+            throw new BusinessException("头像路径不合法");
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setAvatar(normalized);
+        userMapper.updateById(user);
+        imService.importUserToIm(user.getId(), user.getNickname(),
+                AvatarUtil.sanitizeForResponse(user.getAvatar()));
         user.setPassword(null);
         user.setOpenid(null);
         return user;

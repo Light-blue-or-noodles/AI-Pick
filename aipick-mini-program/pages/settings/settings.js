@@ -1,5 +1,6 @@
 // pages/settings/settings.js
 const app = getApp();
+const IMService = require('../../utils/im');
 
 Page({
   data: {
@@ -144,6 +145,7 @@ Page({
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
+          IMService.logout().catch(() => {});
           // Clear storage
           wx.clearStorageSync();
           

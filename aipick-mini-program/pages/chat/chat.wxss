@@ -7,19 +7,51 @@
   background: #f5f5f5;
 }
 
+/* 聊天头部 */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 30rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.header-avatar {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  margin-right: 16rpx;
+}
+
+.header-nickname {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+}
+
 .chat-content {
   flex: 1;
   padding: 20rpx;
   padding-bottom: 20rpx;
 }
 
+.chat-content.user-chat {
+  background: #f8f9fa;
+}
+
 .message-wrapper {
   display: flex;
   margin-bottom: 30rpx;
+  align-items: flex-start;
 }
 
 .message-wrapper.user {
   justify-content: flex-end;
+}
+
+.message-wrapper.other {
+  justify-content: flex-start;
 }
 
 .message-avatar {
@@ -30,6 +62,10 @@
 }
 
 .ai-avatar {
+  margin-right: 16rpx;
+}
+
+.other-avatar {
   margin-right: 16rpx;
 }
 
@@ -47,6 +83,13 @@
 
 .message-wrapper.ai .message-bubble {
   border-top-left-radius: 4rpx;
+  background: #fff;
+}
+
+.message-wrapper.other .message-bubble {
+  border-top-left-radius: 4rpx;
+  background: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 .message-wrapper.user .message-bubble {
@@ -62,6 +105,18 @@
 
 .message-wrapper.user .message-text {
   color: #fff;
+}
+
+.message-time {
+  font-size: 20rpx;
+  color: #999;
+  margin-top: 8rpx;
+  display: block;
+  text-align: right;
+}
+
+.message-wrapper.user .message-time {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* 输入指示器 */
@@ -150,4 +205,13 @@
 .send-btn image {
   width: 48rpx;
   height: 48rpx;
+}
+
+/* 用户聊天特殊样式 */
+.user-chat .message-wrapper {
+  margin-bottom: 24rpx;
+}
+
+.user-chat .message-bubble {
+  max-width: 65%;
 }

@@ -28,7 +28,13 @@
         </view>
       </view>
       <view class="user-actions">
-        <view class="btn-chat" catchtap="onStartChat" data-id="{{item.id}}">
+        <view
+          class="btn-chat"
+          catchtap="onStartChat"
+          data-id="{{item.id}}"
+          data-nickname="{{item.nickname}}"
+          data-avatar="{{item.avatar}}"
+        >
           <text>💬</text>
         </view>
         <view class="btn-unfollow" catchtap="onToggleFollow" data-id="{{item.id}}">

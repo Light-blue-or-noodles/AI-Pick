@@ -33,13 +33,20 @@ Page({
       this.setData({ messages: [] });
       return;
     }
-    const baseUrl = (getApp() && getApp().globalData && getApp().globalData.baseUrl) ? String(getApp().globalData.baseUrl).replace(/\/$/, '') : 'http://localhost:8080';
+    const app = getApp();
+    const baseUrl = (app && app.globalData && app.globalData.baseUrl) ? String(app.globalData.baseUrl).replace(/\/$/, '') : 'http://localhost:8080';
+    const token = wx.getStorageSync('token');
+    const userId = wx.getStorageSync('userId');
     wx.request({
-      url: `${baseUrl}/api/chat/history/${sessionId}`,
+      url: `${baseUrl}/api/chat/ai/history/${sessionId}`,
       method: 'GET',
+      header: {
+        Authorization: token ? `Bearer ${token}` : '',
+        'X-User-Id': userId ? String(userId) : ''
+      },
       success: (res) => {
-        if (res.statusCode === 200 && res.data) {
-          const raw = Array.isArray(res.data) ? res.data : (res.data.data || res.data.list || []);
+        if (res.statusCode === 200 && res.data && res.data.code === 0) {
+          const raw = Array.isArray(res.data.data) ? res.data.data : [];
           const list = [];
           for (let i = 0; i < raw.length; i++) {
             if (raw[i].type === 1 && i + 1 < raw.length && raw[i + 1].type === 2) {

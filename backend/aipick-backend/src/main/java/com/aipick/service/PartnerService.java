@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.aipick.dto.ApplyPartnerRequest;
 import com.aipick.dto.CreatePartnerRequest;
 import com.aipick.dto.PageRequest;
+import com.aipick.dto.UserPartnerResponse;
 import com.aipick.entity.Partner;
 import com.aipick.entity.PartnerApply;
+import com.aipick.entity.User;
 import com.aipick.vo.PartnerVO;
 
 import java.time.LocalDateTime;
@@ -111,4 +113,18 @@ public interface PartnerService {
      * @param partnerId 搭子 ID
      */
     void deletePartner(Long userId, Long partnerId);
+
+    /**
+     * 获取用户可见的搭子列表（用于用户详情页）
+     * 权限控制：
+     * - 公开搭子（scope & 1）：所有用户可见
+     * - 公司限定（scope & 2）：仅同公司用户可见
+     * - 校友限定（scope & 4）：仅同校用户可见
+     *
+     * @param targetUserId 目标用户ID（被查看的用户）
+     * @param currentUser  当前登录用户（可为null）
+     * @param pageRequest  分页参数
+     * @return 可见搭子列表
+     */
+    List<UserPartnerResponse> getUserVisiblePartners(Long targetUserId, User currentUser, PageRequest pageRequest);
 }

@@ -41,6 +41,13 @@ public interface UserService {
     LoginResponse wechatLogin(WechatLoginRequest request);
 
     /**
+     * 本地/联调测试登录（仅当 app.allow-test-login=true），签发固定用户 JWT
+     *
+     * @return 登录响应
+     */
+    LoginResponse testLogin();
+
+    /**
      * 获取当前用户信息
      *
      * @param userId 用户ID
@@ -56,6 +63,15 @@ public interface UserService {
      * @return 用户信息
      */
     User updateUserInfo(Long userId, UpdateUserRequest request);
+
+    /**
+     * 头像文件上传成功后：写入用户表并同步腾讯云 IM（与小程序展示一致）。
+     *
+     * @param userId        用户ID
+     * @param storedUrlPath 存储服务返回的路径，如 /static/avatars/xxx.jpg
+     * @return 更新后的用户（已脱敏）
+     */
+    User saveUploadedAvatarAndSyncIm(Long userId, String storedUrlPath);
 
     /**
      * 根据用户名查询用户

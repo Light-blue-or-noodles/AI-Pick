@@ -10,6 +10,7 @@ import com.aipick.common.PartnerTypeConstants;
 import com.aipick.dto.ApplyPartnerRequest;
 import com.aipick.dto.CreatePartnerRequest;
 import com.aipick.dto.PageRequest;
+import com.aipick.dto.UserPartnerResponse;
 import com.aipick.entity.Partner;
 import com.aipick.entity.PartnerApply;
 import com.aipick.entity.User;
@@ -469,5 +470,140 @@ public class PartnerServiceImpl implements PartnerService {
         LambdaQueryWrapper<User> w = new LambdaQueryWrapper<>();
         w.eq(User::getSchoolName, school).select(User::getId);
         return userMapper.selectList(w).stream().map(User::getId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserPartnerResponse> getUserVisiblePartners(Long targetUserId, User currentUser, PageRequest pageRequest) {
+        // 查询目标用户发布的所有搭子
+        LambdaQueryWrapper<Partner> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Partner::getUserId, targetUserId);
+        wrapper.orderByDesc(Partner::getCreateTime);
+        
+        // 分页查询
+        Page<Partner> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize());
+        IPage<Partner> result = partnerMapper.selectPage(page, wrapper);
+        
+        if (result.getRecords().isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 获取目标用户信息（用于权限判断）
+        User targetUser = userMapper.selectById(targetUserId);
+        
+        // 过滤可见搭子
+        List<UserPartnerResponse> visiblePartners = new ArrayList<>();
+        for (Partner partner : result.getRecords()) {
+            if (isPartnerVisible(partner, targetUser, currentUser)) {
+                visiblePartners.add(toUserPartnerResponse(partner));
+            }
+        }
+        
+        return visiblePartners;
+    }
+    
+    /**
+     * 判断搭子是否对当前用户可见
+     */
+    private boolean isPartnerVisible(Partner partner, User targetUser, User currentUser) {
+        Integer scope = partner.getScope();
+        if (scope == null) {
+            scope = 1; // 默认为公开
+        }
+        
+        // 公开搭子（scope & 1）：所有用户可见
+        if ((scope & 1) != 0) {
+            return true;
+        }
+        
+        // 如果当前用户未登录，只能看到公开搭子
+        if (currentUser == null) {
+            return false;
+        }
+        
+        // 自己看自己发布的搭子，全部可见
+        if (currentUser.getId().equals(partner.getUserId())) {
+            return true;
+        }
+        
+        // 公司限定（scope & 2）：仅同公司用户可见
+        if ((scope & 2) != 0) {
+            String targetCompany = targetUser != null ? targetUser.getCompanyName() : null;
+            String currentCompany = currentUser.getCompanyName();
+            if (targetCompany != null && !targetCompany.isBlank() 
+                    && currentCompany != null && !currentCompany.isBlank()
+                    && targetCompany.equals(currentCompany)) {
+                return true;
+            }
+        }
+        
+        // 校友限定（scope & 4）：仅同校用户可见
+        if ((scope & 4) != 0) {
+            String targetSchool = targetUser != null ? targetUser.getSchoolName() : null;
+            String currentSchool = currentUser.getSchoolName();
+            if (targetSchool != null && !targetSchool.isBlank() 
+                    && currentSchool != null && !currentSchool.isBlank()
+                    && targetSchool.equals(currentSchool)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 将 Partner 转换为 UserPartnerResponse
+     */
+    private UserPartnerResponse toUserPartnerResponse(Partner partner) {
+        UserPartnerResponse response = new UserPartnerResponse();
+        response.setId(partner.getId());
+        response.setTitle(partner.getTitle());
+        response.setTypeCode(partner.getType());
+        response.setTypeName(PartnerTypeConstants.labelOf(partner.getType()));
+        response.setCoverImage(partner.getCoverImage());
+        response.setStatus(partner.getStatus());
+        response.setStatusName(getStatusName(partner.getStatus()));
+        response.setPreference(partner.getPreference());
+        
+        // 解析标签（从 preference 或其他字段）
+        response.setTags(parseTags(partner.getPreference()));
+        
+        response.setCurrentCount(partner.getCurrentCount());
+        response.setMaxCount(partner.getTargetCount());
+        response.setScope(partner.getScope());
+        response.setScopeName(PartnerScopeConstants.labelOf(partner.getScope()));
+        response.setCreateTime(partner.getCreateTime());
+        
+        return response;
+    }
+    
+    /**
+     * 获取状态名称
+     */
+    private String getStatusName(Integer status) {
+        if (status == null) return "未知";
+        switch (status) {
+            case 0: return "招募中";
+            case 1: return "已满";
+            case 2: return "已结束";
+            default: return "未知";
+        }
+    }
+    
+    /**
+     * 解析标签
+     */
+    private List<String> parseTags(String preference) {
+        if (preference == null || preference.isBlank()) {
+            return new ArrayList<>();
+        }
+        // 简单按逗号或空格分割，可根据实际需求调整
+        String[] tags = preference.split("[,，、\\s]+");
+        List<String> result = new ArrayList<>();
+        for (String tag : tags) {
+            if (!tag.trim().isEmpty()) {
+                result.add(tag.trim());
+            }
+        }
+        return result;
     }
 }

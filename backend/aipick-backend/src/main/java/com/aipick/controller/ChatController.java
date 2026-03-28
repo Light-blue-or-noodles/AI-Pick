@@ -39,9 +39,9 @@ public class ChatController {
     }
 
     /**
-     * 获取会话历史（sessionId 为空时返回空列表，避免 500）
+     * 获取 AI 会话历史（sessionId 为空时返回空列表，避免 500）
      */
-    @GetMapping("/history/{sessionId}")
+    @GetMapping("/ai/history/{sessionId}")
     public Result<List<ChatMessage>> getHistory(@PathVariable(required = false) String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return Result.success(List.of());

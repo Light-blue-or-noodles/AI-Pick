@@ -83,6 +83,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/user/login",
                         "/api/user/register",
                         "/api/user/wechat-login",
+                        "/api/user/test-login",
+                        "/api/im/admin/batch-import-users",
                         "/api/static/**",
                         "/api/partner/list",
                         "/api/partner/*",

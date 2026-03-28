@@ -1,11 +1,16 @@
 // app.js
+const envConfig = require('./config/env.js');
+const IMService = require('./utils/im');
+
 // 局域网真机调试：改为 true 并填写电脑的局域网 IP
 const USE_LAN = true;
 const LAN_IP = '192.168.1.173';
 
 function getBaseUrl() {
+  // 优先使用局域网配置（真机调试时）
   if (USE_LAN && LAN_IP) return `http://${LAN_IP}:8080`;
-  return 'http://localhost:8080';
+  // 使用环境配置
+  return envConfig.baseUrl;
 }
 
 const mediaUrl = require('./utils/mediaUrl.js');
@@ -18,14 +23,43 @@ function normalizeImageUrl(url, baseUrl) {
   return mediaUrl.resolveMediaUrl(url, { baseUrl: baseUrl || getBaseUrl(), kind: 'general' });
 }
 
+function safeUpdateTabBarUnread(count) {
+  const n = Math.max(0, Math.floor(Number(count) || 0));
+  try {
+    const pages = getCurrentPages();
+    for (let i = pages.length - 1; i >= 0; i--) {
+      const p = pages[i];
+      if (p && typeof p.getTabBar === 'function') {
+        const bar = p.getTabBar();
+        if (bar && typeof bar.applyImUnreadBadge === 'function') {
+          bar.applyImUnreadBadge(n);
+          break;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('updateTabBarUnread', e);
+  }
+}
+
 App({
   globalData: {
     userInfo: null,
     baseUrl: getBaseUrl(),
-    token: null
+    token: null,
+    imUnreadCount: 0
   },
 
   normalizeImageUrl,
+
+  /**
+   * 同步腾讯云 IM 未读总数到全局与自定义 TabBar（消息 Tab）
+   */
+  updateImUnreadBadge(count) {
+    const n = Math.max(0, Math.floor(Number(count) || 0));
+    this.globalData.imUnreadCount = n;
+    safeUpdateTabBarUnread(n);
+  },
 
   onLaunch() {
     // 检查登录状态
@@ -35,13 +69,13 @@ App({
   checkLoginStatus() {
     const token = wx.getStorageSync('token');
     const userId = wx.getStorageSync('userId');
-    
     if (token && userId) {
       this.globalData.token = token;
       this.globalData.userId = userId;
-      this.getUserInfo();
+    } else {
+      this.globalData.imUnreadCount = 0;
     }
-    // 未登录时不做处理，由页面自行判断
+    // 不在此请求 /api/user/info：首屏为登录页时，用户未点击登录即拉取会污染展示；登录成功后再拉取（见 login 页 persistSession 后）。
   },
   
   getUserInfo() {
@@ -58,6 +92,7 @@ App({
       success: (res) => {
         if (res.statusCode === 401) {
           // token 过期或无效，清除登录状态
+          IMService.logout().catch(() => {});
           this.globalData.token = null;
           this.globalData.userId = null;
           this.globalData.userInfo = null;
@@ -66,7 +101,13 @@ App({
           return;
         }
         if (res.data && res.data.code === 0) {
-          this.globalData.userInfo = res.data.data;
+          const d = res.data.data || {};
+          this.globalData.userInfo = d;
+          try {
+            wx.setStorageSync('userInfo', { ...d, isLogin: true });
+          } catch (e) {
+            console.warn('setStorageSync userInfo', e);
+          }
         }
       },
       fail: () => {

@@ -15,10 +15,18 @@ import com.aipick.dto.RegisterRequest;
 import com.aipick.dto.UpdateUserRequest;
 import com.aipick.dto.WechatLoginRequest;
 import com.aipick.dto.UserInfoDTO;
+import com.aipick.dto.UserProfileResponse;
+import com.aipick.dto.UserPartnerResponse;
+import com.aipick.dto.PageRequest;
 import com.aipick.entity.User;
 import com.aipick.service.UserService;
+import com.aipick.service.FollowService;
+import com.aipick.service.PartnerService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 用户控制器
@@ -33,11 +41,15 @@ public class UserController {
     private static final String[] AVATAR_ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"};
 
     private final UserService userService;
-
+    private final FollowService followService;
+    private final PartnerService partnerService;
     private final ImageStorageService imageStorageService;
 
-    public UserController(UserService userService, ImageStorageService imageStorageService) {
+    public UserController(UserService userService, FollowService followService, 
+                          PartnerService partnerService, ImageStorageService imageStorageService) {
         this.userService = userService;
+        this.followService = followService;
+        this.partnerService = partnerService;
         this.imageStorageService = imageStorageService;
     }
 
@@ -47,6 +59,16 @@ public class UserController {
     @PostMapping("/wechat-login")
     public Result<LoginResponse> wechatLogin(@Valid @RequestBody WechatLoginRequest request) {
         LoginResponse response = userService.wechatLogin(request);
+        return Result.success("登录成功", response);
+    }
+
+    /**
+     * 小程序开发联调：签发 id=1 用户的真实 JWT，便于 IM UserSig 等需鉴权接口。
+     * 仅当 app.allow-test-login=true；生产环境须关闭。
+     */
+    @PostMapping("/test-login")
+    public Result<LoginResponse> testLogin() {
+        LoginResponse response = userService.testLogin();
         return Result.success("登录成功", response);
     }
 
@@ -122,6 +144,7 @@ public class UserController {
         }
         Map<String, String> stored = imageStorageService.storeAvatar(file, userId);
         String urlPath = stored.get("url");
+        userService.saveUploadedAvatarAndSyncIm(userId, urlPath);
         return Result.success("上传成功", Map.of("url", urlPath));
     }
 
@@ -166,6 +189,89 @@ public class UserController {
         User user = userService.joinSchool(userId, schoolName.trim());
         UserInfoDTO dto = toUserInfoDTO(user);
         return Result.success("加入成功", dto);
+    }
+
+    /**
+     * 获取用户资料（用户详情页）
+     * GET /api/user/{id}/profile
+     */
+    @GetMapping("/{id}/profile")
+    public Result<UserProfileResponse> getUserProfile(
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @PathVariable("id") Long userId) {
+        User user = userService.getUserInfo(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        
+        UserProfileResponse response = new UserProfileResponse();
+        response.setId(user.getId());
+        response.setNickname(user.getNickname());
+        response.setAvatar(com.aipick.util.AvatarUtil.sanitizeForResponse(user.getAvatar()));
+        response.setBio(user.getBio());
+        response.setCompanyName(user.getCompanyName());
+        response.setSchoolName(user.getSchoolName());
+        response.setFollowerCount(followService.getFollowerCount(userId));
+        response.setFollowingCount(followService.getFollowingCount(userId));
+        
+        // 检查当前登录用户是否已关注该用户
+        boolean isFollowed = false;
+        if (currentUserId != null && !currentUserId.equals(userId)) {
+            isFollowed = followService.isFollowing(currentUserId, userId);
+        }
+        response.setIsFollowed(isFollowed);
+        
+        // 获取当前登录用户信息（用于权限判断）
+        User currentUser = null;
+        if (currentUserId != null) {
+            try {
+                currentUser = userService.getUserInfo(currentUserId);
+            } catch (Exception e) {
+                // 忽略错误，currentUser 保持为 null
+            }
+        }
+        
+        // 获取用户可见的搭子数量
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setPageNum(1);
+        pageRequest.setPageSize(Integer.MAX_VALUE);
+        List<UserPartnerResponse> visiblePartners = partnerService.getUserVisiblePartners(userId, currentUser, pageRequest);
+        response.setPartnersCount(visiblePartners.size());
+        
+        return Result.success(response);
+    }
+
+    /**
+     * 获取用户发布的搭子列表（用户详情页）
+     * GET /api/user/{id}/partners
+     * 权限控制：仅返回当前用户可见的搭子
+     */
+    @GetMapping("/{id}/partners")
+    public Result<List<UserPartnerResponse>> getUserPartners(
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @PathVariable("id") Long userId,
+            @Valid @ModelAttribute PageRequest pageRequest) {
+        // 获取目标用户信息
+        User targetUser = userService.getUserInfo(userId);
+        if (targetUser == null) {
+            throw new BusinessException("用户不存在");
+        }
+        
+        // 获取当前登录用户信息（用于权限判断）
+        User currentUser = null;
+        if (currentUserId != null) {
+            try {
+                currentUser = userService.getUserInfo(currentUserId);
+            } catch (Exception e) {
+                // 忽略错误，currentUser 保持为 null
+            }
+        }
+        
+        // 调用 Service 获取可见搭子列表
+        List<UserPartnerResponse> partners = partnerService.getUserVisiblePartners(
+                userId, currentUser, pageRequest);
+        
+        return Result.success(partners);
     }
 
     private UserInfoDTO toUserInfoDTO(User user) {

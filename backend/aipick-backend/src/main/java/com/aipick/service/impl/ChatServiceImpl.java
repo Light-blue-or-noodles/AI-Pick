@@ -2,8 +2,8 @@ package com.aipick.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import com.aipick.common.AiConstants;
-import com.aipick.dto.ChatRequest;
 import com.aipick.dto.ChatRecommendItem;
+import com.aipick.dto.ChatRequest;
 import com.aipick.dto.ChatResponse;
 import com.aipick.dto.PageRequest;
 import com.aipick.entity.Activity;
@@ -14,8 +14,8 @@ import com.aipick.mapper.ChatMessageMapper;
 import com.aipick.service.ActivityService;
 import com.aipick.service.ChatService;
 import com.aipick.service.PartnerService;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -123,13 +123,17 @@ public class ChatServiceImpl implements ChatService {
         if (text.contains("运动") || text.contains("运动活动")) {
             IPage<PartnerVO> partners = partnerService.getPartnerList(page, 5, null, null);
             for (PartnerVO p : partners.getRecords()) {
-                if (list.size() >= MAX_RECOMMENDS) break;
+                if (list.size() >= MAX_RECOMMENDS) {
+                    break;
+                }
                 list.add(new ChatRecommendItem("partner", p.getId(), p.getTitle(),
                         truncate(p.getDescription(), 50), toCoverPath(p.getCoverImage(), "partner"), 85));
             }
             IPage<Activity> activities = activityService.getActivityList(page, null, "运动", null);
             for (Activity a : activities.getRecords()) {
-                if (list.size() >= MAX_RECOMMENDS) break;
+                if (list.size() >= MAX_RECOMMENDS) {
+                    break;
+                }
                 list.add(new ChatRecommendItem("activity", a.getId(), a.getTitle(),
                         truncate(a.getDescription(), 50), toCoverPath(a.getCoverImage(), "activity"), 80));
             }
@@ -138,7 +142,9 @@ public class ChatServiceImpl implements ChatService {
         if (text.contains("附近") || text.contains("活动") || text.contains("动态")) {
             IPage<Activity> activities = activityService.getActivityList(page, null, null, null);
             for (Activity a : activities.getRecords()) {
-                if (list.size() >= MAX_RECOMMENDS) break;
+                if (list.size() >= MAX_RECOMMENDS) {
+                    break;
+                }
                 list.add(new ChatRecommendItem("activity", a.getId(), a.getTitle(),
                         truncate(a.getDescription(), 50), toCoverPath(a.getCoverImage(), "activity"), null));
             }
@@ -147,7 +153,9 @@ public class ChatServiceImpl implements ChatService {
         if (text.contains("搭子") && list.isEmpty()) {
             IPage<PartnerVO> partners = partnerService.getPartnerList(page, null, null, null);
             for (PartnerVO p : partners.getRecords()) {
-                if (list.size() >= MAX_RECOMMENDS) break;
+                if (list.size() >= MAX_RECOMMENDS) {
+                    break;
+                }
                 list.add(new ChatRecommendItem("partner", p.getId(), p.getTitle(),
                         truncate(p.getDescription(), 50), toCoverPath(p.getCoverImage(), "partner"), 80));
             }
@@ -157,8 +165,12 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private static String truncate(String s, int maxLen) {
-        if (s == null) return "";
-        if (s.length() <= maxLen) return s;
+        if (s == null) {
+            return "";
+        }
+        if (s.length() <= maxLen) {
+            return s;
+        }
         return s.substring(0, maxLen) + "…";
     }
 
@@ -171,7 +183,9 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private static String buildMatchContextString(List<ChatRecommendItem> recommends) {
-        if (recommends == null || recommends.isEmpty()) return "";
+        if (recommends == null || recommends.isEmpty()) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         sb.append("【系统内已有数据，请仅基于以下内容用一两句话推荐，不要介绍网络或通用知识】\n");
         for (ChatRecommendItem r : recommends) {
@@ -191,8 +205,9 @@ public class ChatServiceImpl implements ChatService {
 
     /**
      * 获取历史消息（用于构建多轮对话上下文）
+     *
      * @param sessionId 会话 ID
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @return 历史消息列表（按时间正序）
      */
     private List<ChatMessage> getHistoryMessages(String sessionId, Long userId) {
@@ -209,9 +224,10 @@ public class ChatServiceImpl implements ChatService {
 
     /**
      * 调用阿里云百炼 API 生成回复（带历史上下文；若有 matchContext 则仅基于系统内数据推荐）
+     *
      * @param currentMessage 当前消息
-     * @param history 历史消息列表
-     * @param matchContext 系统内匹配到的搭子/活动摘要，非空时要求模型只基于此推荐
+     * @param history        历史消息列表
+     * @param matchContext   系统内匹配到的搭子/活动摘要，非空时要求模型只基于此推荐
      * @return AI 回复内容
      */
     private String generateReplyWithHistory(String currentMessage, List<ChatMessage> history, String matchContext) {

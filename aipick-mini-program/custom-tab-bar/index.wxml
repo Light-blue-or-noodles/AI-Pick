@@ -7,6 +7,10 @@
     bindtap="switchTab"
   >
     <view class="tab-icon-wrap">
+      <view
+        class="tab-badge"
+        wx:if="{{item.key === 'message' && imUnreadBadgeText}}"
+      >{{imUnreadBadgeText}}</view>
       <!-- 首页：小房子 -->
       <view wx:if="{{item.key === 'home'}}" class="icon icon-home">
         <view class="icon-home-roof"></view>

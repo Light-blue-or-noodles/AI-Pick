@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "postinstall": "node -e \"const fs=require('fs');const p=require('path');const dst=p.join('utils','vendor','tim-wx.js');try{fs.mkdirSync(p.dirname(dst),{recursive:true});fs.copyFileSync(p.join('node_modules','tim-wx-sdk','tim-wx.js'),dst);}catch(e){if(e.code!=='ENOENT')throw e;}\""
+  },
+  "dependencies": {
+    "tim-wx-sdk": "^2.27.6"
+  }
+}

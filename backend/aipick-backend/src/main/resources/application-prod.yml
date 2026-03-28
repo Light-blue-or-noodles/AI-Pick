@@ -1,6 +1,10 @@
 # 生产环境配置（与 DEPLOY-GUIDE-ALIYUN.md 配合使用）
 # 通过环境变量注入：DB_PASSWORD, JWT_SECRET, DASHSCOPE_API_KEY, WECHAT_APPID, WECHAT_SECRET
 
+app:
+  allow-test-login: false
+  im-batch-import-secret: ${IM_BATCH_IMPORT_SECRET:}
+
 server:
   port: 8080
   servlet:
@@ -99,3 +103,13 @@ storage:
   type: local
   local:
     root-dir: ${upload.dir:uploads}
+
+# 腾讯云 IM（生产环境必须注入，勿在文件中写密钥）
+tencent:
+  im:
+    sdk-app-id: ${TENCENT_IM_SDK_APP_ID}
+    identifier: ${TENCENT_IM_IDENTIFIER:}
+    key: ${TENCENT_IM_KEY}
+    expire-seconds: ${TENCENT_IM_EXPIRE_SECONDS:604800}
+    rest-api-host: ${TENCENT_IM_REST_HOST:https://console.tim.qq.com}
+    avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:}

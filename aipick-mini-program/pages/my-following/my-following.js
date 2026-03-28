@@ -44,7 +44,7 @@ Page({
   onViewProfile(e) {
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({
-      url: `/pages/partner-detail/partner-detail?id=${id}`
+      url: `/pages/user-profile/user-profile?userId=${id}`
     });
   },
 
@@ -75,8 +75,17 @@ Page({
   // Start chat
   onStartChat(e) {
     const id = e.currentTarget.dataset.id;
+    const nickname = e.currentTarget.dataset.nickname || '';
+    const avatar = e.currentTarget.dataset.avatar || '';
+    if (!id) return;
     wx.navigateTo({
-      url: `/pages/chat/chat?userId=${id}`
+      url:
+        '/pages/chat/chat?userId=' +
+        encodeURIComponent(String(id)) +
+        '&nickname=' +
+        encodeURIComponent(nickname) +
+        '&avatar=' +
+        encodeURIComponent(avatar)
     });
   }
 });

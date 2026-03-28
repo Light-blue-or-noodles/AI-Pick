@@ -3,6 +3,7 @@ package com.aipick.controller;
 import com.aipick.common.Result;
 import com.aipick.dto.PageRequest;
 import com.aipick.dto.UserInfoDTO;
+import com.aipick.dto.FollowActionRequest;
 import com.aipick.entity.User;
 import com.aipick.service.FollowService;
 import com.aipick.service.UserService;
@@ -97,6 +98,39 @@ public class FollowController {
             @PathVariable("userId") Long targetUserId) {
         boolean isFollowing = followService.isFollowing(currentUserId, targetUserId);
         return Result.success(Map.of("isFollowing", isFollowing));
+    }
+
+    /**
+     * 关注/取消关注用户（带 action 参数）
+     * POST /api/user/{id}/follow
+     * action: follow - 关注, cancel - 取消关注
+     */
+    @PostMapping("/{id}/follow")
+    public Result<Map<String, Object>> followUserWithAction(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @PathVariable("id") Long targetUserId,
+            @Valid @RequestBody FollowActionRequest request) {
+        
+        String action = request.getAction();
+        boolean isFollowing = followService.isFollowing(currentUserId, targetUserId);
+        
+        if ("follow".equals(action)) {
+            if (isFollowing) {
+                // 幂等性：已关注则返回成功但不重复操作
+                return Result.success("已关注", Map.of("isFollowing", true));
+            }
+            followService.followUser(currentUserId, targetUserId);
+            return Result.success("关注成功", Map.of("isFollowing", true));
+        } else if ("cancel".equals(action)) {
+            if (!isFollowing) {
+                // 幂等性：未关注则返回成功但不重复操作
+                return Result.success("已取消关注", Map.of("isFollowing", false));
+            }
+            followService.unfollowUser(currentUserId, targetUserId);
+            return Result.success("取消关注成功", Map.of("isFollowing", false));
+        }
+        
+        return Result.error("无效的操作类型");
     }
 
     private UserInfoDTO toUserInfoDTO(User user) {

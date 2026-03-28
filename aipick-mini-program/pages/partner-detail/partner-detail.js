@@ -156,7 +156,17 @@ Page({
   },
 
   onStartChat() {
-    wx.showToast({ title: '敬请期待', icon: 'none' });
+    const partnerInfo = this.data.partnerInfo || {};
+    const { userId, nickname, avatar } = partnerInfo;
+
+    if (!userId) {
+      wx.showToast({ title: '无法发起聊天', icon: 'none' });
+      return;
+    }
+
+    wx.navigateTo({
+      url: `/pages/chat/chat?userId=${encodeURIComponent(userId)}&nickname=${encodeURIComponent(nickname || '')}&avatar=${encodeURIComponent(avatar || '')}`
+    });
   },
 
   onShowMatch() {
