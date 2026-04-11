@@ -299,7 +299,7 @@ Page({
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     wx.showLoading({ title: '上传中' });
     wx.uploadFile({
-      url: `${baseUrl}/api/activity/upload-image`,
+      url: `${baseUrl}/api/partner/upload-image`,
       filePath,
       name: 'file',
       header: {

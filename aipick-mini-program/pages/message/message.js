@@ -25,7 +25,7 @@ Page({
     setTimeout(function () {
       if (typeof that.getTabBar === 'function') {
         const bar = that.getTabBar();
-        if (bar) bar.setData({ selected: 3 });
+        if (bar) bar.setData({ selected: 2 });
       }
     }, 0);
 

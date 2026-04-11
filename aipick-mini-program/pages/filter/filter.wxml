@@ -6,15 +6,15 @@
     <view class="filter-section">
       <view class="section-title">距离</view>
       <view class="filter-options">
-        <view class="option-item {{distance === 'all' ? 'active' : ''}}" 
+        <view class="option-item {{distance === 'all' ? 'active' : ''}}"
               bindtap="selectDistance" data-value="all">不限</view>
-        <view class="option-item {{distance === '1km' ? 'active' : ''}}" 
+        <view class="option-item {{distance === '1km' ? 'active' : ''}}"
               bindtap="selectDistance" data-value="1km">1km内</view>
-        <view class="option-item {{distance === '3km' ? 'active' : ''}}" 
+        <view class="option-item {{distance === '3km' ? 'active' : ''}}"
               bindtap="selectDistance" data-value="3km">3km内</view>
-        <view class="option-item {{distance === '5km' ? 'active' : ''}}" 
+        <view class="option-item {{distance === '5km' ? 'active' : ''}}"
               bindtap="selectDistance" data-value="5km">5km内</view>
-        <view class="option-item {{distance === '10km' ? 'active' : ''}}" 
+        <view class="option-item {{distance === '10km' ? 'active' : ''}}"
               bindtap="selectDistance" data-value="10km">10km内</view>
       </view>
     </view>
@@ -23,111 +23,60 @@
     <view class="filter-section">
       <view class="section-title">性别</view>
       <view class="filter-options">
-        <view class="option-item {{gender === 'all' ? 'active' : ''}}" 
+        <view class="option-item {{gender === 'all' ? 'active' : ''}}"
               bindtap="selectGender" data-value="all">不限</view>
-        <view class="option-item {{gender === 'male' ? 'active' : ''}}" 
+        <view class="option-item {{gender === 'male' ? 'active' : ''}}"
               bindtap="selectGender" data-value="male">男</view>
-        <view class="option-item {{gender === 'female' ? 'active' : ''}}" 
+        <view class="option-item {{gender === 'female' ? 'active' : ''}}"
               bindtap="selectGender" data-value="female">女</view>
       </view>
     </view>
 
     <!-- 搭子类型筛选 -->
-    <view class="filter-section" wx:if="{{pageType === 'partner'}}">
+    <view class="filter-section">
       <view class="section-title">搭子类型</view>
       <view class="filter-options">
-        <view class="option-item {{partnerType === 'all' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'all' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="all">全部</view>
-        <view class="option-item {{partnerType === 'game' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'game' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="game">游戏</view>
-        <view class="option-item {{partnerType === 'sports' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'sports' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="sports">运动</view>
-        <view class="option-item {{partnerType === 'food' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'food' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="food">美食</view>
-        <view class="option-item {{partnerType === 'study' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'study' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="study">学习</view>
-        <view class="option-item {{partnerType === 'travel' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'travel' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="travel">旅行</view>
-        <view class="option-item {{partnerType === 'other' ? 'active' : ''}}" 
+        <view class="option-item {{partnerType === 'other' ? 'active' : ''}}"
               bindtap="selectPartnerType" data-value="other">其他</view>
       </view>
     </view>
 
-    <!-- 活动类型筛选 -->
-    <view class="filter-section" wx:if="{{pageType === 'activity'}}">
-      <view class="section-title">活动类型</view>
-      <view class="filter-options">
-        <view class="option-item {{activityType === 'all' ? 'active' : ''}}" 
-              bindtap="selectActivityType" data-value="all">全部</view>
-        <view class="option-item {{activityType === 'sports' ? 'active' : ''}}" 
-              bindtap="selectActivityType" data-value="sports">运动</view>
-        <view class="option-item {{activityType === 'food' ? 'active' : ''}}" 
-              bindtap="selectActivityType" data-value="food">美食</view>
-        <view class="option-item {{activityType === 'study' ? 'active' : ''}}" 
-              bindtap="selectActivityType" data-value="study">学习</view>
-        <view class="option-item {{activityType === 'entertainment' ? 'active' : ''}}" 
-              bindtap="selectActivityType" data-value="entertainment">娱乐</view>
-        <view class="option-item {{activityType === 'social' ? 'active' : ''}}" 
-              bindtap="selectActivityType" data-value="social">社交</view>
-      </view>
-    </view>
-
     <!-- 匹配度筛选 -->
-    <view class="filter-section" wx:if="{{pageType === 'partner'}}">
+    <view class="filter-section">
       <view class="section-title">匹配度</view>
       <view class="filter-options">
-        <view class="option-item {{matchLevel === 'all' ? 'active' : ''}}" 
+        <view class="option-item {{matchLevel === 'all' ? 'active' : ''}}"
               bindtap="selectMatchLevel" data-value="all">不限</view>
-        <view class="option-item {{matchLevel === '90' ? 'active' : ''}}" 
+        <view class="option-item {{matchLevel === '90' ? 'active' : ''}}"
               bindtap="selectMatchLevel" data-value="90">90%以上</view>
-        <view class="option-item {{matchLevel === '80' ? 'active' : ''}}" 
+        <view class="option-item {{matchLevel === '80' ? 'active' : ''}}"
               bindtap="selectMatchLevel" data-value="80">80%以上</view>
-        <view class="option-item {{matchLevel === '70' ? 'active' : ''}}" 
+        <view class="option-item {{matchLevel === '70' ? 'active' : ''}}"
               bindtap="selectMatchLevel" data-value="70">70%以上</view>
       </view>
     </view>
 
-    <!-- 时间筛选（活动） -->
-    <view class="filter-section" wx:if="{{pageType === 'activity'}}">
-      <view class="section-title">时间</view>
-      <view class="filter-options">
-        <view class="option-item {{timeRange === 'all' ? 'active' : ''}}" 
-              bindtap="selectTimeRange" data-value="all">全部</view>
-        <view class="option-item {{timeRange === 'today' ? 'active' : ''}}" 
-              bindtap="selectTimeRange" data-value="today">今天</view>
-        <view class="option-item {{timeRange === 'tomorrow' ? 'active' : ''}}" 
-              bindtap="selectTimeRange" data-value="tomorrow">明天</view>
-        <view class="option-item {{timeRange === 'weekend' ? 'active' : ''}}" 
-              bindtap="selectTimeRange" data-value="weekend">周末</view>
-        <view class="option-item {{timeRange === 'thisMonth' ? 'active' : ''}}" 
-              bindtap="selectTimeRange" data-value="thisMonth">本月</view>
-      </view>
-    </view>
-
-    <!-- 活动状态 -->
-    <view class="filter-section" wx:if="{{pageType === 'activity'}}">
-      <view class="section-title">活动状态</view>
-      <view class="filter-options">
-        <view class="option-item {{activityStatus === 'all' ? 'active' : ''}}" 
-              bindtap="selectActivityStatus" data-value="all">全部</view>
-        <view class="option-item {{activityStatus === 'recruiting' ? 'active' : ''}}" 
-              bindtap="selectActivityStatus" data-value="recruiting">招募中</view>
-        <view class="option-item {{activityStatus === 'full' ? 'active' : ''}}" 
-              bindtap="selectActivityStatus" data-value="full">已满</view>
-        <view class="option-item {{activityStatus === 'ended' ? 'active' : ''}}" 
-              bindtap="selectActivityStatus" data-value="ended">已结束</view>
-      </view>
-    </view>
-
     <!-- 搭子状态 -->
-    <view class="filter-section" wx:if="{{pageType === 'partner'}}">
+    <view class="filter-section">
       <view class="section-title">搭子状态</view>
       <view class="filter-options">
-        <view class="option-item {{partnerStatus === 'all' ? 'active' : ''}}" 
+        <view class="option-item {{partnerStatus === 'all' ? 'active' : ''}}"
               bindtap="selectPartnerStatus" data-value="all">全部</view>
-        <view class="option-item {{partnerStatus === 'recruiting' ? 'active' : ''}}" 
+        <view class="option-item {{partnerStatus === 'recruiting' ? 'active' : ''}}"
               bindtap="selectPartnerStatus" data-value="recruiting">招募中</view>
-        <view class="option-item {{partnerStatus === 'full' ? 'active' : ''}}" 
+        <view class="option-item {{partnerStatus === 'full' ? 'active' : ''}}"
               bindtap="selectPartnerStatus" data-value="full">已满</view>
       </view>
     </view>

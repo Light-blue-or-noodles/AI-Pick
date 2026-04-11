@@ -26,13 +26,6 @@
         <view class="icon-partner-body icon-partner-body-right"></view>
       </view>
 
-      <!-- 活动：日历 -->
-      <view wx:elif="{{item.key === 'activity'}}" class="icon icon-calendar">
-        <view class="icon-calendar-top"></view>
-        <view class="icon-calendar-body"></view>
-        <view class="icon-calendar-dot"></view>
-      </view>
-
       <!-- 消息：气泡 -->
       <view wx:elif="{{item.key === 'message'}}" class="icon icon-message">
         <view class="icon-message-bubble">

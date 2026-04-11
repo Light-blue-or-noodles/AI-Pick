@@ -134,7 +134,7 @@ Page({
             recommends = recommends.map(r => {
               let avatar = r.avatar;
               if (!avatar || avatar === '') {
-                avatar = (r.type === 'partner' ? '/images/partner-banner.jpg' : '/images/activity-banner.jpg');
+                avatar = '/images/partner-banner.jpg';
               } else {
                 avatar = toFullUrl(avatar);
               }
@@ -180,15 +180,10 @@ Page({
   },
 
   goToDetail(e) {
-    const { type, id } = e.currentTarget.dataset;
-    if (type === 'partner') {
-      wx.navigateTo({
-        url: `/pages/partner-detail/partner-detail?id=${id}`
-      });
-    } else if (type === 'activity') {
-      wx.navigateTo({
-        url: `/pages/activity-detail/activity-detail?id=${id}`
-      });
-    }
+    const { id } = e.currentTarget.dataset;
+    if (!id) return;
+    wx.navigateTo({
+      url: `/pages/partner-detail/partner-detail?id=${id}`
+    });
   }
 });

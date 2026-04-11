@@ -95,6 +95,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.32</version>
         </dependency>
 
         <!-- javax.annotation for @PostConstruct (Java 9+) -->
@@ -131,6 +132,19 @@
             <artifactId>tencentcloud-sdk-java</artifactId>
             <version>3.1.1035</version>
         </dependency>
+
+        <!-- 阿里云内容安全 SDK -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>green20220302</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <!-- 阿里云核心 SDK -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>tea-openapi</artifactId>
+            <version>0.2.8</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -162,7 +176,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
+                            <version>1.18.32</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

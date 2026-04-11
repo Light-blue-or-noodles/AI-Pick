@@ -221,7 +221,7 @@ Page({
     const welcomeMessage = {
       id: 1,
       type: 'ai',
-      content: '你好！我是 AI-Pick AI 智能助手 🎉\n\n我可以帮你：\n• 找到志同道合的搭子\n• 推荐附近有趣的活动\n• 智能匹配聊天话题\n• 解答你的一切问题\n\n请问有什么可以帮到你？',
+      content: '你好！我是 AI-Pick AI 智能助手 🎉\n\n我可以帮你：\n• 找到志同道合的搭子\n• 推荐兴趣相投的搭友\n• 智能匹配聊天话题\n• 解答常见问题\n\n请问有什么可以帮到你？',
       time: this.formatTime(new Date()),
       avatar: '/images/ai-icon.png'
     };
@@ -324,10 +324,10 @@ Page({
   getDefaultResponse(content) {
     const responses = [
       '听起来很有趣！能不能告诉我更多关于你的兴趣爱好？',
-      '我明白了～根据你的需求，我可以为你推荐一些附近的搭子和活动',
+      '我明白了～根据你的需求，我可以为你推荐附近的搭子',
       '太棒了！让我帮你分析一下最适合你的社交方式',
       '好的，我正在为你匹配合适的搭子，请稍等...',
-      '根据你的描述，我发现有几个活动非常适合你参加'
+      '根据你的描述，有几类搭子可能很适合你'
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   },

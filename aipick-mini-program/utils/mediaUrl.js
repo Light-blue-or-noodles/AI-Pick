@@ -20,7 +20,7 @@ function getBaseUrl(explicit) {
 /**
  * 将任意后端返回的图片引用解析为可请求地址（一般为 http(s)）
  * @param {string} input 相对路径、完整 URL、或历史带 IP 的 URL
- * @param {{ baseUrl?: string, kind?: 'avatar'|'cover'|'activity'|'general' }} options
+ * @param {{ baseUrl?: string, kind?: 'avatar'|'cover'|'general' }} options
  */
 function resolveMediaUrl(input, options) {
   const opts = options || {};
@@ -40,7 +40,6 @@ function resolveMediaUrl(input, options) {
     try {
       const u = new URL(s);
       const path = u.pathname || '';
-      // 本站静态资源（任意历史主机：localhost / 127 / 局域网 IP）
       if (path.indexOf('/static/') >= 0 || path.indexOf('/api/static/') >= 0) {
         let p = path;
         if (p.indexOf('/api/') === 0) {
@@ -71,38 +70,14 @@ function defaultSrcForKind(kind) {
   if (kind === 'avatar') {
     return '/images/default-avatar.png';
   }
-  if (kind === 'cover' || kind === 'activity') {
-    return '/images/empty-activity.png';
+  if (kind === 'cover') {
+    return '/images/partner-banner.jpg';
   }
   return '/images/default-avatar.png';
-}
-
-/**
- * 活动封面：支持 coverImage、images JSON 首张、路径规范化
- */
-function resolveActivityCoverUrl(activity, baseUrl) {
-  if (!activity) {
-    return '/images/activity-banner.jpg';
-  }
-  let img = activity.coverImage;
-  if ((img == null || String(img).trim() === '') && activity.images) {
-    try {
-      const arr = typeof activity.images === 'string' ? JSON.parse(activity.images) : activity.images;
-      if (Array.isArray(arr) && arr.length > 0 && arr[0]) {
-        img = arr[0];
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-  if (img == null || String(img).trim() === '') {
-    return '/images/activity-banner.jpg';
-  }
-  return resolveMediaUrl(img, { baseUrl, kind: 'cover' });
 }
 
 module.exports = {
   getBaseUrl,
   resolveMediaUrl,
-  resolveActivityCoverUrl
+  defaultSrcForKind
 };

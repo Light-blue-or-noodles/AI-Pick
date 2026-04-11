@@ -2,7 +2,6 @@
 
 @import '../../styles/variables.wxss';
 @import '../../styles/common.wxss';
-@import '../../styles/profile.wxss';
 
 /* 底部留出 Tab 栏高度，避免内容被遮挡 */
 .container {

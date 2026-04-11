@@ -25,17 +25,6 @@
         <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
       </view>
     </view>
-    <view class="privacy-item">
-      <text class="item-label">谁可以看我的活动</text>
-      <view class="item-right">
-        <picker mode="selector" range="{{activityVisibilityOptions}}" bindchange="onSetActivityVisibility">
-          <text class="item-value">
-            {{activityVisibility === 'all' ? '全部' : activityVisibility === 'friends' ? '好友' : '仅自己'}}
-          </text>
-        </picker>
-        <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
-      </view>
-    </view>
   </view>
 
   <!-- Visibility Settings -->

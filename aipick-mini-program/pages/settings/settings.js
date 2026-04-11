@@ -11,7 +11,6 @@ Page({
     // Notification settings
     messageNotification: true,
     newFollowerNotification: true,
-    activityNotification: true,
     
     // Privacy settings
     chatPermission: 'all',  // all, friends, none
@@ -30,7 +29,6 @@ Page({
       phone: userInfo.phone || '',
       messageNotification: true,
       newFollowerNotification: true,
-      activityNotification: true,
       chatPermission: 'all',
       profileVisibility: 'friends'
     });
@@ -72,13 +70,6 @@ Page({
   onAboutUs() {
     wx.navigateTo({
       url: '/pages/about-us/about-us'
-    });
-  },
-
-  // Navigate to my favorites
-  onMyFavorites() {
-    wx.navigateTo({
-      url: '/pages/my-favorites/my-favorites'
     });
   },
 

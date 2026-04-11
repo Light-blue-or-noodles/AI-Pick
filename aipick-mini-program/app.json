@@ -9,15 +9,9 @@
     "pages/partner-detail/partner-detail",
     "pages/partner-publish/partner-publish",
     "pages/my-partner/my-partner",
-    "pages/activity/activity",
-    "pages/activity-detail/activity-detail",
-    "pages/activity-create/activity-create",
-    "pages/my-activity/my-activity",
-    "pages/my-favorites/my-favorites",
     "pages/my-following/my-following",
     "pages/user-profile/user-profile",
     "pages/filter/filter",
-    "pages/calendar/calendar",
     "pages/message/message",
     "pages/chat/chat",
     "pages/profile/profile",
@@ -56,12 +50,6 @@
         "selectedIconPath": "images/partner-active.png"
       },
       {
-        "pagePath": "pages/activity/activity",
-        "text": "活动",
-        "iconPath": "images/activity.png",
-        "selectedIconPath": "images/activity-active.png"
-      },
-      {
         "pagePath": "pages/message/message",
         "text": "消息",
         "iconPath": "images/message.png",
@@ -77,13 +65,13 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "用于首页推荐附近搭子/活动、活动与搭子发布选点"
+      "desc": "用于首页推荐附近搭子、搭子发布选点"
     },
     "scope.album": {
-      "desc": "用于选择活动图片"
+      "desc": "用于选择搭子封面等图片"
     },
     "scope.camera": {
-      "desc": "用于拍摄活动图片"
+      "desc": "用于拍摄搭子封面等图片"
     }
   },
   "sitemapLocation": "sitemap.json",

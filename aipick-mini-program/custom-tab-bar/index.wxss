@@ -173,45 +173,6 @@
   background: rgba(95, 179, 168, 0.3);
 }
 
-/* 活动图标：日历 */
-.icon-calendar-top {
-  position: absolute;
-  top: 4rpx;
-  left: 6rpx;
-  right: 6rpx;
-  height: 8rpx;
-  background: #5FB3A8;
-  border-radius: 6rpx 6rpx 0 0;
-}
-
-.icon-calendar-body {
-  position: absolute;
-  top: 10rpx;
-  left: 6rpx;
-  right: 6rpx;
-  bottom: 6rpx;
-  background: #ffffff;
-  border-radius: 0 0 6rpx 6rpx;
-  border: 2rpx solid #5FB3A8;
-  border-top: none;
-  box-sizing: border-box;
-}
-
-.icon-calendar-dot {
-  position: absolute;
-  bottom: 10rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: #5FB3A8;
-}
-
-.tab-item.active .icon-calendar-body {
-  background: rgba(95, 179, 168, 0.05);
-}
-
 /* 消息图标：气泡 */
 .icon-message-bubble {
   position: absolute;

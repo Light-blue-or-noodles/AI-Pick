@@ -1,7 +1,7 @@
 // pages/index/index.js
 const app = getApp();
 const recommendFeedback = require('../../utils/recommendFeedback.js');
-const { resolveActivityCoverUrl } = require('../../utils/imageUrl.js');
+const { mapPartnerForList } = require('../../utils/partnerListMap.js');
 
 function formatPreferenceDisplay(pref) {
   if (!pref) return '';
@@ -103,33 +103,37 @@ Page({
   //     });
   // },
 
-  // 加载附近动态（真实数据：后端活动列表分页，按创建时间倒序）
+  // 附近动态：搭子列表（Pick 搭，取最新几条）
   loadNearbyDynamics() {
     const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
     request({
-      url: `${baseUrl}/api/activity`,
+      url: `${baseUrl}/api/partner`,
       method: 'GET',
       data: {
         pageNum: 1,
-        pageSize: 3
+        pageSize: 3,
+        scopeType: 'platform'
       }
     })
       .then((res) => {
-        // 后端返回 { code: 0, data: { records: [], total, ... } }，每条为活动
         const body = res && res.data;
         const records = (body && body.data && Array.isArray(body.data.records)) ? body.data.records : [];
         const base = app.globalData.baseUrl || 'http://localhost:8080';
-        const list = records.slice(0, 3).map(a => ({
-          id: a.id,
-          type: 'activity',
-          name: a.title || '活动',
-          content: a.description || '',
-          time: a.startTime ? (String(a.startTime).replace('T', ' ').substring(0, 16)) : '',
-          location: a.location || '',
-          avatar: resolveActivityCoverUrl(a, base) || '/images/default-avatar.png',
-          likeCount: a.viewCount != null ? a.viewCount : 0,
-          commentCount: 0
-        }));
+        const list = records.slice(0, 3).map((raw) => {
+          const m = mapPartnerForList(raw, base);
+          return {
+            id: m.id,
+            type: 'partner',
+            name: m.title,
+            content: m.preference || m.typeName || '',
+            time: m.createTime,
+            location: m.distance || '',
+            avatar: m.cover || '/images/default-avatar.png',
+            images: [],
+            likeCount: raw.viewCount != null ? raw.viewCount : 0,
+            commentCount: 0
+          };
+        });
         this.setData({ nearbyDynamics: list });
       })
       .catch((err) => {
@@ -324,7 +328,7 @@ Page({
   // 跳转搜索
   goToSearch() {
     wx.navigateTo({
-      url: '/pages/filter/filter?type=partner'
+      url: '/pages/filter/filter'
     });
   },
 
@@ -335,13 +339,6 @@ Page({
     });
   },
 
-  // 跳转活动页面
-  goToActivity() {
-    wx.switchTab({
-      url: '/pages/activity/activity'
-    });
-  },
-
   // 跳转AI匹配
   goToAIMatch() {
     wx.navigateTo({
@@ -349,30 +346,19 @@ Page({
     });
   },
 
-  // 跳转日历
-  goToCalendar() {
-    wx.navigateTo({
-      url: '/pages/calendar/calendar'
-    });
-  },
-
-  // 跳转附近动态
+  // 跳转附近动态（更多搭子）
   goToNearby() {
     wx.switchTab({
-      url: '/pages/activity/activity'
+      url: '/pages/partner/partner'
     });
   },
 
   // 查看详情
   goToDetail(e) {
     const { type, id } = e.currentTarget.dataset;
-    if (type === 'partner') {
+    if (type === 'partner' || !type) {
       wx.navigateTo({
         url: `/pages/partner-detail/partner-detail?id=${id}`
-      });
-    } else if (type === 'activity') {
-      wx.navigateTo({
-        url: `/pages/activity-detail/activity-detail?id=${id}`
       });
     }
   },

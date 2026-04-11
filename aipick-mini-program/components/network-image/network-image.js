@@ -8,7 +8,7 @@ Component({
     mode: { type: String, value: 'aspectFill' },
     customClass: { type: String, value: '' },
     preferDownloadInDevtools: { type: Boolean, value: false },
-    /** 与 mediaUrl.resolveMediaUrl 一致：avatar | cover | activity | general */
+    /** 与 mediaUrl.resolveMediaUrl 一致：avatar | cover | general */
     mediaKind: { type: String, value: 'general' },
     /** 为 false 时不做 URL 解析（已传入完整可访问地址时） */
     resolveUrl: { type: Boolean, value: true }

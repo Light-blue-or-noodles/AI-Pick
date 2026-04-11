@@ -15,12 +15,6 @@
         <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
       </view>
     </view>
-    <view class="setting-item" bindtap="onMyFavorites">
-      <text class="setting-label">我的收藏</text>
-      <view class="setting-right">
-        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
-      </view>
-    </view>
     <view class="setting-item" bindtap="onMyFollowing">
       <text class="setting-label">我的关注</text>
       <view class="setting-right">
@@ -47,15 +41,6 @@
         checked="{{newFollowerNotification}}" 
         bindchange="onToggleNotification"
         data-type="newFollowerNotification"
-        color="#FF6B35"
-      />
-    </view>
-    <view class="setting-item">
-      <text class="setting-label">活动提醒</text>
-      <switch 
-        checked="{{activityNotification}}" 
-        bindchange="onToggleNotification"
-        data-type="activityNotification"
         color="#FF6B35"
       />
     </view>

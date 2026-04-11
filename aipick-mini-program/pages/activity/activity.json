@@ -1,6 +1,0 @@
-{
-  "enablePullDownRefresh": true,
-  "usingComponents": {
-    "network-image": "/components/network-image/network-image"
-  }
-}

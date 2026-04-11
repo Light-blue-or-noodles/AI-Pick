@@ -31,11 +31,6 @@
       </view>
       <view class="stat-divider"></view>
       <view class="stat-item">
-        <text class="stat-value">{{stats.activities}}</text>
-        <text class="stat-label">活动</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
         <text class="stat-value">{{stats.messages}}</text>
         <text class="stat-label">消息</text>
       </view>

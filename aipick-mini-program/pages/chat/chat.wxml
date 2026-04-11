@@ -37,7 +37,7 @@
   <!-- 快捷回复 - 仅AI聊天时显示 -->
   <view class="quick-replies" wx:if="{{isAI && messages.length <= 1}}">
     <view class="quick-reply" bindtap="onQuickReply" data-reply="帮我找游戏搭子">🎮 帮我找游戏搭子</view>
-    <view class="quick-reply" bindtap="onQuickReply" data-reply="推荐一些活动">📍 推荐一些活动</view>
+    <view class="quick-reply" bindtap="onQuickReply" data-reply="推荐一些搭子">📍 推荐一些搭子</view>
     <view class="quick-reply" bindtap="onQuickReply" data-reply="我想认识新朋友">👋 我想认识新朋友</view>
   </view>
 

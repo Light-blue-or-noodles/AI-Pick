@@ -21,7 +21,7 @@
             <view class="recommend-title">为你推荐：</view>
             <block wx:for="{{item.recommends}}" wx:for-item="rec" wx:key="id">
               <view class="recommend-card" bindtap="goToDetail" data-type="{{rec.type}}" data-id="{{rec.id}}">
-                <network-image class="rec-avatar" customClass="rec-avatar" url="{{rec.avatar}}" defaultSrc="/images/activity-banner.jpg" mode="aspectFill" />
+                <network-image class="rec-avatar" customClass="rec-avatar" url="{{rec.avatar}}" defaultSrc="/images/partner-banner.jpg" mode="aspectFill" />
                 <view class="rec-info">
                   <text class="rec-name">{{rec.name}}</text>
                   <text class="rec-desc">{{rec.desc}}</text>
@@ -41,7 +41,7 @@
         <text class="welcome-text">你好！我是 AI 助手</text>
       </view>
       <view class="welcome-sub-wrap">
-        <text class="welcome-sub">告诉我你想找什么样的搭子或活动</text>
+        <text class="welcome-sub">告诉我你想找什么样的搭子</text>
       </view>
     </view>
 
@@ -50,11 +50,11 @@
       <view class="action-btn" catchtap="quickAsk" data-text="推荐一些游戏搭子">
         <text>🎮 游戏搭子</text>
       </view>
-      <view class="action-btn" catchtap="quickAsk" data-text="推荐一些运动活动">
-        <text>🏃 运动活动</text>
+      <view class="action-btn" catchtap="quickAsk" data-text="推荐一些运动搭子">
+        <text>🏃 运动搭子</text>
       </view>
-      <view class="action-btn" catchtap="quickAsk" data-text="附近有什么活动">
-        <text>📍 附近动态</text>
+      <view class="action-btn" catchtap="quickAsk" data-text="帮我推荐附近的搭子">
+        <text>📍 附近搭子</text>
       </view>
     </view>
   </scroll-view>
@@ -62,7 +62,7 @@
   <!-- 输入区域 -->
   <view class="input-area">
     <input class="message-input" 
-           placeholder="请输入你想找的搭子或活动..." 
+           placeholder="请输入你想找的搭子类型或偏好..." 
            value="{{inputValue}}"
            bindinput="onInput"
            bindconfirm="sendMessage"

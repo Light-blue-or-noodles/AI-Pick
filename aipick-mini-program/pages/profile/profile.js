@@ -31,7 +31,6 @@ Page({
     userInfo: null,
     stats: {
       partners: 0,
-      activities: 0,
       messages: 0
     },
     loadingUser: false,
@@ -40,9 +39,6 @@ Page({
       { id: 'join-company', icon: '/images/company.png', title: '加入公司', arrow: true },
       { id: 'join-school', icon: '/images/school.png', title: '加入学校', arrow: true },
       { id: 'my-partners', icon: '/images/my-partner.png', title: '我的搭子', arrow: true },
-      { id: 'my-activities', icon: '/images/my-activity.png', title: '我的活动', arrow: true },
-      { id: 'my-favorites', icon: '/images/favorite.png', title: '我的收藏', arrow: true },
-      { id: 'my-posts', icon: '/images/post.png', title: '我的发布', arrow: true },
       { id: 'settings', icon: '/images/settings.png', title: '设置', arrow: true },
       { id: 'about', icon: '/images/about.png', title: '关于我们', arrow: true }
     ]
@@ -57,7 +53,7 @@ Page({
     setTimeout(function () {
       if (typeof that.getTabBar === 'function') {
         const bar = that.getTabBar();
-        if (bar) bar.setData({ selected: 4 });
+        if (bar) bar.setData({ selected: 3 });
       }
     }, 0);
     this.loadUserInfo();
@@ -135,11 +131,11 @@ Page({
       });
 
       if (res.data && res.data.code === 0) {
+        const d = res.data.data || {};
         this.setData({
-          stats: res.data.data || {
-            partners: 0,
-            activities: 0,
-            messages: 0
+          stats: {
+            partners: d.partners != null ? d.partners : 0,
+            messages: d.messages != null ? d.messages : 0
           }
         });
       } else {
@@ -214,21 +210,6 @@ Page({
           url: '/pages/my-partner/my-partner'
         });
         break;
-      case 'my-activities':
-        wx.navigateTo({
-          url: '/pages/my-activity/my-activity'
-        });
-        break;
-      case 'my-favorites':
-        wx.navigateTo({
-          url: '/pages/my-favorites/my-favorites'
-        });
-        break;
-      case 'my-posts':
-        wx.navigateTo({
-          url: '/pages/my-posts/my-posts'
-        });
-        break;
       case 'settings':
         wx.navigateTo({
           url: '/pages/settings/settings'
@@ -236,7 +217,7 @@ Page({
         break;
       case 'about':
         wx.navigateTo({
-          url: '/pages/about/about'
+          url: '/pages/about-us/about-us'
         });
         break;
     }

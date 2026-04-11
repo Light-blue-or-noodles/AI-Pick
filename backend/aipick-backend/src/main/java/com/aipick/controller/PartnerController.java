@@ -1,5 +1,6 @@
 package com.aipick.controller;
 
+import com.aipick.common.BusinessException;
 import com.aipick.common.Result;
 import com.aipick.dto.ApplyPartnerRequest;
 import com.aipick.dto.CreatePartnerRequest;
@@ -7,14 +8,18 @@ import com.aipick.dto.PageRequest;
 import com.aipick.entity.Partner;
 import com.aipick.entity.PartnerApply;
 import com.aipick.service.PartnerService;
+import com.aipick.storage.ImageStorageService;
 import com.aipick.vo.PartnerVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 搭子控制器
@@ -25,10 +30,40 @@ import java.util.List;
 @RequestMapping("/partner")
 public class PartnerController {
 
-    private final PartnerService partnerService;
+    private static final long IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+    private static final String[] IMAGE_ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"};
 
-    public PartnerController(PartnerService partnerService) {
+    private final PartnerService partnerService;
+    private final ImageStorageService imageStorageService;
+
+    public PartnerController(PartnerService partnerService, ImageStorageService imageStorageService) {
         this.partnerService = partnerService;
+        this.imageStorageService = imageStorageService;
+    }
+
+    /**
+     * 搭子封面等配图上传（存储逻辑与活动图一致，落盘 activity-images 子目录）
+     */
+    @PostMapping("/upload-image")
+    public Result<Map<String, String>> uploadPartnerImage(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "file", required = false) MultipartFile filePart,
+            @RequestParam(value = "image", required = false) MultipartFile imagePart) {
+        MultipartFile file = (filePart != null && !filePart.isEmpty()) ? filePart
+                : (imagePart != null && !imagePart.isEmpty() ? imagePart : null);
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("请选择图片");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !Arrays.asList(IMAGE_ALLOWED).contains(contentType)) {
+            throw new BusinessException("仅支持 JPG/PNG/GIF/WEBP");
+        }
+        if (file.getSize() > IMAGE_MAX_SIZE) {
+            throw new BusinessException("图片大小不能超过 5MB");
+        }
+        Map<String, String> stored = imageStorageService.storeActivityImage(file, userId);
+        String urlPath = stored.get("url");
+        return Result.success("上传成功", Map.of("url", urlPath));
     }
 
     /**

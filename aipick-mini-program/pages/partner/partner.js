@@ -131,7 +131,7 @@ Page({
   // 跳转筛选页面
   goToFilter() {
     wx.navigateTo({
-      url: '/pages/filter/filter?type=partner'
+      url: '/pages/filter/filter'
     });
   },
 

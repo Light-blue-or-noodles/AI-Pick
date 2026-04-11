@@ -23,7 +23,6 @@
           <text class="user-bio" wx:if="{{item.bio}}">{{item.bio}}</text>
           <view class="user-stats" wx:if="{{item.fansCount !== undefined}}">
             <text class="stat-item">粉丝 {{item.fansCount}}</text>
-            <text class="stat-item" wx:if="{{item.activitiesCount !== undefined}}">活动 {{item.activitiesCount}}</text>
           </view>
         </view>
       </view>

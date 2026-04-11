@@ -2,7 +2,7 @@
 <view class="container">
   <!-- App Info -->
   <view class="app-info">
-    <image class="app-logo" src="/images/logo.png" mode="aspectFit" />
+    <image class="app-logo" src="/images/ai-icon.png" mode="aspectFit" />
     <text class="app-name">AI-Pick</text>
     <text class="app-slogan">智能匹配，找到你的最佳搭子</text>
     <text class="app-version">Version {{version}}</text>
@@ -22,8 +22,8 @@
       <view class="feature-item">
         <text class="feature-icon">🎯</text>
         <view class="feature-content">
-          <text class="feature-title">多元活动</text>
-          <text class="feature-desc">运动、学习、娱乐，丰富活动等你参与</text>
+          <text class="feature-title">丰富搭子类型</text>
+          <text class="feature-desc">游戏、运动、干饭、旅行等，快速找到同频搭子</text>
         </view>
       </view>
       <view class="feature-item">
