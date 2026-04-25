@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.2.12</version>
         <relativePath/>
     </parent>
 
@@ -116,14 +116,14 @@
         <dependency>
             <groupId>com.alibaba.cloud.ai</groupId>
             <artifactId>spring-ai-alibaba-agent-framework</artifactId>
-            <version>1.1.2.0</version>
+            <version>1.1.2.2</version>
         </dependency>
 
         <!-- Spring AI Alibaba - DashScope Starter（提供 ChatModel，封装通义千问等） -->
         <dependency>
             <groupId>com.alibaba.cloud.ai</groupId>
             <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
-            <version>1.1.2.1</version>
+            <version>1.1.2.2</version>
         </dependency>
 
         <!-- Tencent Cloud IM SDK -->

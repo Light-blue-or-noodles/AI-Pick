@@ -1,53 +1,148 @@
 ---
-article: OpenClaw与Cursor联动开发实践.md
-preset_primary: system-design
-density: balanced
-style_primary: blueprint
-image_count: 5
-language: zh
+type: mixed
+density: per-section
+style: hand-drawn-warm
+image_count: 10
+language: zh-CN
 ---
 
-## 配图大纲
+## Article Illustration Outline
 
-| ID | 类型 | 风格 | 插入位置 | 文件名 |
-|----|------|------|----------|--------|
-| 01 | framework | blueprint | §2.1 整体架构后 | 01-framework-multi-agent-cursor.png |
-| 02 | flowchart | notion | §3.1 任务分配流程后 | 02-flowchart-task-handoff.png |
-| 03 | framework | blueprint | §9.2 MemOS Cloud 插件架构后 | 03-framework-memos-plugin.png |
-| 04 | comparison | vector-illustration | §9.4.1 两者定位差异后 | 04-comparison-memory-systems.png |
-| 05 | infographic | blueprint | §6.2 效率对比后 | 05-infographic-efficiency-comparison.png |
+**Article**: OpenClaw与Cursor联动开发实践-v2.md
+**Analysis Date**: 2026-04-15
+**Style**: hand-drawn-warm (based on user reference image, warm paper texture + cartoon technical doodle style)
 
-## Illustration 1
+---
 
-**Position**: 第 2 章 §2.1 整体架构  
-**Purpose**: 将 ASCII 架构示意图转为可读的系统框架图  
-**Visual Content**: Main Agent → 五类专用 Agent（pm/backend/frontend/test/review）→ Cursor CLI → 代码产物层  
-**Filename**: 01-framework-multi-agent-cursor.png  
+## Illustration 1: Agent Architecture Framework
+**Position**: §2.1 Agent 系统架构
+**Purpose**: Visualize the three-layer Agent architecture (Main Agent → Specialized Agents → Tool Agents)
+**Type**: framework
+**Visual Content**: 
+- Top layer: Main Agent (coordinator robot with crown)
+- Middle layer: 5 specialized agents (pm, backend, frontend, test, review) as cute robots
+- Bottom layer: Tool agents (cursor-agent, browser, test)
+- Flow arrows showing task distribution
+**Filename**: 01-framework-agent-architecture.png
+**Reference**: Replace ASCII diagram in §2.1
 
-## Illustration 2
+---
 
-**Position**: 第 3 章 §3.1 任务分配流程  
-**Purpose**: 标准化协作四步可视化  
-**Visual Content**: 任务描述 → 方案复述 → 确认执行 → 审查验收（中文短标签）  
-**Filename**: 02-flowchart-task-handoff.png  
+## Illustration 2: Memory System Layers
+**Position**: §2.2 记忆系统设计
+**Purpose**: Show three-layer memory system hierarchy
+**Type**: framework
+**Visual Content**:
+- Top: Project-level memory (AGENTS.md) - orange, building icon
+- Middle: Agent-level memory (MEMORY.md) - blue, robot icon
+- Bottom: Cloud memory (MemOS Cloud) - green, cloud icon
+- Arrows showing read/sync flow
+**Filename**: 02-framework-memory-system.png
+**Reference**: Replace ASCII diagram in §2.2
 
-## Illustration 3
+---
 
-**Position**: 第 9 章 §9.2 MemOS Cloud 插件架构  
-**Purpose**: 云端记忆与插件、多 Agent 的关系  
-**Visual Content**: MemOS Cloud（存储/语义搜索/图谱）→ HTTPS → 插件（自动回忆/捕获/钩子）→ 三个 agents  
-**Filename**: 03-framework-memos-plugin.png  
+## Illustration 3: Collaboration Flowchart
+**Position**: §3.2 OpenClaw 与 Cursor 的协作模型
+**Purpose**: Show 6-step collaboration flow from user to code
+**Type**: flowchart
+**Visual Content**:
+- Step 1: User sends task (human figure)
+- Step 2: Main Agent understands (robot)
+- Step 3: backend/frontend-agent reads MEMORY.md (robot)
+- Step 4: cursor-agent builds CLI command (robot with wand)
+- Step 5: Cursor CLI generates code (computer)
+- Step 6: Code repository (checkmark)
+- Vertical flow with connecting arrows
+**Filename**: 03-flowchart-collaboration-model.png
+**Reference**: Replace ASCII diagram in §3.2
 
-## Illustration 4
+---
 
-**Position**: §9.4.1 两者定位差异  
-**Purpose**: OpenClaw 本地记忆 vs MemOS Cloud 并排对比  
-**Visual Content**: 两列表格视觉化：存储位置、检索方式、共享范围、主要用途（取自文中表格）  
-**Filename**: 04-comparison-memory-systems.png  
+## Illustration 4: Task Distribution Flow
+**Position**: §4.2 多 Agent 协作流程
+**Purpose**: Show horizontal workflow with review pass/fail branches
+**Type**: flowchart
+**Visual Content**:
+- Stage 1: pm-agent (requirements)
+- Stage 2: dev agents (coding)
+- Stage 3: review-agent (review with pass/fail branches)
+- Stage 4: test-agent (testing)
+- Stage 5: Complete (trophy)
+- Horizontal layout with color-coded agents
+**Filename**: 04-flowchart-task-distribution.png
+**Reference**: Replace ASCII diagram in §4.2
 
-## Illustration 5
+---
 
-**Position**: §6.2 效率对比  
-**Purpose**: 突出「约 10 倍」效率叙事  
-**Visual Content**: 传统开发 vs AI 开发：时间 6–7 周 vs 20+ 小时，人力对比条形或对比卡  
-**Filename**: 05-infographic-efficiency-comparison.png  
+## Illustration 5: Evolution Timeline
+**Position**: §8.1 从混乱到规范：四阶段演进
+**Purpose**: Show 4-stage evolution from chaos to intelligence
+**Type**: timeline
+**Visual Content**:
+- Phase 1 (Red): Direct coding - chaos, 40% standard rate
+- Phase 2 (Yellow): cursor-agent - tool phase, 60% standard rate
+- Phase 3 (Green): AGENTS.md - standardization, 90% standard rate
+- Phase 4 (Blue): MemOS Cloud - intelligence, 95% standard rate
+- Timeline with dates and metrics
+- Status indicators: ❌ → ⚠️ → ✅ → ⭐
+**Filename**: 05-timeline-evolution.png
+**Reference**: New illustration for §8.1
+
+---
+
+## Illustration 6: Multi-Agent Task Handoff
+**Position**: §4.1.3 指令传递与结果回调机制
+**Purpose**: Visualize task handoff chain before cursor-agent execution
+**Type**: flowchart
+**Filename**: 02-flowchart-task-handoff.png
+
+---
+
+## Illustration 7: MemOS Plugin Architecture
+**Position**: §6.2 MemOS Cloud 插件架构
+**Purpose**: Show MemOS Cloud platform and plugin capabilities mapped to multi-agents
+**Type**: framework
+**Filename**: 03-framework-memos-plugin.png
+
+---
+
+## Illustration 8: Memory Systems Comparison
+**Position**: §7.2 详细对比分析
+**Purpose**: Compare OpenClaw local memory and MemOS Cloud memory at a glance
+**Type**: comparison
+**Filename**: 04-comparison-memory-systems.png
+
+---
+
+## Illustration 9: Efficiency Comparison Infographic
+**Position**: §8.3 演进历程数据总结
+**Purpose**: Emphasize efficiency gain and manpower change with visual contrast
+**Type**: infographic
+**Filename**: 05-infographic-efficiency-comparison.png
+
+---
+
+## Illustration 10: Multi-Agent + Cursor Layered Framework
+**Position**: §3.1 Cursor Agent 模式解析
+**Purpose**: Supplement chapter-level architecture perspective and role relationships
+**Type**: framework
+**Filename**: 01-framework-multi-agent-cursor.png
+
+---
+
+## Summary
+
+Total illustrations: 10
+- Framework: 4
+- Flowchart: 3
+- Timeline: 1
+- Comparison: 1
+- Infographic: 1
+
+All illustrations use warm style with:
+- Hand-drawn aesthetic
+- Cute robot characters
+- Warm color palette (oranges, blues, greens)
+- Paper texture background
+- Chinese labels
