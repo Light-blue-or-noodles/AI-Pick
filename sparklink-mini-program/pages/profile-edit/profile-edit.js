@@ -176,9 +176,16 @@ Page({
           wx.showToast({ title: (data && data.message) || '头像上传失败', icon: 'none' });
         }
       },
-      fail: () => {
+      fail: (err) => {
         wx.hideLoading();
-        wx.showToast({ title: '网络异常', icon: 'none' });
+        const msg = (err && err.errMsg) ? String(err.errMsg) : '';
+        console.error('[uploadAvatar] uploadFile fail', err);
+        // 常见：未配置 uploadFile 合法域名、证书问题、URL 与后台不一致
+        wx.showToast({
+          title: msg && msg.length < 36 ? msg : '网络异常（请查控制台/合法域名）',
+          icon: 'none',
+          duration: 3200
+        });
       }
     });
   },

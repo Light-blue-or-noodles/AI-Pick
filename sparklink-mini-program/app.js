@@ -69,6 +69,30 @@ App({
     this.checkLoginStatus();
   },
 
+  /**
+   * 会话失效或用户已在服务端不存在（如库重置后本地仍为旧 userId）时统一清理，避免 IM/接口继续用幽灵账号。
+   */
+  clearLoginState() {
+    IMService.logout().catch(() => {});
+    this.globalData.token = null;
+    this.globalData.userId = null;
+    this.globalData.userInfo = null;
+    this.globalData.imUnreadCount = 0;
+    try {
+      wx.removeStorageSync('token');
+      wx.removeStorageSync('userId');
+      wx.removeStorageSync('userInfo');
+      wx.removeStorageSync('userNickname');
+      wx.removeStorageSync('userAvatar');
+      wx.removeStorageSync('isLoggedIn');
+      wx.removeStorageSync('imUserSig');
+      wx.removeStorageSync('imUserID');
+      wx.removeStorageSync('imSdkAppId');
+    } catch (e) {
+      console.warn('clearLoginState', e);
+    }
+  },
+
   checkLoginStatus() {
     const token = wx.getStorageSync('token');
     const userId = wx.getStorageSync('userId');
@@ -80,42 +104,64 @@ App({
     }
     // 不在此请求 /api/user/info：首屏为登录页时，用户未点击登录即拉取会污染展示；登录成功后再拉取（见 login 页 persistSession 后）。
   },
-  
+
+  /**
+   * 拉取当前用户信息并写入 globalData / storage。
+   * @returns {Promise<boolean>} 是否拉取成功（token 无效、用户不存在、网络失败均为 false）
+   */
   getUserInfo() {
     if (!this.globalData.token || !this.globalData.userId) {
-      return;
+      return Promise.resolve(false);
     }
-    wx.request({
-      url: `${this.globalData.baseUrl}/api/user/info`,
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${this.globalData.token}`,
-        'X-User-Id': String(this.globalData.userId)
-      },
-      success: (res) => {
-        if (res.statusCode === 401) {
-          // token 过期或无效，清除登录状态
-          IMService.logout().catch(() => {});
-          this.globalData.token = null;
-          this.globalData.userId = null;
-          this.globalData.userInfo = null;
-          wx.removeStorageSync('token');
-          wx.removeStorageSync('userId');
-          return;
-        }
-        if (res.data && res.data.code === 0) {
-          const d = res.data.data || {};
-          this.globalData.userInfo = d;
-          try {
-            wx.setStorageSync('userInfo', { ...d, isLogin: true });
-          } catch (e) {
-            console.warn('setStorageSync userInfo', e);
+    return new Promise((resolve) => {
+      wx.request({
+        url: `${this.globalData.baseUrl}/api/user/info`,
+        method: 'GET',
+        header: {
+          'Authorization': `Bearer ${this.globalData.token}`,
+          'X-User-Id': String(this.globalData.userId)
+        },
+        success: (res) => {
+          const body = res.data || {};
+          const msg = body.message || body.msg || '';
+          if (res.statusCode === 401 || body.code === 401) {
+            this.clearLoginState();
+            resolve(false);
+            return;
           }
+          if (
+            res.statusCode === 400 ||
+            body.code === 400
+          ) {
+            if (msg.indexOf('用户不存在') !== -1 && msg.indexOf('对方') === -1) {
+              this.clearLoginState();
+              wx.showToast({
+                title: '账号已失效，请重新登录',
+                icon: 'none',
+                duration: 2500
+              });
+              resolve(false);
+              return;
+            }
+          }
+          if (body.code === 0) {
+            const d = body.data || {};
+            this.globalData.userInfo = d;
+            try {
+              wx.setStorageSync('userInfo', { ...d, isLogin: true });
+            } catch (e) {
+              console.warn('setStorageSync userInfo', e);
+            }
+            resolve(true);
+            return;
+          }
+          resolve(false);
+        },
+        fail: () => {
+          console.log('获取用户信息失败');
+          resolve(false);
         }
-      },
-      fail: () => {
-        console.log('获取用户信息失败');
-      }
+      });
     });
   },
   

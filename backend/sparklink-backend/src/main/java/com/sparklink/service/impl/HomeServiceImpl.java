@@ -11,6 +11,7 @@ import com.sparklink.common.PartnerScopeConstants;
 import com.sparklink.common.PartnerTypeConstants;
 import com.sparklink.service.AiService;
 import com.sparklink.service.HomeService;
+import com.sparklink.util.MediaPathUtil;
 import com.sparklink.vo.ActivityVO;
 import com.sparklink.vo.AiRecommendVO;
 import com.sparklink.vo.HomeRecommendVO;
@@ -132,7 +133,7 @@ public class HomeServiceImpl implements HomeService {
             }
             vo.setScope(partner.getScope());
             vo.setScopeName(PartnerScopeConstants.labelOf(partner.getScope()));
-            vo.setCoverImage(partner.getCoverImage());
+            vo.setCoverImage(MediaPathUtil.normalizeForResponse(partner.getCoverImage()));
             vo.setMaxParticipants(partner.getTargetCount());
             vo.setCurrentParticipants(partner.getCurrentCount());
             vo.setAddress(partner.getLocation());

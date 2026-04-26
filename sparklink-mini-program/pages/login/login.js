@@ -24,8 +24,12 @@ Page({
     }
     app.globalData.token = token;
     app.globalData.userId = userId;
-    app.getUserInfo();
-    wx.switchTab({ url: '/pages/index/index' });
+    // 须等 /api/user/info 成功再进首页：库重置后本地仍为旧 userId 时，应先清会话并留在登录页
+    app.getUserInfo().then((ok) => {
+      if (ok) {
+        wx.switchTab({ url: '/pages/index/index' });
+      }
+    });
   },
 
   // WeChat one-click login（同一次点击内拉头像昵称，便于写入库并 account_import 到腾讯云 IM）

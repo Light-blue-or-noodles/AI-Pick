@@ -33,6 +33,54 @@ function hydrateAuthFromStorage() {
   }
 }
 
+/** 与 app.js 一致：401 或「用户不存在」时清理本地会话，避免幽灵 userId 继续打 IM */
+function shouldClearSessionByResponse(res) {
+  if (!res) {
+    return false;
+  }
+  const body =
+    typeof res.data === 'object' && res.data !== null ? res.data : {};
+  const msg = body.message || body.msg || '';
+  const sc = res.statusCode;
+  if (sc === 401 || body.code === 401) {
+    return true;
+  }
+  if ((sc === 400 || body.code === 400) && msg.indexOf('用户不存在') !== -1) {
+    // 单聊 prep-peer 等会返回「对方用户不存在」，不应清当前登录态
+    if (msg.indexOf('对方') !== -1) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+let _sessionClearToastTimer = null;
+function tryClearSessionFromBadResponse(res, options) {
+  if (options.skipSessionClear || !shouldClearSessionByResponse(res)) {
+    return;
+  }
+  const app = getAppSafe();
+  if (!app || typeof app.clearLoginState !== 'function') {
+    return;
+  }
+  app.clearLoginState();
+  if (options.suppressSessionToast) {
+    return;
+  }
+  if (_sessionClearToastTimer) {
+    return;
+  }
+  wx.showToast({
+    title: '登录已失效，请重新登录',
+    icon: 'none',
+    duration: 2500
+  });
+  _sessionClearToastTimer = setTimeout(() => {
+    _sessionClearToastTimer = null;
+  }, 2200);
+}
+
 /** 当前请求用的鉴权与 baseUrl（不依赖模块加载时刻的 getApp 结果） */
 function resolveRequestContext() {
   hydrateAuthFromStorage();
@@ -100,25 +148,26 @@ const request = (options) => {
       data: payload,
       header: header,
       success: (res) => {
-        if (res.data.code === 0) {
+        const body =
+          typeof res.data === 'object' && res.data !== null ? res.data : {};
+        if (body.code === 0) {
           resolve(res.data);
-        } else if (res.data.code === 401) {
-          // 未登录，跳转登录页
-          console.warn('未登录，请先到登录页登录');
-          // wx.navigateTo({
-          //   url: '/pages/login/login'
-          // });
-          reject(res.data);
-        } else {
-          const errText = res.data.message || res.data.msg || '请求失败';
-          if (!options.suppressErrorToast) {
-            wx.showToast({
-              title: errText,
-              icon: 'none'
-            });
-          }
-          reject(res.data);
+          return;
         }
+        tryClearSessionFromBadResponse(res, options);
+        if (body.code === 401) {
+          console.warn('未登录或 token 无效');
+          reject(res.data);
+          return;
+        }
+        const errText = body.message || body.msg || '请求失败';
+        if (!options.suppressErrorToast) {
+          wx.showToast({
+            title: errText,
+            icon: 'none'
+          });
+        }
+        reject(res.data);
       },
       fail: (err) => {
         wx.showToast({

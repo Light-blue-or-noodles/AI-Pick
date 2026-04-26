@@ -1,199 +1,413 @@
--- sparklink 数据库初始化脚本
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS sparklink DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- MySQL dump 10.13  Distrib 8.0.45, for Linux (aarch64)
+--
+-- Host: localhost    Database: sparklink
+-- ------------------------------------------------------
+-- Server version	8.0.45
 
-USE sparklink;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- 用户表
-CREATE TABLE IF NOT EXISTS t_user (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
-    password VARCHAR(255) NOT NULL COMMENT '密码',
-    nickname VARCHAR(50) DEFAULT NULL COMMENT '昵称',
-    avatar VARCHAR(500) DEFAULT NULL COMMENT '头像URL',
-    phone VARCHAR(20) DEFAULT NULL COMMENT '手机号',
-    email VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
-    gender TINYINT DEFAULT 0 COMMENT '性别 0-未知 1-男 2-女',
-    bio VARCHAR(500) DEFAULT NULL COMMENT '个性签名',
-    status TINYINT DEFAULT 0 COMMENT '状态 0-正常 1-禁用',
-    openid VARCHAR(100) DEFAULT NULL COMMENT '微信openid',
-    company_name VARCHAR(100) DEFAULT NULL COMMENT '公司名称',
-    school_name VARCHAR(100) DEFAULT NULL COMMENT '学校名称',
-    birthday VARCHAR(20) DEFAULT NULL COMMENT '生日 yyyy-MM-dd',
-    tags VARCHAR(500) DEFAULT NULL COMMENT '兴趣标签 JSON 数组',
-    location VARCHAR(200) DEFAULT NULL COMMENT '常驻/当前位置(城市或 lat,lon GCJ-02)',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建人',
-    update_by BIGINT DEFAULT NULL COMMENT '更新人',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_username (username),
-    INDEX idx_phone (phone)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+--
+-- Table structure for table `t_activity`
+--
 
--- 搭子表
-CREATE TABLE IF NOT EXISTS t_partner (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    user_id BIGINT NOT NULL COMMENT '发布者ID',
-    title VARCHAR(100) NOT NULL COMMENT '标题',
-    content TEXT NOT NULL COMMENT '内容描述',
-    preference VARCHAR(512) DEFAULT NULL COMMENT '搭子偏好，逗号分隔标签',
-    scope TINYINT NOT NULL DEFAULT 1 COMMENT '可见范围 1公开 2同事 3校友',
-    type TINYINT NOT NULL COMMENT '搭子类型 1-15 见 PartnerTypeConstants',
-    target_count INT DEFAULT 2 COMMENT '目标人数',
-    current_count INT DEFAULT 0 COMMENT '当前人数',
-    location VARCHAR(200) DEFAULT NULL COMMENT '活动地点展示文案',
-    latitude DECIMAL(10, 7) DEFAULT NULL COMMENT '纬度 GCJ-02',
-    longitude DECIMAL(11, 7) DEFAULT NULL COMMENT '经度 GCJ-02',
-    plan_time DATETIME DEFAULT NULL COMMENT '计划/集合开始时间',
-    plan_end_time DATETIME DEFAULT NULL COMMENT '计划/活动结束时间',
-    cover_image VARCHAR(500) DEFAULT NULL COMMENT '封面图片',
-    status TINYINT DEFAULT 0 COMMENT '状态 0-待应征 1-已满 2-已结束',
-    view_count INT DEFAULT 0 COMMENT '浏览量',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建人',
-    update_by BIGINT DEFAULT NULL COMMENT '更新人',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_user_id (user_id),
-    INDEX idx_type (type),
-    INDEX idx_status (status),
-    INDEX idx_create_time (create_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='搭子表';
+DROP TABLE IF EXISTS `t_activity`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_activity` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `description` text NOT NULL,
+  `type` tinyint NOT NULL,
+  `category` varchar(50) DEFAULT NULL,
+  `register_end_time` datetime DEFAULT NULL,
+  `start_time` datetime DEFAULT NULL,
+  `end_time` datetime DEFAULT NULL,
+  `location` varchar(200) DEFAULT NULL,
+  `latitude` decimal(10,7) DEFAULT NULL,
+  `longitude` decimal(10,7) DEFAULT NULL,
+  `fee` decimal(10,2) DEFAULT '0.00',
+  `max_participants` int DEFAULT '0',
+  `current_participants` int DEFAULT '0',
+  `cover_image` varchar(500) DEFAULT NULL,
+  `images` text COMMENT 'å¤šå›¾JSONæ•°ç»„ï¼Œé¦–å¼ ä¸ºå°é¢',
+  `status` tinyint DEFAULT '0',
+  `view_count` int DEFAULT '0',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint DEFAULT NULL,
+  `update_by` bigint DEFAULT NULL,
+  `deleted` tinyint DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 搭子应征表
-CREATE TABLE IF NOT EXISTS t_partner_apply (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    partner_id BIGINT NOT NULL COMMENT '搭子ID',
-    user_id BIGINT NOT NULL COMMENT '申请人ID',
-    message VARCHAR(500) DEFAULT NULL COMMENT '申请留言',
-    status TINYINT DEFAULT 0 COMMENT '状态 0-待审核 1-已通过 2-已拒绝',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建人',
-    update_by BIGINT DEFAULT NULL COMMENT '更新人',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_partner_id (partner_id),
-    INDEX idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='搭子应征表';
+--
+-- Table structure for table `t_activity_participant`
+--
 
--- 活动表
-CREATE TABLE IF NOT EXISTS t_activity (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    user_id BIGINT NOT NULL COMMENT '发布者ID',
-    title VARCHAR(100) NOT NULL COMMENT '活动标题',
-    description TEXT NOT NULL COMMENT '活动描述',
-    type TINYINT NOT NULL COMMENT '活动类型 1-线下 2-线上',
-    category VARCHAR(50) DEFAULT NULL COMMENT '分类',
-    register_end_time DATETIME DEFAULT NULL COMMENT '报名截止时间',
-    start_time DATETIME DEFAULT NULL COMMENT '活动开始时间',
-    end_time DATETIME DEFAULT NULL COMMENT '活动结束时间',
-    location VARCHAR(200) DEFAULT NULL COMMENT '活动地点',
-    latitude DECIMAL(10, 7) DEFAULT NULL COMMENT '纬度',
-    longitude DECIMAL(10, 7) DEFAULT NULL COMMENT '经度',
-    fee DECIMAL(10, 2) DEFAULT 0 COMMENT '费用 0-免费',
-    max_participants INT DEFAULT 0 COMMENT '人数上限 0-不限',
-    current_participants INT DEFAULT 0 COMMENT '当前报名人数',
-    cover_image VARCHAR(500) DEFAULT NULL COMMENT '封面图片',
-    status TINYINT DEFAULT 0 COMMENT '状态 0-待开始 1-报名中 2-进行中 3-已结束 4-已取消',
-    view_count INT DEFAULT 0 COMMENT '浏览量',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建人',
-    update_by BIGINT DEFAULT NULL COMMENT '更新人',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_user_id (user_id),
-    INDEX idx_type (type),
-    INDEX idx_category (category),
-    INDEX idx_status (status),
-    INDEX idx_start_time (start_time),
-    INDEX idx_create_time (create_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动表';
+DROP TABLE IF EXISTS `t_activity_participant`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_activity_participant` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `activity_id` bigint NOT NULL COMMENT 'æ´»åŠ¨ID',
+  `user_id` bigint NOT NULL COMMENT 'ç”¨æˆ·ID',
+  `status` int DEFAULT '0' COMMENT 'çŠ¶æ€(0-å·²æŠ¥å/1-å·²ç­¾åˆ°/2-å·²å–æ¶ˆ)',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_activity_id` (`activity_id`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='æ´»åŠ¨å‚ä¸Žè€…è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 活动报名表
-CREATE TABLE IF NOT EXISTS t_activity_registration (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    activity_id BIGINT NOT NULL COMMENT '活动ID',
-    user_id BIGINT NOT NULL COMMENT '报名人ID',
-    message VARCHAR(500) DEFAULT NULL COMMENT '报名留言',
-    status TINYINT DEFAULT 0 COMMENT '状态 0-已报名 1-已取消',
-    check_in_time DATETIME DEFAULT NULL COMMENT '签到时间',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建人',
-    update_by BIGINT DEFAULT NULL COMMENT '更新人',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_activity_id (activity_id),
-    INDEX idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动报名表';
+--
+-- Table structure for table `t_activity_registration`
+--
 
--- AI对话消息表
-CREATE TABLE IF NOT EXISTS t_chat_message (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    session_id VARCHAR(50) NOT NULL COMMENT '会话ID',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    type TINYINT NOT NULL COMMENT '消息类型 1-用户 2-AI',
-    content TEXT NOT NULL COMMENT '消息内容',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    create_by BIGINT DEFAULT NULL COMMENT '创建人',
-    update_by BIGINT DEFAULT NULL COMMENT '更新人',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_session_id (session_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_create_time (create_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话消息表';
+DROP TABLE IF EXISTS `t_activity_registration`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_activity_registration` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `activity_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL,
+  `message` varchar(500) DEFAULT NULL,
+  `status` tinyint DEFAULT '0',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint DEFAULT NULL,
+  `update_by` bigint DEFAULT NULL,
+  `deleted` tinyint DEFAULT '0',
+  `check_in_time` datetime DEFAULT NULL COMMENT 'ç­¾åˆ°æ—¶é—´',
+  PRIMARY KEY (`id`),
+  KEY `idx_activity_id` (`activity_id`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 用户会话表（用于私信）
-CREATE TABLE IF NOT EXISTS t_conversation (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    user_id1 BIGINT NOT NULL COMMENT '用户1 ID',
-    user_id2 BIGINT NOT NULL COMMENT '用户2 ID',
-    last_message_id BIGINT DEFAULT NULL COMMENT '最后一条消息ID',
-    unread_count1 INT DEFAULT 0 COMMENT '未读数量（用户1）',
-    unread_count2 INT DEFAULT 0 COMMENT '未读数量（用户2）',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_user_id1 (user_id1),
-    INDEX idx_user_id2 (user_id2)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户会话表';
+--
+-- Table structure for table `t_activity_remind`
+--
 
--- 用户私信消息表
-CREATE TABLE IF NOT EXISTS t_user_message (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    conversation_id BIGINT NOT NULL COMMENT '会话ID',
-    sender_id BIGINT NOT NULL COMMENT '发送者ID',
-    receiver_id BIGINT NOT NULL COMMENT '接收者ID',
-    type VARCHAR(20) DEFAULT 'text' COMMENT '消息类型 text/image/location',
-    content TEXT NOT NULL COMMENT '消息内容',
-    latitude DECIMAL(10, 7) DEFAULT NULL COMMENT '纬度',
-    longitude DECIMAL(10, 7) DEFAULT NULL COMMENT '经度',
-    is_read TINYINT DEFAULT 0 COMMENT '是否已读 0-未读 1-已读',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_conversation_id (conversation_id),
-    INDEX idx_sender_id (sender_id),
-    INDEX idx_receiver_id (receiver_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户私信消息表';
+DROP TABLE IF EXISTS `t_activity_remind`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_activity_remind` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ä¸»é”®ID',
+  `activity_id` bigint NOT NULL COMMENT 'æ´»åŠ¨ID',
+  `user_id` bigint NOT NULL COMMENT 'ç”¨æˆ·ID',
+  `remind_time` datetime NOT NULL COMMENT 'æé†’æ—¶é—´',
+  `is_reminded` tinyint DEFAULT '0' COMMENT 'æ˜¯å¦å·²æé†’ 0-æœªæé†’ 1-å·²æé†’',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'åˆ›å»ºæ—¶é—´',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'æ›´æ–°æ—¶é—´',
+  `deleted` tinyint DEFAULT '0' COMMENT 'åˆ é™¤æ ‡è®° 0-æ­£å¸¸ 1-åˆ é™¤',
+  PRIMARY KEY (`id`),
+  KEY `idx_activity_id` (`activity_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_remind_time` (`remind_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='æ´»åŠ¨æé†’è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- 活动提醒表
-CREATE TABLE IF NOT EXISTS t_activity_remind (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    activity_id BIGINT NOT NULL COMMENT '活动ID',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    remind_time DATETIME NOT NULL COMMENT '提醒时间',
-    is_reminded TINYINT DEFAULT 0 COMMENT '是否已提醒 0-未提醒 1-已提醒',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted TINYINT DEFAULT 0 COMMENT '删除标记 0-正常 1-删除',
-    INDEX idx_activity_id (activity_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_remind_time (remind_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动提醒表';
+--
+-- Table structure for table `t_chat_message`
+--
 
--- 插入测试用户 (密码: 123456)
-INSERT INTO t_user (username, password, nickname, avatar, status) VALUES
-('testuser', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5E', '测试用户', NULL, 0),
-('demouser', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5E', '演示用户', NULL, 0);
+DROP TABLE IF EXISTS `t_chat_message`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_chat_message` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ä¸»é”®ID',
+  `session_id` varchar(50) NOT NULL COMMENT 'ä¼šè¯ID',
+  `user_id` bigint NOT NULL COMMENT 'ç”¨æˆ·ID',
+  `type` tinyint NOT NULL COMMENT 'æ¶ˆæ¯ç±»åž‹ 1-ç”¨æˆ· 2-AI',
+  `content` text NOT NULL COMMENT 'æ¶ˆæ¯å†…å®¹',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'åˆ›å»ºæ—¶é—´',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'æ›´æ–°æ—¶é—´',
+  `create_by` bigint DEFAULT NULL COMMENT 'åˆ›å»ºäºº',
+  `update_by` bigint DEFAULT NULL COMMENT 'æ›´æ–°äºº',
+  `deleted` tinyint DEFAULT '0' COMMENT 'åˆ é™¤æ ‡è®° 0-æ­£å¸¸ 1-åˆ é™¤',
+  PRIMARY KEY (`id`),
+  KEY `idx_session_id` (`session_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AIå¯¹è¯æ¶ˆæ¯è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_company`
+--
+
+DROP TABLE IF EXISTS `t_company`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_company` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) DEFAULT NULL COMMENT 'å…¬å¸åç§°',
+  `invite_code` varchar(20) DEFAULT NULL COMMENT 'é‚€è¯·ç ',
+  `member_count` int DEFAULT '0' COMMENT 'æˆå‘˜æ•°é‡',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='å…¬å¸è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_conversation`
+--
+
+DROP TABLE IF EXISTS `t_conversation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_conversation` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ä¸»é”®ID',
+  `user_id1` bigint NOT NULL COMMENT 'ç”¨æˆ·1 ID',
+  `user_id2` bigint NOT NULL COMMENT 'ç”¨æˆ·2 ID',
+  `last_message_id` bigint DEFAULT NULL COMMENT 'æœ€åŽä¸€æ¡æ¶ˆæ¯ID',
+  `unread_count1` int DEFAULT '0' COMMENT 'æœªè¯»æ•°é‡ï¼ˆç”¨æˆ·1ï¼‰',
+  `unread_count2` int DEFAULT '0' COMMENT 'æœªè¯»æ•°é‡ï¼ˆç”¨æˆ·2ï¼‰',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'åˆ›å»ºæ—¶é—´',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'æ›´æ–°æ—¶é—´',
+  `create_by` bigint DEFAULT NULL COMMENT 'åˆ›å»ºäºº',
+  `update_by` bigint DEFAULT NULL COMMENT 'æ›´æ–°äºº',
+  `deleted` tinyint DEFAULT '0' COMMENT 'åˆ é™¤æ ‡è®° 0-æ­£å¸¸ 1-åˆ é™¤',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id1` (`user_id1`),
+  KEY `idx_user_id2` (`user_id2`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='ç”¨æˆ·ä¼šè¯è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_favorite`
+--
+
+DROP TABLE IF EXISTS `t_favorite`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_favorite` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ä¸»é”®ID',
+  `user_id` bigint NOT NULL COMMENT 'ç”¨æˆ·ID',
+  `target_type` tinyint NOT NULL COMMENT 'ç›®æ ‡ç±»åž‹ 1-æ´»åŠ¨ 2-æ­å­',
+  `target_id` bigint NOT NULL COMMENT 'ç›®æ ‡IDï¼ˆæ´»åŠ¨IDæˆ–æ­å­IDï¼‰',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'åˆ›å»ºæ—¶é—´',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'æ›´æ–°æ—¶é—´',
+  `create_by` bigint DEFAULT NULL COMMENT 'åˆ›å»ºäºº',
+  `update_by` bigint DEFAULT NULL COMMENT 'æ›´æ–°äºº',
+  `deleted` tinyint DEFAULT '0' COMMENT 'åˆ é™¤æ ‡è®° 0-æ­£å¸¸ 1-åˆ é™¤',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_user_target` (`user_id`,`target_type`,`target_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_target_type` (`target_type`),
+  KEY `idx_target_id` (`target_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='æ”¶è—è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_follow`
+--
+
+DROP TABLE IF EXISTS `t_follow`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_follow` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ä¸»é”®ID',
+  `user_id` bigint NOT NULL COMMENT 'å…³æ³¨è€…ID',
+  `follow_user_id` bigint NOT NULL COMMENT 'è¢«å…³æ³¨è€…ID',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'åˆ›å»ºæ—¶é—´',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'æ›´æ–°æ—¶é—´',
+  `create_by` bigint DEFAULT NULL COMMENT 'åˆ›å»ºäºº',
+  `update_by` bigint DEFAULT NULL COMMENT 'æ›´æ–°äºº',
+  `deleted` tinyint DEFAULT '0' COMMENT 'åˆ é™¤æ ‡è®° 0-æ­£å¸¸ 1-åˆ é™¤',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_user_follow` (`user_id`,`follow_user_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_follow_user_id` (`follow_user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='å…³æ³¨è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_message`
+--
+
+DROP TABLE IF EXISTS `t_message`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_message` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `from_user_id` bigint NOT NULL COMMENT 'å‘é€è€…ID',
+  `to_user_id` bigint NOT NULL COMMENT 'æŽ¥æ”¶è€…ID',
+  `content` text COMMENT 'æ¶ˆæ¯å†…å®¹',
+  `type` int DEFAULT '0' COMMENT 'æ¶ˆæ¯ç±»åž‹(0-æ–‡æœ¬/1-å›¾ç‰‡/2-è¯­éŸ³)',
+  `is_read` tinyint DEFAULT '0' COMMENT 'æ˜¯å¦å·²è¯»',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_from_user_id` (`from_user_id`),
+  KEY `idx_to_user_id` (`to_user_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='æ¶ˆæ¯è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_partner`
+--
+
+DROP TABLE IF EXISTS `t_partner`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_partner` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `content` text NOT NULL,
+  `preference` varchar(512) DEFAULT NULL COMMENT '搭子偏好，逗号分隔标签',
+  `scope` tinyint NOT NULL DEFAULT '1' COMMENT '可见范围 1公开 2同事 3校友',
+  `type` tinyint NOT NULL,
+  `target_count` int DEFAULT '2',
+  `current_count` int DEFAULT '0',
+  `location` varchar(200) DEFAULT NULL,
+  `latitude` decimal(10,7) DEFAULT NULL COMMENT 'çº¬åº¦ GCJ-02',
+  `longitude` decimal(11,7) DEFAULT NULL COMMENT 'ç»åº¦ GCJ-02',
+  `plan_time` datetime DEFAULT NULL,
+  `plan_end_time` datetime DEFAULT NULL COMMENT '计划/活动结束时间',
+  `cover_image` varchar(500) DEFAULT NULL,
+  `status` tinyint DEFAULT '0',
+  `view_count` int DEFAULT '0',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint DEFAULT NULL,
+  `update_by` bigint DEFAULT NULL,
+  `deleted` tinyint DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_partner_apply`
+--
+
+DROP TABLE IF EXISTS `t_partner_apply`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_partner_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `partner_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL,
+  `message` varchar(500) DEFAULT NULL,
+  `status` tinyint DEFAULT '0',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint DEFAULT NULL,
+  `update_by` bigint DEFAULT NULL,
+  `deleted` tinyint DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_partner_id` (`partner_id`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_school`
+--
+
+DROP TABLE IF EXISTS `t_school`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_school` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) DEFAULT NULL COMMENT 'å­¦æ ¡åç§°',
+  `invite_code` varchar(20) DEFAULT NULL COMMENT 'é‚€è¯·ç ',
+  `member_count` int DEFAULT '0' COMMENT 'æˆå‘˜æ•°é‡',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='å­¦æ ¡è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_user`
+--
+
+DROP TABLE IF EXISTS `t_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_user` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `nickname` varchar(50) DEFAULT NULL,
+  `avatar` varchar(500) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `gender` tinyint DEFAULT '0',
+  `bio` varchar(500) DEFAULT NULL,
+  `status` tinyint DEFAULT '0',
+  `openid` varchar(100) DEFAULT NULL,
+  `company_name` varchar(100) DEFAULT NULL COMMENT 'å…¬å¸åç§°',
+  `school_name` varchar(100) DEFAULT NULL COMMENT 'å­¦æ ¡åç§°',
+  `birthday` varchar(20) DEFAULT NULL COMMENT 'ç”Ÿæ—¥ yyyy-MM-dd',
+  `tags` varchar(500) DEFAULT NULL COMMENT 'å…´è¶£æ ‡ç­¾ JSON æ•°ç»„',
+  `location` varchar(200) DEFAULT NULL COMMENT '常驻/当前位置(城市或lat,lon GCJ-02)',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint DEFAULT NULL,
+  `update_by` bigint DEFAULT NULL,
+  `deleted` tinyint DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  KEY `idx_username` (`username`),
+  KEY `idx_phone` (`phone`)
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_user_message`
+--
+
+DROP TABLE IF EXISTS `t_user_message`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_user_message` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ä¸»é”®ID',
+  `conversation_id` bigint NOT NULL COMMENT 'ä¼šè¯ID',
+  `sender_id` bigint NOT NULL COMMENT 'å‘é€è€…ID',
+  `receiver_id` bigint NOT NULL COMMENT 'æŽ¥æ”¶è€…ID',
+  `type` varchar(20) DEFAULT 'text' COMMENT 'æ¶ˆæ¯ç±»åž‹ text/image/location',
+  `content` text NOT NULL COMMENT 'æ¶ˆæ¯å†…å®¹',
+  `latitude` decimal(10,7) DEFAULT NULL COMMENT 'çº¬åº¦',
+  `longitude` decimal(10,7) DEFAULT NULL COMMENT 'ç»åº¦',
+  `is_read` tinyint DEFAULT '0' COMMENT 'æ˜¯å¦å·²è¯» 0-æœªè¯» 1-å·²è¯»',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'åˆ›å»ºæ—¶é—´',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'æ›´æ–°æ—¶é—´',
+  `create_by` bigint DEFAULT NULL COMMENT 'åˆ›å»ºäºº',
+  `update_by` bigint DEFAULT NULL COMMENT 'æ›´æ–°äºº',
+  `deleted` tinyint DEFAULT '0' COMMENT 'åˆ é™¤æ ‡è®° 0-æ­£å¸¸ 1-åˆ é™¤',
+  PRIMARY KEY (`id`),
+  KEY `idx_conversation_id` (`conversation_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_receiver_id` (`receiver_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='ç”¨æˆ·ç§ä¿¡æ¶ˆæ¯è¡¨';
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-04-26 10:05:24

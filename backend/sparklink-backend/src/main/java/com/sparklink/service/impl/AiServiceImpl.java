@@ -17,6 +17,7 @@ import com.sparklink.service.AiService;
 import com.sparklink.service.RecommendFeedbackService;
 import com.sparklink.util.AvatarUtil;
 import com.sparklink.util.DistanceUtil;
+import com.sparklink.util.MediaPathUtil;
 import com.sparklink.vo.ActivityVO;
 import com.sparklink.vo.AiRecommendVO;
 import com.sparklink.vo.PartnerVO;
@@ -436,7 +437,7 @@ public class AiServiceImpl implements AiService {
             }
             vo.setScope(p.getScope());
             vo.setScopeName(PartnerScopeConstants.labelOf(p.getScope()));
-            vo.setCoverImage(p.getCoverImage());
+            vo.setCoverImage(MediaPathUtil.normalizeForResponse(p.getCoverImage()));
             vo.setMaxParticipants(p.getTargetCount());
             vo.setCurrentParticipants(p.getCurrentCount());
             vo.setAddress(p.getLocation());
@@ -508,7 +509,7 @@ public class AiServiceImpl implements AiService {
             vo.setCreateTime(a.getCreateTime());
             vo.setEventTime(a.getStartTime());
             vo.setMatchScore(calculateActivityMatchScore(a, request, profile));
-            vo.setCoverImage(a.getCoverImage());
+            vo.setCoverImage(MediaPathUtil.normalizeForResponse(a.getCoverImage()));
             if (a.getLatitude() != null) {
                 vo.setLatitude(a.getLatitude().doubleValue());
             }

@@ -27,6 +27,8 @@ class MediaPathUtilTest {
     void normalizeForResponse_stripsHostForStatic() {
         assertEquals("/static/covers/x.png",
                 MediaPathUtil.normalizeForResponse("http://192.168.1.5:8080/api/static/covers/x.png"));
+        assertEquals("/static/avatars/27_x.jpg",
+                MediaPathUtil.normalizeForResponse("http://59.110.0.107:8080/api/static/avatars/27_x.jpg"));
     }
 
     @Test

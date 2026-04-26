@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sparklink.integration.DashScopeCompatClient;
+import com.sparklink.util.MediaPathUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -177,7 +178,8 @@ public class ChatServiceImpl implements ChatService {
         if (url == null || url.isBlank()) {
             return "partner".equalsIgnoreCase(kind) ? "/static/covers/partner-default.png" : "/static/covers/activity-default.png";
         }
-        return url.startsWith("http") ? url : url;
+        String n = MediaPathUtil.normalizeForResponse(url);
+        return n != null ? n : url;
     }
 
     private static String buildMatchContextString(List<ChatRecommendItem> recommends) {

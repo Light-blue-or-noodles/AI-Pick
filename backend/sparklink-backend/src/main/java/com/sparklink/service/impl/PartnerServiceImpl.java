@@ -19,6 +19,7 @@ import com.sparklink.mapper.PartnerMapper;
 import com.sparklink.mapper.UserMapper;
 import com.sparklink.service.PartnerService;
 import com.sparklink.util.AvatarUtil;
+import com.sparklink.util.MediaPathUtil;
 import com.sparklink.vo.PartnerVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -236,7 +237,7 @@ public class PartnerServiceImpl implements PartnerService {
         vo.setTitle(partner.getTitle());
         vo.setDescription(partner.getContent());
         vo.setPreference(partner.getPreference());
-        vo.setCoverImage(partner.getCoverImage());
+        vo.setCoverImage(MediaPathUtil.normalizeForResponse(partner.getCoverImage()));
         vo.setMaxParticipants(partner.getTargetCount());
         vo.setCurrentParticipants(partner.getCurrentCount());
         vo.setScope(partner.getScope());
@@ -571,7 +572,7 @@ public class PartnerServiceImpl implements PartnerService {
         response.setTitle(partner.getTitle());
         response.setTypeCode(partner.getType());
         response.setTypeName(PartnerTypeConstants.labelOf(partner.getType()));
-        response.setCoverImage(partner.getCoverImage());
+        response.setCoverImage(MediaPathUtil.normalizeForResponse(partner.getCoverImage()));
         response.setStatus(partner.getStatus());
         response.setStatusName(getStatusName(partner.getStatus()));
         response.setPreference(partner.getPreference());

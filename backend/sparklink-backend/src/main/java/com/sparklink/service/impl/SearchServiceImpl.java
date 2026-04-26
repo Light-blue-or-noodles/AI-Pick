@@ -9,6 +9,8 @@ import com.sparklink.mapper.ActivityMapper;
 import com.sparklink.mapper.PartnerMapper;
 import com.sparklink.mapper.UserMapper;
 import com.sparklink.service.SearchService;
+import com.sparklink.util.AvatarUtil;
+import com.sparklink.util.MediaPathUtil;
 import com.sparklink.vo.ActivityVO;
 import com.sparklink.vo.PartnerVO;
 import com.sparklink.service.MatchScoreService;
@@ -436,7 +438,7 @@ public class SearchServiceImpl implements SearchService {
             vo.setStatus(a.getStatus());
             vo.setCreateTime(a.getCreateTime());
             vo.setEventTime(a.getStartTime());
-            vo.setCoverImage(a.getCoverImage());
+            vo.setCoverImage(MediaPathUtil.normalizeForResponse(a.getCoverImage()));
             
             // 计算匹配度
             int matchScore = calculateActivityMatchScore(a, criteria);
@@ -485,7 +487,7 @@ public class SearchServiceImpl implements SearchService {
             vo.setUserId(p.getUserId());
             vo.setTitle(p.getTitle());
             vo.setDescription(p.getContent());
-            vo.setCoverImage(p.getCoverImage());
+            vo.setCoverImage(MediaPathUtil.normalizeForResponse(p.getCoverImage()));
             vo.setMaxParticipants(p.getTargetCount());
             vo.setCurrentParticipants(p.getCurrentCount());
             vo.setAddress(p.getLocation());
@@ -495,7 +497,7 @@ public class SearchServiceImpl implements SearchService {
             User user = userMap.get(p.getUserId());
             if (user != null) {
                 vo.setNickname(user.getNickname());
-                vo.setAvatar(user.getAvatar());
+                vo.setAvatar(AvatarUtil.sanitizeForResponse(user.getAvatar()));
                 vo.setGender(user.getGender());
             }
             

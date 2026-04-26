@@ -119,8 +119,8 @@ tencent:
     key: ${TENCENT_IM_KEY:8806e0cd94d52d2d5a1d6d3f9e47253b8274de8cf262ee66961dcbe154cead64}
     expire-seconds: ${TENCENT_IM_EXPIRE_SECONDS:604800}
     rest-api-host: ${TENCENT_IM_REST_HOST:https://console.tim.qq.com}
-    # 库内相对路径 /static/... 拼 FaceUrl 时使用；须与小程序访问后端的本机 IP 一致（见 app.js LAN_IP）。
-    # 微信头像等为 https 完整链时可直接同步到 IM；腾讯云服务器无法访问纯内网 IP 时本站上传头像仅小程序端可见。
+    # 库内相对路径 /static/... 拼 FaceUrl 时使用。生产为公网 HTTPS（与 application-prod 默认一致）；本地可用 LAN IP。
+    # 微信头像等为 https 完整链时可直接同步到 IM。
     avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:http://192.168.1.173:8080/api}
 
 # 阿里云内容安全（绿网）配置

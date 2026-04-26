@@ -12,6 +12,7 @@ import com.sparklink.entity.ActivityRegistration;
 import com.sparklink.mapper.ActivityMapper;
 import com.sparklink.mapper.ActivityRegistrationMapper;
 import com.sparklink.service.ActivityService;
+import com.sparklink.util.MediaPathUtil;
 import com.sparklink.vo.ActivityCalendarVO;
 import com.sparklink.vo.ActivityVO;
 import com.sparklink.vo.DayActivitiesVO;
@@ -65,7 +66,8 @@ public class ActivityServiceImpl implements ActivityService {
     private String effectiveCoverImage(Activity a) {
         String c = a.getCoverImage();
         if (c != null && !c.isBlank()) {
-            return c;
+            String n = MediaPathUtil.normalizeForResponse(c);
+            return n != null ? n : c;
         }
         String raw = a.getImages();
         if (raw == null || raw.isBlank()) {
@@ -77,13 +79,52 @@ public class ActivityServiceImpl implements ActivityService {
             if (list != null && !list.isEmpty()) {
                 String first = list.get(0);
                 if (first != null && !first.isBlank()) {
-                    return first;
+                    String n = MediaPathUtil.normalizeForResponse(first);
+                    return n != null ? n : first;
                 }
             }
         } catch (JsonProcessingException ignored) {
             // ignore
         }
         return c;
+    }
+
+    /**
+     * 出参与落库修正：将历史写入的 http://IP:8080/api/static/... 统一为 /static/...，便于小程序用当前 baseUrl 访问。
+     */
+    private void normalizeActivityMediaFields(Activity a) {
+        if (a == null) {
+            return;
+        }
+        String cover = a.getCoverImage();
+        if (cover != null && !cover.isBlank()) {
+            String n = MediaPathUtil.normalizeForResponse(cover);
+            if (n != null) {
+                a.setCoverImage(n);
+            }
+        }
+        String raw = a.getImages();
+        if (raw == null || raw.isBlank()) {
+            return;
+        }
+        try {
+            List<String> list = objectMapper.readValue(raw, new TypeReference<List<String>>() {
+            });
+            if (list == null || list.isEmpty()) {
+                return;
+            }
+            List<String> out = new ArrayList<>();
+            for (String u : list) {
+                if (u == null || u.isBlank()) {
+                    continue;
+                }
+                String n = MediaPathUtil.normalizeForResponse(u);
+                out.add(n != null ? n : u);
+            }
+            a.setImages(objectMapper.writeValueAsString(out));
+        } catch (JsonProcessingException ignored) {
+            // keep original images json
+        }
     }
 
     @Override
@@ -169,7 +210,11 @@ public class ActivityServiceImpl implements ActivityService {
         }
         wrapper.orderByDesc(Activity::getCreateTime);
 
-        return activityMapper.selectPage(page, wrapper);
+        IPage<Activity> result = activityMapper.selectPage(page, wrapper);
+        if (result.getRecords() != null) {
+            result.getRecords().forEach(this::normalizeActivityMediaFields);
+        }
+        return result;
     }
 
     @Override
@@ -179,7 +224,8 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BusinessException("活动不存在");
         }
 
-        // 增加浏览量
+        normalizeActivityMediaFields(activity);
+        // 增加浏览量（可能顺带把封面规范路径写回库）
         activity.setViewCount(activity.getViewCount() + 1);
         activityMapper.updateById(activity);
 

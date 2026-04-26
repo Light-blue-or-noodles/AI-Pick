@@ -369,9 +369,15 @@ Page({
           wx.showToast({ title: '解析失败', icon: 'none' });
         }
       },
-      fail: () => {
+      fail: (err) => {
         wx.hideLoading();
-        wx.showToast({ title: '上传失败', icon: 'none' });
+        const msg = (err && err.errMsg) ? String(err.errMsg) : '';
+        console.error('[uploadCover] uploadFile fail', err);
+        wx.showToast({
+          title: msg && msg.length < 36 ? msg : '上传失败（请查控制台/uploadFile域名）',
+          icon: 'none',
+          duration: 3200
+        });
       }
     });
   },

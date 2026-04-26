@@ -113,4 +113,5 @@ tencent:
     key: ${TENCENT_IM_KEY}
     expire-seconds: ${TENCENT_IM_EXPIRE_SECONDS:604800}
     rest-api-host: ${TENCENT_IM_REST_HOST:https://console.tim.qq.com}
-    avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:}
+    # account_import 的 FaceUrl 须为腾讯云可访问的 HTTPS；默认与线上 API 域名一致（含 /api，后接 /static/...）
+    avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:https://www.aipick.cloud/api}
