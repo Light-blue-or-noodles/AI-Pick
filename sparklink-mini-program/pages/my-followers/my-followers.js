@@ -1,6 +1,7 @@
 // pages/my-followers/my-followers.js
 const app = getApp();
 const { get, getApiErrorMessage } = require('../../utils/request');
+const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 
 Page({
   data: {
@@ -24,7 +25,8 @@ Page({
 
   fetchFollowersList() {
     this.setData({ isLoading: true });
-    return get('/api/user/followers', {})
+    // 使用与 /api/user/follow/stats 同前缀的路径，避免部分环境将 /user/followers 误路由到「关注列表」
+    return get('/api/user/follow/followers', {})
       .then((result) => {
         const page = result && result.data;
         const list = page && Array.isArray(page.records) ? page.records : [];
@@ -52,14 +54,6 @@ Page({
     const nickname = e.currentTarget.dataset.nickname || '';
     const avatar = e.currentTarget.dataset.avatar || '';
     if (!id) return;
-    wx.navigateTo({
-      url:
-        '/pages/chat/chat?userId=' +
-        encodeURIComponent(String(id)) +
-        '&nickname=' +
-        encodeURIComponent(nickname) +
-        '&avatar=' +
-        encodeURIComponent(avatar)
-    });
+    navigateToChatWithPeer({ userId: id, nickname, avatar });
   }
 });

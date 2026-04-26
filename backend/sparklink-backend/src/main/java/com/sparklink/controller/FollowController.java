@@ -67,8 +67,10 @@ public class FollowController {
 
     /**
      * 获取我的粉丝列表
+     * <p>同时注册 {@code /follow/followers}：与 {@link #getFollowStats} 同前缀，避免部分网关/旧版路由将
+     * {@code /user/followers} 误转发为关注列表接口。</p>
      */
-    @GetMapping("/followers")
+    @GetMapping({"/followers", "/follow/followers"})
     public Result<IPage<UserInfoDTO>> getFollowers(
             @RequestHeader("X-User-Id") Long userId,
             @Valid @ModelAttribute PageRequest pageRequest) {
