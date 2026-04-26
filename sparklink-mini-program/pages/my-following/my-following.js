@@ -1,6 +1,7 @@
 // pages/my-following/my-following.js
 const app = getApp();
 const { get, post, getApiErrorMessage } = require('../../utils/request');
+const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 
 Page({
   data: {
@@ -80,14 +81,6 @@ Page({
     const nickname = e.currentTarget.dataset.nickname || '';
     const avatar = e.currentTarget.dataset.avatar || '';
     if (!id) return;
-    wx.navigateTo({
-      url:
-        '/pages/chat/chat?userId=' +
-        encodeURIComponent(String(id)) +
-        '&nickname=' +
-        encodeURIComponent(nickname) +
-        '&avatar=' +
-        encodeURIComponent(avatar)
-    });
+    navigateToChatWithPeer({ userId: id, nickname, avatar });
   }
 });

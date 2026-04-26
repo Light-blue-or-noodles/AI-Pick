@@ -3,6 +3,7 @@ const app = getApp();
 const IMService = require('../../utils/im');
 const { post, get } = require('../../utils/request');
 const { resolveMediaUrl } = require('../../utils/mediaUrl.js');
+const { getCurrentUserId, isSelfChat } = require('../../utils/navigateToChat.js');
 
 Page({
   data: {
@@ -101,7 +102,7 @@ Page({
 
     const isAI = options.isAI === 'true' || options.isAI === true || !userId;
 
-    const currentUserId = wx.getStorageSync('userId');
+    const currentUserId = getCurrentUserId();
     const currentUserAvatar = this._resolveLocalUserAvatar();
     const targetAvatar = resolveMediaUrl(avatar && String(avatar).trim() ? avatar : '', {
       baseUrl: app.globalData.baseUrl,
@@ -145,6 +146,21 @@ Page({
           wx.navigateTo({ url: '/pages/login/login' });
         }
       });
+      return;
+    }
+    if (isSelfChat(userId)) {
+      wx.showToast({
+        title: '不能与自己聊天',
+        icon: 'none',
+        duration: 2000
+      });
+      setTimeout(() => {
+        wx.navigateBack({
+          fail: () => {
+            wx.switchTab({ url: '/pages/message/message' });
+          }
+        });
+      }, 2000);
       return;
     }
     this.fetchTargetAvatarFromServerIfMissing();

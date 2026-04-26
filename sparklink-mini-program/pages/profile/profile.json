@@ -1,4 +1,9 @@
 {
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "",
+  "navigationBarBackgroundColor": "#f4fbf9",
+  "backgroundColor": "#F5FAF9",
+  "backgroundColorContent": "#F5FAF9",
   "usingComponents": {
     "network-image": "/components/network-image/network-image"
   }

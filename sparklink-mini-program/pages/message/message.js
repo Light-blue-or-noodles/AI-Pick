@@ -1,6 +1,7 @@
 // pages/message/message.js
 const app = getApp();
 const IMService = require('../../utils/im');
+const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 
 Page({
   data: {
@@ -179,9 +180,7 @@ Page({
     const nickname = item.nickname || item.displayName || '';
     const avatar = item.avatar || '';
 
-    wx.navigateTo({
-      url: `/pages/chat/chat?userId=${encodeURIComponent(userId)}&nickname=${encodeURIComponent(nickname)}&avatar=${encodeURIComponent(avatar)}`
-    });
+    navigateToChatWithPeer({ userId, nickname, avatar });
   },
 
   deleteMessage() {

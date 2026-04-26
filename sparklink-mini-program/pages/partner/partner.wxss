@@ -17,7 +17,7 @@
   right: 0;
   z-index: 100;
   background: var(--bg-white);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1rpx 0 rgba(0, 0, 0, 0.06);
 }
 
 /* 占位，避免列表顶到标签栏下（仅保留一行同事搭/校友搭/Pick搭时的高度） */
@@ -65,14 +65,14 @@
   font-size: var(--font-base);
 }
 
-/* 展示范围标签栏：同事搭 / 校友搭 / Pick搭（选中高亮+下划线） */
+/* 展示范围标签栏：白底分段，与原生导航衔接；选中主色字 + 主色指示条 */
 .scope-tabs {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   padding: 0 var(--page-horizontal);
   padding-top: env(safe-area-inset-top);
   height: calc(88rpx + env(safe-area-inset-top));
-  background: var(--primary-color);
+  background: linear-gradient(180deg, var(--bg-white) 0%, rgba(232, 246, 245, 0.35) 100%);
   border-bottom: 1rpx solid var(--border-light);
   box-sizing: border-box;
 }
@@ -85,29 +85,35 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 0 8rpx;
+  padding: 0 8rpx 6rpx;
+  box-sizing: border-box;
+}
+
+.scope-tab:active {
+  opacity: 0.85;
 }
 
 .scope-tab-text {
   font-size: var(--font-base);
-  color: rgba(255, 255, 255, 0.75);
-  transition: color 0.2s ease;
+  color: var(--text-secondary);
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
 .scope-tab.active .scope-tab-text {
-  color: #fff;
-  font-weight: 500;
+  color: var(--primary-dark);
+  font-weight: 600;
 }
 
 .scope-tab-underline {
   position: absolute;
-  bottom: 0;
+  bottom: 12rpx;
   left: 50%;
   transform: translateX(-50%);
-  width: 40rpx;
-  height: 6rpx;
-  border-radius: 3rpx;
-  background: #fff;
+  width: 48rpx;
+  height: 4rpx;
+  border-radius: var(--radius-full);
+  background: var(--primary-color);
+  box-shadow: 0 1rpx 4rpx rgba(95, 179, 168, 0.35);
 }
 
 /* 搭子列表：和首页一致，整页滚动，无固定高度；底部留白仅由 .container 提供，不重复 */

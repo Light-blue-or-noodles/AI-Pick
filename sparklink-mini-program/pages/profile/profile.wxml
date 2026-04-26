@@ -1,50 +1,69 @@
 <!--pages/profile/profile.wxml-->
 <view class="container">
-  <!-- 顶部背景 -->
-  <view class="profile-header">
-    <view class="header-bg"></view>
-    
-    <!-- 用户信息 -->
-    <view class="user-info" bindtap="onAvatarClick">
-      <view class="avatar-wrap">
-        <network-image
-          class="avatar"
-          customClass="avatar"
-          url="{{userInfo.avatar}}"
-          defaultSrc="/images/default-avatar.png"
-          mode="aspectFill"
-          mediaKind="avatar"
-        />
-        <view class="login-badge" wx:if="{{!userInfo.isLogin}}">登录</view>
-      </view>
-      <view class="user-detail">
-        <text class="nickname">{{userInfo.nickname}}</text>
-        <text class="bio" wx:if="{{userInfo.isLogin}}">{{userInfo.bio && userInfo.bio !== 'null' ? userInfo.bio : '设置你的个性签名'}}</text>
-        <text class="bio" wx:else>登录后享受更多功能</text>
-        <!-- 公司和学校信息 -->
-        <view class="org-info" wx:if="{{userInfo.isLogin}}">
-          <text class="org-item" wx:if="{{userInfo.companyName}}">🏢 {{userInfo.companyName}}</text>
-          <text class="org-item" wx:if="{{userInfo.schoolName}}">🎓 {{userInfo.schoolName}}</text>
+  <!-- 顶区渐变铺满（状态栏下为浅色，不压系统字）；资料+统计为同一张圆角卡片，与参考 App 一体感 -->
+  <view class="profile-header" style="padding-top: {{headerContentTopRpx}}rpx;">
+    <view class="profile-hero-sheet">
+      <view
+        class="user-info"
+        style="padding-right: {{userInfoExtraRightRpx}}rpx;"
+        bindtap="onAvatarClick"
+      >
+        <view class="avatar-wrap">
+          <network-image
+            class="avatar"
+            customClass="avatar"
+            url="{{userInfo.avatar}}"
+            defaultSrc="/images/default-avatar.png"
+            mode="aspectFill"
+            mediaKind="avatar"
+          />
+          <view class="login-badge" wx:if="{{!userInfo.isLogin}}">登录</view>
         </view>
+        <view class="user-detail">
+          <text class="nickname">{{userInfo.nickname}}</text>
+          <text class="bio bio--single" wx:if="{{userInfo.isLogin}}">{{userInfo.bioDisplay}}</text>
+          <text class="bio bio--single" wx:else>登录后享受更多功能</text>
+          <view
+            class="org-info {{userInfo.companyName && userInfo.schoolName ? 'org-info--pair' : 'org-info--single'}}"
+            wx:if="{{userInfo.isLogin}}"
+          >
+            <view class="org-item" wx:if="{{userInfo.companyName}}">
+              <text class="org-ico">🏢</text>
+              <view class="org-txt-wrap">
+                <text class="org-txt">{{userInfo.companyDisplay}}</text>
+              </view>
+            </view>
+            <view class="org-item" wx:if="{{userInfo.schoolName}}">
+              <text class="org-ico">🎓</text>
+              <view class="org-txt-wrap">
+                <text class="org-txt">{{userInfo.schoolDisplay}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        <image
+          class="edit-icon"
+          src="/images/edit.png"
+          catchtap="editProfile"
+          wx:if="{{userInfo.isLogin}}"
+        />
       </view>
-      <image class="edit-icon" src="/images/edit.png" bindtap="editProfile" wx:if="{{userInfo.isLogin}}" />
-    </view>
 
-    <!-- 统计数据 -->
-    <view class="stats" wx:if="{{userInfo.isLogin}}">
-      <view class="stat-item" bindtap="goStatMyPartners" hover-class="stat-item--hover">
-        <text class="stat-value">{{stats.partners}}</text>
-        <text class="stat-label">我发布的搭子</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item" bindtap="goStatFollowers" hover-class="stat-item--hover">
-        <text class="stat-value">{{stats.followers}}</text>
-        <text class="stat-label">粉丝</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item" bindtap="goStatFollowing" hover-class="stat-item--hover">
-        <text class="stat-value">{{stats.following}}</text>
-        <text class="stat-label">关注的人</text>
+      <view class="stats" wx:if="{{userInfo.isLogin}}">
+        <view class="stat-item" bindtap="goStatMyPartners" hover-class="stat-item--hover">
+          <text class="stat-value">{{stats.partners}}</text>
+          <text class="stat-label">我发布的搭子</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item" bindtap="goStatFollowers" hover-class="stat-item--hover">
+          <text class="stat-value">{{stats.followers}}</text>
+          <text class="stat-label">粉丝</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item" bindtap="goStatFollowing" hover-class="stat-item--hover">
+          <text class="stat-value">{{stats.following}}</text>
+          <text class="stat-label">关注的人</text>
+        </view>
       </view>
     </view>
   </view>

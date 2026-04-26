@@ -1,6 +1,7 @@
 // pages/partner-detail/partner-detail.js
 const app = getApp();
 const { get, post, getApiErrorMessage } = require('../../utils/request');
+const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 
 /**
  * 统一从 Result 中取出 DTO，并兼容未部署新后端时缺少 activityTagScore/publisherTagScore 的字段
@@ -291,9 +292,7 @@ Page({
       return;
     }
 
-    wx.navigateTo({
-      url: `/pages/chat/chat?userId=${encodeURIComponent(userId)}&nickname=${encodeURIComponent(nickname || '')}&avatar=${encodeURIComponent(avatar || '')}`
-    });
+    navigateToChatWithPeer({ userId, nickname, avatar });
   },
 
   onShowMatch() {

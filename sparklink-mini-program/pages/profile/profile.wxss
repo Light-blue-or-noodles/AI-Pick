@@ -9,35 +9,53 @@
   box-sizing: border-box;
 }
 
+/* 顶区：状态栏对应位置用最浅薄荷（不抢系统图标对比度），向下自然加深，无「两截」硬分界 */
 .profile-header {
   position: relative;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-  padding: 60rpx var(--page-horizontal) 40rpx;
+  padding-left: var(--page-horizontal);
+  padding-right: var(--page-horizontal);
+  padding-bottom: 28rpx;
+  box-sizing: border-box;
+  background: linear-gradient(
+    180deg,
+    #f4fbf9 0%,
+    #eaf6f2 18%,
+    #dff2ec 52%,
+    var(--bg-color) 100%
+  );
 }
 
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(95, 179, 168, 0.15) 0%, transparent 100%);
+/* 资料 + 统计：单卡片，与上方渐变衔接为一块主视觉（参考一体头图+白卡） */
+.profile-hero-sheet {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: var(--radius-lg);
+  padding: 28rpx 24rpx 24rpx;
+  box-shadow: 0 8rpx 36rpx rgba(74, 154, 144, 0.1);
+  border: 1rpx solid rgba(255, 255, 255, 0.95);
+  box-sizing: border-box;
 }
 
-/* 用户信息 */
+/* 左头像 + 右侧资料块：头像相对整块资料区垂直居中 */
 .user-info {
   position: relative;
   display: flex;
   align-items: center;
   z-index: 1;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .avatar-wrap {
   position: relative;
-  width: 140rpx;
-  height: 140rpx;
+  flex-shrink: 0;
+  /* 略缩小头像，右侧资料区更宽，公司列可稳定展示约 10 个汉字宽度 */
+  width: 118rpx;
+  height: 118rpx;
   border-radius: 50%;
-  border: 6rpx solid rgba(255, 255, 255, 0.5);
+  border: 5rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6rpx 20rpx rgba(95, 179, 168, 0.22);
   overflow: hidden;
 }
 
@@ -61,55 +79,146 @@
 }
 
 .user-detail {
-  flex: 1;
-  margin-left: 24rpx;
+  flex: 1 1 0%;
+  min-width: 0;
+  margin-left: 18rpx;
+  padding-right: 60rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12rpx;
 }
 
 .nickname {
   display: block;
   font-size: 36rpx;
   font-weight: 600;
-  color: #fff;
-  margin-bottom: 8rpx;
+  color: var(--text-primary);
+  line-height: var(--line-tight);
 }
 
 .bio {
   font-size: var(--font-sm);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
+  line-height: var(--line-tight);
 }
 
+/* 与 profile-edit 的 length 规则一致由 JS 截断；text + 块级占满 user-detail，避免 view 包字在 flex 下宽度异常被裁切 */
+.bio--single {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+}
+
+/* 单列：Grid + 左对齐，胶囊随文案宽度；双列：Flex 可换行，避免首枚 width:100% 挤掉学校 */
 .org-info {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+  column-gap: 28rpx;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.org-info--pair {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  margin-top: 12rpx;
+  align-items: center;
   gap: 16rpx;
+  column-gap: 0;
+}
+
+.org-info--pair .org-item {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+}
+
+.org-info--single {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+}
+
+.org-info--single .org-item {
+  justify-self: start;
 }
 
 .org-item {
-  font-size: var(--font-xs);
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.2);
-  padding: 6rpx 16rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: rgba(95, 179, 168, 0.14);
+  padding: 10rpx 16rpx 10rpx 14rpx;
   border-radius: var(--radius-full);
+  gap: 12rpx;
+}
+
+.org-ico {
+  flex-shrink: 0;
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.org-txt-wrap {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 280rpx;
+  overflow: hidden;
+}
+
+.org-txt {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  font-size: var(--font-sm);
+  color: var(--primary-dark);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .edit-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
   width: 40rpx;
   height: 40rpx;
   padding: 10rpx;
+  box-sizing: content-box;
 }
 
-/* 统计数据 */
+/* 统计数据：与资料同属 hero 卡片，仅分隔线区分 */
 .stats {
   position: relative;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  margin-top: 40rpx;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-lg);
-  padding: 30rpx;
-  z-index: 1;
+  margin-top: 28rpx;
+  padding-top: 28rpx;
+  background: transparent;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  box-shadow: none;
+  border: none;
+  border-top: 1rpx solid rgba(95, 179, 168, 0.14);
 }
 
 .stat-item {
@@ -123,20 +232,20 @@
 }
 
 .stat-item--hover {
-  opacity: 0.88;
-  background: rgba(255, 255, 255, 0.12);
+  opacity: 0.92;
+  background: rgba(95, 179, 168, 0.08);
 }
 
 .stat-value {
   font-size: 40rpx;
   font-weight: 600;
-  color: #fff;
+  color: var(--primary-dark);
 }
 
 .stat-label {
   font-size: 20rpx;
   line-height: 1.3;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
   margin-top: 8rpx;
   text-align: center;
   padding: 0 4rpx;
@@ -147,7 +256,7 @@
 .stat-divider {
   width: 1rpx;
   height: 60rpx;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(95, 179, 168, 0.22);
 }
 
 /* 功能菜单 */

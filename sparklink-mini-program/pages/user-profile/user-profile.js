@@ -2,6 +2,7 @@
 const app = getApp();
 const { get, post, getApiErrorMessage } = require('../../utils/request');
 const { mapPartnerForList } = require('../../utils/partnerListMap.js');
+const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 
 // URL 处理工具函数
 const toFullUrl = (path) => {
@@ -147,15 +148,7 @@ Page({
     if (!userId) return;
     const nickname = (userInfo && userInfo.nickname) || '';
     const avatar = (userInfo && userInfo.avatar) || '';
-    wx.navigateTo({
-      url:
-        '/pages/chat/chat?userId=' +
-        encodeURIComponent(String(userId)) +
-        '&nickname=' +
-        encodeURIComponent(nickname) +
-        '&avatar=' +
-        encodeURIComponent(avatar)
-    });
+    navigateToChatWithPeer({ userId, nickname, avatar });
   },
 
   // 跳转到搭子详情
