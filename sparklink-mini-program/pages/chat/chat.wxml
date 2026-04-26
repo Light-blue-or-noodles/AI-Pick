@@ -1,0 +1,74 @@
+<!--pages/chat/chat.wxml-->
+<view class="container">
+  <!-- 对方昵称仅使用系统导航栏标题（wx.setNavigationBarTitle），避免与页内再叠一行标题 -->
+  <scroll-view class="chat-content {{!isAI ? 'user-chat' : ''}}" scroll-y scroll-into-view="{{scrollIntoView}}">
+    <block wx:for="{{messages}}" wx:key="id">
+      <view class="message-wrapper {{item.type}}" id="msg-{{item.id}}">
+        <view class="chat-avatar-slot ai-avatar" wx:if="{{item.type === 'ai'}}">
+          <network-image
+            style="width: 72rpx; height: 72rpx; display: block;"
+            customClass="chat-avatar-img"
+            url="/images/ai-icon.png"
+            defaultSrc="/images/ai-icon.png"
+            mode="aspectFill"
+            mediaKind="general"
+          />
+        </view>
+        <view class="chat-avatar-slot other-avatar" wx:if="{{item.type === 'other'}}">
+          <network-image
+            style="width: 72rpx; height: 72rpx; display: block;"
+            customClass="chat-avatar-img"
+            url="{{item.avatar || targetUser.avatar || ''}}"
+            defaultSrc="/images/default-avatar.png"
+            mode="aspectFill"
+            mediaKind="avatar"
+          />
+        </view>
+        <view class="message-bubble">
+          <text class="message-text">{{item.content}}</text>
+          <text class="message-time" wx:if="{{!isAI}}">{{item.time}}</text>
+        </view>
+        <view class="chat-avatar-slot user-avatar" wx:if="{{item.type === 'user'}}">
+          <network-image
+            style="width: 72rpx; height: 72rpx; display: block;"
+            customClass="chat-avatar-img"
+            url="{{currentUser.avatar || ''}}"
+            defaultSrc="/images/default-avatar.png"
+            mode="aspectFill"
+            mediaKind="avatar"
+          />
+        </view>
+      </view>
+    </block>
+
+    <!-- AI 正在输入 -->
+    <view class="typing-indicator" wx:if="{{isAiTyping}}">
+      <view class="typing-dot"></view>
+      <view class="typing-dot"></view>
+      <view class="typing-dot"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 快捷回复 - 仅AI聊天时显示 -->
+  <view class="quick-replies" wx:if="{{isAI && messages.length <= 1}}">
+    <view class="quick-reply" bindtap="onQuickReply" data-reply="帮我找游戏搭子">🎮 帮我找游戏搭子</view>
+    <view class="quick-reply" bindtap="onQuickReply" data-reply="推荐一些搭子">📍 推荐一些搭子</view>
+    <view class="quick-reply" bindtap="onQuickReply" data-reply="我想认识新朋友">👋 我想认识新朋友</view>
+  </view>
+
+  <!-- 输入区域：发送以文字按钮为主，避免仅依赖 send.png 在真机不显示 -->
+  <view class="input-area">
+    <input
+      class="chat-input"
+      type="text"
+      placeholder="输入消息..."
+      value="{{inputValue}}"
+      bindinput="onInputChange"
+      bindconfirm="sendMessage"
+      confirm-type="send"
+    />
+    <view class="send-btn" bindtap="sendMessage" hover-class="send-btn-hover" aria-role="button" aria-label="发送消息">
+      <text class="send-btn-text">发送</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,110 @@
+<!--pages/profile-edit/profile-edit.wxml - 标题使用导航栏，仅保留顶部右侧保存 -->
+<view class="container">
+  <view class="header header-right-only">
+    <view class="save-btn" bindtap="onSave">
+      <text>保存</text>
+    </view>
+  </view>
+
+  <!-- Form -->
+  <view class="form">
+    <!-- Avatar -->
+    <view class="form-item avatar-item">
+      <view class="avatar-section" bindtap="onChooseAvatar">
+        <view class="edit-avatar-wrap">
+          <!-- 未拉到接口前不挂 network-image，避免 url 从空到有效时部分端上白块；_avatarViewKey>0 表示已执行 fillForm -->
+          <image wx:if="{{!_avatarViewKey}}" class="edit-avatar" src="/images/default-avatar.png" mode="aspectFill" />
+          <network-image
+            wx:else
+            class="edit-avatar"
+            customClass="edit-avatar"
+            url="{{avatar}}"
+            defaultSrc="/images/default-avatar.png"
+            mode="aspectFill"
+            mediaKind="avatar"
+          />
+        </view>
+        <text class="avatar-tip">点击更换</text>
+      </view>
+    </view>
+
+    <!-- Nickname -->
+    <view class="form-item">
+      <text class="form-label">昵称</text>
+      <input 
+        class="form-input" 
+        placeholder="请输入昵称" 
+        value="{{nickname}}"
+        maxlength="12"
+        bindinput="onNicknameInput"
+      />
+    </view>
+
+    <!-- Gender -->
+    <view class="form-item">
+      <text class="form-label">性别</text>
+      <view class="gender-options">
+        <text 
+          class="gender-option {{gender === item ? 'active' : ''}}"
+          wx:for="{{genderOptions}}"
+          wx:key="*this"
+          bindtap="onSelectGender"
+          data-index="{{index}}"
+        >{{item}}</text>
+      </view>
+    </view>
+
+    <!-- Birthday -->
+    <view class="form-item">
+      <text class="form-label">生日</text>
+      <picker mode="date" value="{{birthday}}" bindchange="onBirthdayChange">
+        <view class="picker-row">
+          <text class="picker-text {{birthday ? 'has-value' : ''}}">{{birthday || '请选择生日'}}</text>
+          <image class="picker-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+        </view>
+      </picker>
+    </view>
+
+    <!-- Bio -->
+    <view class="form-item">
+      <view class="form-label-row">
+        <text class="form-label">个人简介</text>
+        <text class="form-count">{{bioLength}}/100</text>
+      </view>
+      <textarea 
+        class="form-textarea" 
+        placeholder="请输入个人简介..." 
+        value="{{bio}}"
+        maxlength="100"
+        bindinput="onBioInput"
+      />
+    </view>
+
+    <!-- Tags -->
+    <view class="form-item">
+      <text class="form-label">兴趣标签</text>
+      <view class="selected-tags">
+        <view 
+          class="tag-item"
+          wx:for="{{tags}}"
+          wx:key="*this"
+          bindtap="onRemoveTag"
+          data-index="{{index}}"
+        >
+          <text>{{item}}</text>
+          <text class="tag-remove">×</text>
+        </view>
+        <text class="tag-tip" wx:if="{{tags.length < 5}}">点击添加</text>
+      </view>
+      <view class="available-tags">
+        <text 
+          class="available-tag"
+          wx:for="{{availableTags}}"
+          wx:key="*this"
+          bindtap="onAddTag"
+          data-tag="{{item}}"
+        >{{item}}</text>
+      </view>
+    </view>
+  </view>
+</view>

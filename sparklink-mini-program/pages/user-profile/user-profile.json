@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "用户主页",
+  "navigationBarBackgroundColor": "#5FB3A8",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F5FAF9",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "network-image": "/components/network-image/network-image"
+  }
+}

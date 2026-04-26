@@ -1,0 +1,476 @@
+# 服务器初始化部署指南
+
+> 适用：SparkLink 后端服务及类似 Spring Boot 项目
+> 版本：v1.0
+> 更新日期：2026-04-25
+
+---
+
+## 一、前置条件
+
+### 1.1 服务器要求
+
+| 项目 | 最低配置 | 推荐配置 |
+|------|---------|---------|
+| CPU | 2核 | 4核+ |
+| 内存 | 2GB | 4GB+ |
+| 磁盘 | 20GB | 50GB+ |
+| 系统 | CentOS 7+/Ubuntu 18+/Alibaba Cloud Linux 3 | Alibaba Cloud Linux 3 |
+| 网络 | 公网IP，开放 22/80/443/8080 端口 | 同左 |
+
+### 1.2 本地环境要求
+
+- SSH 密钥已配置（`~/.ssh/id_ed25519`）
+- 本地已安装 Java 17（用于打包）
+- 本地已安装 Maven（用于构建）
+- 项目代码已克隆到本地
+
+---
+
+## 二、服务器初始化
+
+### 2.1 连接服务器
+
+```bash
+ssh -i ~/.ssh/id_ed25519 root@<服务器IP>
+```
+
+### 2.2 安装基础依赖
+
+```bash
+# 更新系统
+yum update -y  # CentOS/Alibaba Cloud Linux
+# 或
+apt update && apt upgrade -y  # Ubuntu
+
+# 安装必要工具
+yum install -y wget curl vim net-tools  # CentOS
+# 或
+apt install -y wget curl vim net-tools  # Ubuntu
+
+# 安装 Java 17
+yum install -y java-17-openjdk java-17-openjdk-devel  # CentOS
+# 或
+apt install -y openjdk-17-jdk  # Ubuntu
+
+# 验证安装
+java -version
+```
+
+### 2.3 安装 Docker（推荐）
+
+```bash
+# 安装 Docker
+curl -fsSL https://get.docker.com | sh
+
+# 启动 Docker
+systemctl start docker
+systemctl enable docker
+
+# 安装 Docker Compose
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+```
+
+### 2.4 部署 MySQL（Docker 方式）
+
+```bash
+# 创建数据目录
+mkdir -p /opt/mysql/data /opt/mysql/conf /opt/mysql/logs
+
+# 运行 MySQL 容器
+docker run -d \
+  --name mysql \
+  --restart always \
+  -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=sparklink \
+  -v /opt/mysql/data:/var/lib/mysql \
+  -v /opt/mysql/logs:/var/log/mysql \
+  mysql:8.0 \
+  --character-set-server=utf8mb4 \
+  --collation-server=utf8mb4_unicode_ci
+
+# 等待 MySQL 启动
+sleep 30
+
+# 验证连接
+docker exec -it mysql mysql -uroot -proot -e "SHOW DATABASES;"
+```
+
+### 2.5 部署 Redis（Docker 方式）
+
+```bash
+# 运行 Redis 容器
+docker run -d \
+  --name redis \
+  --restart always \
+  -p 6379:6379 \
+  redis:7-alpine \
+  redis-server --appendonly yes
+
+# 验证连接
+docker exec -it redis redis-cli ping
+# 应返回: PONG
+```
+
+---
+
+## 三、应用部署
+
+### 3.1 创建部署目录
+
+```bash
+# 在服务器上执行
+mkdir -p /opt/sparklink
+mkdir -p /opt/sparklink/backup
+mkdir -p /var/log/sparklink
+```
+
+### 3.2 本地构建打包
+
+```bash
+# 在本地执行
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17  # macOS 示例
+cd <项目路径>/backend/sparklink-backend
+
+# 清理并打包
+mvn clean package -DskipTests
+
+# 确认 jar 包生成
+ls -la target/*.jar
+```
+
+### 3.3 上传应用到服务器
+
+```bash
+# 在本地执行
+scp -i ~/.ssh/id_ed25519 \
+  target/sparklink-backend-1.0.0.jar \
+  root@<服务器IP>:/opt/sparklink/app.jar
+```
+
+### 3.4 配置环境变量
+
+在服务器上创建环境变量文件：
+
+```bash
+cat > /opt/sparklink/.env << 'EOF'
+# JWT 配置（生产环境请使用强密钥）
+JWT_SECRET=your-strong-secret-key-here
+
+# 数据库配置
+DB_PASSWORD=root
+
+# 阿里云百炼 API Key（可选）
+DASHSCOPE_API_KEY=
+
+# 微信小程序配置（可选）
+WECHAT_SECRET=
+
+# 腾讯云 IM 配置（可选）
+TENCENT_IM_SDK_APP_ID=1600133993
+TENCENT_IM_IDENTIFIER=administrator
+TENCENT_IM_KEY=your-im-key-here
+TENCENT_IM_EXPIRE_SECONDS=604800
+TENCENT_IM_REST_HOST=https://console.tim.qq.com
+TENCENT_IM_AVATAR_PUBLIC_BASE=http://<服务器IP>:8080/api
+EOF
+```
+
+### 3.5 创建 Systemd 服务
+
+```bash
+cat > /etc/systemd/system/sparklink.service << 'EOF'
+[Unit]
+Description=SparkLink Backend Service
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/sparklink
+
+# 环境变量
+Environment=JWT_SECRET=your-strong-secret-key-here
+Environment=DB_PASSWORD=root
+Environment=TENCENT_IM_SDK_APP_ID=1600133993
+Environment=TENCENT_IM_IDENTIFIER=administrator
+Environment=TENCENT_IM_KEY=your-im-key-here
+Environment=TENCENT_IM_EXPIRE_SECONDS=604800
+Environment=TENCENT_IM_REST_HOST=https://console.tim.qq.com
+Environment=TENCENT_IM_AVATAR_PUBLIC_BASE=http://127.0.0.1:8080/api
+Environment=JAVA_OPTS=-Xmx512m -Xms256m
+
+# 启动命令
+ExecStart=/usr/bin/java -jar /opt/sparklink/app.jar --spring.profiles.active=prod
+
+# 重启策略
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 重新加载 systemd
+systemctl daemon-reload
+
+# 启用服务
+systemctl enable sparklink
+```
+
+### 3.6 初始化数据库
+
+```bash
+# 复制 SQL 文件到服务器
+scp -i ~/.ssh/id_ed25519 \
+  src/main/resources/db/schema.sql \
+  root@<服务器IP>:/opt/sparklink/schema.sql
+
+# 在服务器上执行初始化
+docker exec -i mysql mysql -uroot -proot sparklink < /opt/sparklink/schema.sql
+```
+
+### 3.7 启动服务
+
+```bash
+# 启动服务
+systemctl start sparklink
+
+# 查看状态
+systemctl status sparklink
+
+# 查看日志
+journalctl -u sparklink -f
+```
+
+### 3.8 验证部署
+
+```bash
+# 检查端口监听
+netstat -tlnp | grep 8080
+# 或
+ss -tlnp | grep 8080
+
+# 测试健康检查接口
+curl http://localhost:8080/api/health
+
+# 测试外部访问（本地执行）
+curl http://<服务器IP>:8080/api/health
+```
+
+---
+
+## 四、常用运维命令
+
+### 4.1 服务管理
+
+```bash
+# 启动/停止/重启
+systemctl start sparklink
+systemctl stop sparklink
+systemctl restart sparklink
+
+# 查看状态
+systemctl status sparklink
+
+# 查看日志
+journalctl -u sparklink -f
+journalctl -u sparklink --since "1 hour ago"
+```
+
+### 4.2 数据库管理
+
+```bash
+# 进入 MySQL 容器
+docker exec -it mysql mysql -uroot -proot
+
+# 备份数据库
+docker exec mysql mysqldump -uroot -proot sparklink > /opt/sparklink/backup/sparklink_$(date +%Y%m%d_%H%M%S).sql
+
+# 查看数据库日志
+docker logs mysql
+```
+
+### 4.3 Redis 管理
+
+```bash
+# 进入 Redis 容器
+docker exec -it redis redis-cli
+
+# 查看 Redis 日志
+docker logs redis
+```
+
+---
+
+## 五、更新部署
+
+### 5.1 备份现有版本
+
+```bash
+# 在服务器上执行
+cd /opt/sparklink
+mv app.jar app.jar.backup.$(date +%Y%m%d_%H%M%S)
+```
+
+### 5.2 上传新版本
+
+```bash
+# 在本地执行
+scp -i ~/.ssh/id_ed25519 \
+  target/sparklink-backend-1.0.0.jar \
+  root@<服务器IP>:/opt/sparklink/app.jar
+```
+
+### 5.3 重启服务
+
+```bash
+# 在服务器上执行
+systemctl restart sparklink
+
+# 验证状态
+systemctl status sparklink
+```
+
+---
+
+## 六、安全配置
+
+### 6.1 防火墙配置
+
+```bash
+# 开放必要端口
+firewall-cmd --permanent --add-port=22/tcp
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --permanent --add-port=8080/tcp
+
+# 重载防火墙
+firewall-cmd --reload
+
+# 查看开放的端口
+firewall-cmd --list-ports
+```
+
+### 6.2 Nginx 反向代理（可选）
+
+```bash
+# 安装 Nginx
+yum install -y nginx
+
+# 创建配置文件
+cat > /etc/nginx/conf.d/sparklink.conf << 'EOF'
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location /api {
+        proxy_pass http://127.0.0.1:8080/api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
+# 测试配置
+nginx -t
+
+# 启动 Nginx
+systemctl start nginx
+systemctl enable nginx
+```
+
+---
+
+## 七、故障排查
+
+### 7.1 服务无法启动
+
+```bash
+# 查看详细错误日志
+journalctl -u sparklink --no-pager -n 100
+
+# 检查端口占用
+netstat -tlnp | grep 8080
+
+# 检查环境变量
+cat /opt/sparklink/.env
+```
+
+### 7.2 数据库连接失败
+
+```bash
+# 检查 MySQL 容器状态
+docker ps | grep mysql
+
+# 检查 MySQL 日志
+docker logs mysql
+
+# 测试数据库连接
+docker exec -it mysql mysql -uroot -proot -e "SHOW DATABASES;"
+```
+
+### 7.3 内存不足
+
+```bash
+# 查看内存使用
+free -h
+
+# 调整 JVM 参数
+# 编辑 /etc/systemd/system/sparklink.service
+# Environment=JAVA_OPTS=-Xmx256m -Xms128m
+
+# 重载并重启
+systemctl daemon-reload
+systemctl restart sparklink
+```
+
+---
+
+## 八、附录
+
+### 8.1 文件目录结构
+
+```
+/opt/
+├── sparklink/                    # 应用目录
+│   ├── app.jar               # 主应用
+│   ├── app.jar.backup.*      # 备份文件
+│   ├── .env                  # 环境变量
+│   ├── backup/               # 备份目录
+│   └── schema.sql            # 数据库脚本
+├── mysql/                     # MySQL 数据
+│   ├── data/
+│   ├── conf/
+│   └── logs/
+└── ...
+
+/var/log/
+├── sparklink/                   # 应用日志
+└── ...
+```
+
+### 8.2 环境变量说明
+
+| 变量名 | 说明 | 必填 |
+|--------|------|------|
+| JWT_SECRET | JWT 签名密钥 | 是 |
+| DB_PASSWORD | 数据库密码 | 是 |
+| DASHSCOPE_API_KEY | 阿里云百炼 API Key | 否 |
+| WECHAT_SECRET | 微信小程序 AppSecret | 否 |
+| TENCENT_IM_* | 腾讯云 IM 配置 | 否 |
+
+### 8.3 相关文档
+
+- [Spring Boot 部署文档](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html)
+- [Docker 官方文档](https://docs.docker.com/)
+- [MySQL Docker 镜像](https://hub.docker.com/_/mysql)
+
+---
+
+_文档版本：v1.0_
+_最后更新：2026-04-25

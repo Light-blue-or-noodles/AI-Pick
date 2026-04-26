@@ -1,0 +1,95 @@
+/* pages/index/index.wxss — 新首页：留白、居中、胶囊按钮 */
+
+@import '../../styles/variables.wxss';
+
+page {
+  background: #f2f4f3;
+  min-height: 100%;
+}
+
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  padding-left: 48rpx;
+  padding-right: 48rpx;
+  padding-top: calc(80rpx + env(safe-area-inset-top));
+  padding-bottom: var(--tab-bar-padding);
+}
+
+.home-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.mascot-wrap {
+  width: 280rpx;
+  height: 280rpx;
+  margin-bottom: 48rpx;
+  background: #ffffff;
+  border-radius: 32rpx;
+  box-shadow: 0 12rpx 40rpx rgba(95, 179, 168, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mascot-img {
+  width: 92%;
+  height: 92%;
+  display: block;
+}
+
+.home-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 20rpx;
+}
+
+.home-sub {
+  font-size: 28rpx;
+  color: #666666;
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 56rpx;
+}
+
+.chips {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24rpx;
+  width: 100%;
+  max-width: 520rpx;
+}
+
+.chip {
+  text-align: center;
+  font-size: 30rpx;
+  color: #333333;
+  background: #ffffff;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  border-radius: 999rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.chip-hover {
+  opacity: 0.88;
+}
+
+/* 主操作：进入完整 AI 对话 */
+.chip-primary {
+  border-color: rgba(95, 179, 168, 0.35);
+  background: linear-gradient(180deg, #f6fcfb 0%, #ffffff 100%);
+}

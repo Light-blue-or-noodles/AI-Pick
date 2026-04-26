@@ -1,0 +1,233 @@
+/* pages/message/message.wxss - 消息页样式 */
+
+@import '../../styles/variables.wxss';
+@import '../../styles/common.wxss';
+@import '../../styles/message.wxss';
+
+/* 消息页：底部留出 Tab 栏高度 */
+.container {
+  padding-bottom: var(--tab-bar-padding);
+  box-sizing: border-box;
+}
+
+/* 注意：勿使用 class message-header，会与 styles/message.wxss 中「页头渐变」冲突 */
+.message-list {
+  height: 100vh;
+  background: var(--bg-color);
+  padding: 20rpx var(--page-horizontal) calc(20rpx + var(--tab-bar-padding));
+  box-sizing: border-box;
+}
+
+.message-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 28rpx 28rpx 26rpx;
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-light);
+}
+
+.message-item:active {
+  opacity: 0.96;
+  transform: scale(0.995);
+  transition: transform 0.12s ease;
+}
+
+.message-item.unread {
+  background: linear-gradient(90deg, rgba(232, 246, 245, 0.95) 0%, #ffffff 28%);
+  box-shadow: 0 2rpx 16rpx rgba(95, 179, 168, 0.12);
+  border-color: rgba(95, 179, 168, 0.22);
+}
+
+.message-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 104rpx;
+  height: 104rpx;
+  margin-right: 24rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-gray);
+  box-shadow: 0 0 0 2rpx rgba(255, 255, 255, 0.9), 0 4rpx 14rpx rgba(0, 0, 0, 0.06);
+}
+
+.message-avatar-wrap .message-avatar-img,
+.message-avatar-wrap network-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.message-avatar-wrap image,
+.message-avatar-wrap .network-image {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 4rpx;
+}
+
+/* 与 styles/message.wxss 的 .message-header 页头区分：会话行用 session-top */
+.session-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12rpx;
+}
+
+.session-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 20rpx;
+  letter-spacing: 0.02em;
+}
+
+.message-item.unread .session-name {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.session-time {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+}
+
+.session-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 40rpx;
+}
+
+.session-preview {
+  font-size: 26rpx;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 20rpx;
+}
+
+.message-item.unread .session-preview {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.unread-badge {
+  flex-shrink: 0;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  background: linear-gradient(135deg, #ff6b6b 0%, var(--error-color) 100%);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(255, 77, 79, 0.35);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.empty-state image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.5;
+}
+
+.empty-state text {
+  color: var(--text-tertiary);
+  font-size: var(--font-base);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  color: var(--text-tertiary);
+  font-size: var(--font-base);
+}
+
+/* 未登录引导 */
+.auth-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  padding: 48rpx 40rpx calc(48rpx + var(--tab-bar-padding));
+  box-sizing: border-box;
+}
+
+.auth-gate-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 32rpx;
+  opacity: 0.35;
+}
+
+.auth-gate-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16rpx;
+}
+
+.auth-gate-desc {
+  font-size: 28rpx;
+  color: var(--text-tertiary);
+  margin-bottom: 48rpx;
+  text-align: center;
+}
+
+.auth-gate-btn {
+  width: 400rpx;
+  line-height: 88rpx;
+  background: var(--primary-color, #5FB3A8);
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 44rpx;
+  border: none;
+}
+
+.auth-gate-btn::after {
+  border: none;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+  margin-top: 16rpx;
+  text-align: center;
+  padding: 0 40rpx;
+}

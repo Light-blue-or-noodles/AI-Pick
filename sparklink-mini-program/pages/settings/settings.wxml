@@ -1,0 +1,74 @@
+<!--pages/settings/settings.wxml-->
+<view class="container">
+  <!-- Account Settings（返回使用小程序自带导航栏） -->
+  <view class="section">
+    <view class="section-title">账号设置</view>
+    <view class="setting-item" bindtap="onEditProfile">
+      <text class="setting-label">编辑资料</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="setting-item" bindtap="onAccountSecurity">
+      <text class="setting-label">账号与安全</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Notification Settings -->
+  <view class="section">
+    <view class="section-title">通知设置</view>
+    <view class="setting-item">
+      <text class="setting-label">消息通知</text>
+      <switch 
+        checked="{{messageNotification}}" 
+        bindchange="onToggleNotification"
+        data-type="messageNotification"
+        color="#5FB3A8"
+      />
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">新粉丝提醒</text>
+      <switch 
+        checked="{{newFollowerNotification}}" 
+        bindchange="onToggleNotification"
+        data-type="newFollowerNotification"
+        color="#5FB3A8"
+      />
+    </view>
+  </view>
+
+  <!-- Privacy Settings -->
+  <view class="section">
+    <view class="section-title">隐私设置</view>
+    <view class="setting-item" bindtap="onPrivacySettings">
+      <text class="setting-label">隐私设置</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Other Settings -->
+  <view class="section">
+    <view class="section-title">其他</view>
+    <view class="setting-item" bindtap="onClearCache">
+      <text class="setting-label">清空缓存</text>
+      <view class="setting-right">
+        <image class="setting-arrow" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Logout -->
+  <view class="logout-btn" bindtap="onLogout">
+    <text>退出登录</text>
+  </view>
+
+  <!-- Version -->
+  <view class="version">
+    <text>Spark Link v0.0.1</text>
+  </view>
+</view>

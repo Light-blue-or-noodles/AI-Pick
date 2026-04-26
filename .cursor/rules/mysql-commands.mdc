@@ -22,19 +22,19 @@ alwaysApply: true
 
 ## 默认库与账号
 
-- 库名：`aipick`（与 `backend/aipick-backend/src/main/resources/application.yml` 中 `spring.datasource.url` 一致）
+- 库名：`sparklink`（与 `backend/sparklink-backend/src/main/resources/application.yml` 中 `spring.datasource.url` 一致）
 - 用户名/密码：优先从 `application.yml` 读取（默认 `root` / `root`），或由用户指定
 
 ## 命令模板
 
 ```bash
-/Applications/MySQLWorkbench.app/Contents/MacOS/mysql -h 127.0.0.1 -P 3306 -u root -proot aipick -e "你的SQL;"
+/Applications/MySQLWorkbench.app/Contents/MacOS/mysql -h 127.0.0.1 -P 3306 -u root -proot sparklink -e "你的SQL;"
 ```
 
 执行多行或从迁移文件执行时：
 
 ```bash
-/Applications/MySQLWorkbench.app/Contents/MacOS/mysql -h 127.0.0.1 -P 3306 -u root -proot aipick < path/to/migration.sql
+/Applications/MySQLWorkbench.app/Contents/MacOS/mysql -h 127.0.0.1 -P 3306 -u root -proot sparklink < path/to/migration.sql
 ```
 
 ## 注意

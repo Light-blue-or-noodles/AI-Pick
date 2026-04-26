@@ -1,0 +1,80 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/agreement/user-agreement/user-agreement",
+    "pages/agreement/privacy-policy/privacy-policy",
+    "pages/index/index",
+    "pages/index-classic/index",
+    "pages/ai-chat/ai-chat",
+    "pages/partner/partner",
+    "pages/partner-detail/partner-detail",
+    "pages/partner-publish/partner-publish",
+    "pages/my-partner/my-partner",
+    "pages/my-following/my-following",
+    "pages/user-profile/user-profile",
+    "pages/filter/filter",
+    "pages/message/message",
+    "pages/chat/chat",
+    "pages/profile/profile",
+    "pages/profile-edit/profile-edit",
+    "pages/settings/settings",
+    "pages/account-security/account-security",
+    "pages/privacy-settings/privacy-settings",
+    "pages/about-us/about-us",
+    "pages/company/join/company-join",
+    "pages/school/join/school-join"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "Spark Link",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5FAF9"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#5FB3A8",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/home.png",
+        "selectedIconPath": "images/home-active.png"
+      },
+      {
+        "pagePath": "pages/partner/partner",
+        "text": "搭子",
+        "iconPath": "images/partner.png",
+        "selectedIconPath": "images/partner-active.png"
+      },
+      {
+        "pagePath": "pages/message/message",
+        "text": "消息",
+        "iconPath": "images/message.png",
+        "selectedIconPath": "images/message-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/profile.png",
+        "selectedIconPath": "images/profile-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于首页推荐附近搭子、搭子发布选点"
+    },
+    "scope.album": {
+      "desc": "用于选择搭子封面等图片"
+    },
+    "scope.camera": {
+      "desc": "用于拍摄搭子封面等图片"
+    }
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

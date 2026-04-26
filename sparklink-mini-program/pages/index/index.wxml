@@ -1,0 +1,15 @@
+<!--pages/index/index.wxml 新版首页：AI 助手主视觉 + 快捷意图 -->
+<view class="home-page">
+  <view class="home-main">
+    <view class="mascot-wrap">
+      <image class="mascot-img" src="/images/home-ai-mascot.png" mode="aspectFit" />
+    </view>
+    <text class="home-title">你好！我是 AI 助手</text>
+    <text class="home-sub">告诉我你想找什么样的搭子</text>
+    <view class="chips">
+      <view class="chip" bindtap="onQuickGame" hover-class="chip-hover">🎮 游戏搭子</view>
+      <view class="chip" bindtap="onQuickSport" hover-class="chip-hover">🏃 运动搭子</view>
+      <view class="chip chip-primary" bindtap="goToAiChat" hover-class="chip-hover">💬 AI 对话</view>
+    </view>
+  </view>
+</view>

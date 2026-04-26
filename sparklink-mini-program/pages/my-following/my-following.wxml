@@ -1,0 +1,54 @@
+<!--pages/my-following/my-following.wxml-->
+<view class="container">
+  <!-- Loading -->
+  <view class="loading" wx:if="{{isLoading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- Following List -->
+  <view class="list" wx:else>
+    <view 
+      class="user-card"
+      wx:for="{{followingList}}"
+      wx:key="id"
+    >
+      <view class="user-info" bindtap="onViewProfile" data-id="{{item.id}}">
+        <network-image
+          class="user-avatar"
+          customClass="user-avatar"
+          url="{{item.avatar}}"
+          defaultSrc="/images/default-avatar.png"
+          mode="aspectFill"
+          mediaKind="avatar"
+        />
+        <view class="user-detail">
+          <text class="user-name">{{item.nickname || '用户'}}</text>
+          <text class="user-bio" wx:if="{{item.bio}}">{{item.bio}}</text>
+          <view class="user-stats" wx:if="{{item.fansCount !== undefined}}">
+            <text class="stat-item">粉丝 {{item.fansCount}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="user-actions">
+        <view
+          class="btn-chat"
+          catchtap="onStartChat"
+          data-id="{{item.id}}"
+          data-nickname="{{item.nickname}}"
+          data-avatar="{{item.avatar}}"
+        >
+          <text>💬</text>
+        </view>
+        <view class="btn-unfollow" catchtap="onToggleFollow" data-id="{{item.id}}">
+          <text>已关注</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="empty-state" wx:if="{{followingList.length === 0}}">
+      <image src="/images/empty-avatar.png" mode="aspectFit" />
+      <text>暂无关注的用户</text>
+      <text class="empty-tip">去发现更多有趣的搭子吧～</text>
+    </view>
+  </view>
+</view>

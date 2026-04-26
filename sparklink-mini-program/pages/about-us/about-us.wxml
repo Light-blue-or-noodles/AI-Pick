@@ -1,0 +1,92 @@
+<!--pages/about-us/about-us.wxml-->
+<view class="container">
+  <!-- App Info -->
+  <view class="app-info">
+    <image class="app-logo" src="/images/ai-icon.png" mode="aspectFit" />
+    <text class="app-name">Spark Link</text>
+    <text class="app-slogan">智能匹配，找到你的最佳搭子</text>
+    <text class="app-version">Version {{version}}</text>
+  </view>
+
+  <!-- Features -->
+  <view class="section">
+    <view class="section-title">产品特色</view>
+    <view class="feature-list">
+      <view class="feature-item">
+        <text class="feature-icon">🤖</text>
+        <view class="feature-content">
+          <text class="feature-title">AI智能匹配</text>
+          <text class="feature-desc">基于AI算法，精准推荐最适合你的搭子</text>
+        </view>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">🎯</text>
+        <view class="feature-content">
+          <text class="feature-title">丰富搭子类型</text>
+          <text class="feature-desc">游戏、运动、干饭、旅行等，快速找到同频搭子</text>
+        </view>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">🔒</text>
+        <view class="feature-content">
+          <text class="feature-title">安全可靠</text>
+          <text class="feature-desc">实名认证，保障每一次相遇的安全</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Contact -->
+  <view class="section">
+    <view class="section-title">联系我们</view>
+    <view class="contact-list">
+      <view class="contact-item" bindtap="onCopyContact">
+        <text class="contact-label">商务合作</text>
+        <view class="contact-right">
+          <text class="contact-value">contact@aipick.com</text>
+          <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
+        </view>
+      </view>
+      <view class="contact-item">
+        <text class="contact-label">官方网站</text>
+        <view class="contact-right">
+          <text class="contact-value">www.aipick.com</text>
+          <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Legal -->
+  <view class="section">
+    <view class="section-title">法律信息</view>
+    <view class="legal-list">
+      <view class="legal-item" bindtap="onViewAgreement">
+        <text class="legal-label">用户协议</text>
+        <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+      <view class="legal-item" bindtap="onViewPrivacy">
+        <text class="legal-label">隐私政策</text>
+        <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Update -->
+  <view class="section">
+    <view class="section-title">版本更新</view>
+    <view class="update-item" bindtap="onCheckUpdate">
+      <text class="update-label">检查更新</text>
+      <view class="update-right">
+        <text class="update-version">当前版本 {{version}}</text>
+        <image class="arrow-icon" src="/images/arrow-right.png" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- Copyright -->
+  <view class="copyright">
+    <text>© 2026 Spark Link. All rights reserved.</text>
+    <text>Build {{buildDate}}</text>
+  </view>
+</view>

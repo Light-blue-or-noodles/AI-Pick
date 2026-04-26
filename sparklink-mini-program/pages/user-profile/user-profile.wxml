@@ -1,0 +1,121 @@
+<!--pages/user-profile/user-profile.wxml-->
+<view class="container">
+  <!-- Loading -->
+  <view class="loading" wx:if="{{isLoading}}">
+    <text>加载中...</text>
+  </view>
+
+  <block wx:else>
+    <!-- 上部：用户信息区 -->
+    <view class="user-header">
+      <view class="user-info">
+        <network-image
+          class="user-avatar"
+          customClass="user-avatar"
+          url="{{userInfo.avatar}}"
+          defaultSrc="/images/default-avatar.png"
+          mode="aspectFill"
+          mediaKind="avatar"
+        />
+        <view class="user-detail">
+          <text class="user-name">{{userInfo.nickname || '用户'}}</text>
+          <text class="user-bio">{{userInfo.bio || '这个人很懒，什么都没写~'}}</text>
+          <view class="org-info" wx:if="{{userInfo.companyName || userInfo.schoolName}}">
+            <text class="org-item" wx:if="{{userInfo.companyName}}">🏢 {{userInfo.companyName}}</text>
+            <text class="org-item" wx:if="{{userInfo.schoolName}}">🎓 {{userInfo.schoolName}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="action-bar">
+        <view class="btn-follow {{userInfo.isFollowing ? 'following' : ''}}" bindtap="onToggleFollow">
+          <text>{{userInfo.isFollowing ? '已关注' : '+ 关注'}}</text>
+        </view>
+        <view class="btn-chat" bindtap="onStartChat">
+          <text>💬 私信</text>
+        </view>
+      </view>
+
+      <view class="user-stats">
+        <view class="user-stat-pill">
+          <text class="user-stat-num">{{userInfo.fansCount || 0}}</text>
+          <text class="user-stat-txt">粉丝</text>
+        </view>
+        <view class="user-stat-pill">
+          <text class="user-stat-num">{{userInfo.followingCount || 0}}</text>
+          <text class="user-stat-txt">关注</text>
+        </view>
+        <view class="user-stat-pill">
+          <text class="user-stat-num">{{userInfo.partnersCount != null ? userInfo.partnersCount : partners.length}}</text>
+          <text class="user-stat-txt">搭子</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 下部：搭子列表 -->
+    <view class="partners-section">
+      <view class="section-title">
+        <text>TA的搭子</text>
+        <text class="section-count">{{partners.length}}个</text>
+      </view>
+
+      <!-- 搭子列表 -->
+      <view class="partner-list" wx:if="{{partners.length > 0}}">
+        <block wx:for="{{partners}}" wx:key="id">
+          <view class="partner-card" bindtap="goToPartnerDetail" data-id="{{item.id}}">
+            <view class="partner-cover-wrap">
+              <network-image
+                class="partner-cover"
+                customClass="partner-cover"
+                url="{{item.cover}}"
+                defaultSrc="/images/partner-banner.jpg"
+                mode="aspectFill"
+                mediaKind="cover"
+              />
+              <view class="partner-status-tag {{item.status}}">
+                {{item.statusLabel || (item.status === 'recruiting' ? '招募中' : (item.status === 'full' ? '已满' : '已结束'))}}
+              </view>
+            </view>
+            <view class="partner-body">
+              <view class="partner-header">
+                <view class="partner-category">{{item.typeName || item.category}}</view>
+                <view class="member-count">
+                  <view class="member-count-ico" aria-label="人数">👥</view>
+                  <text class="member-count-num">{{item.members}}/{{item.maxMembers}}人</text>
+                </view>
+              </view>
+              <view class="partner-title">{{item.title}}</view>
+              <view class="partner-pref" wx:if="{{item.preference}}">偏好：{{item.preference}}</view>
+              <view class="partner-tags">
+                <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+              </view>
+              <view class="partner-footer">
+                <view class="author-info">
+                  <network-image
+                    class="author-avatar"
+                    customClass="author-avatar"
+                    url="{{item.author.avatar}}"
+                    defaultSrc="/images/default-avatar.png"
+                    mode="aspectFill"
+                    mediaKind="avatar"
+                  />
+                  <text class="author-name">{{item.author.name}}</text>
+                </view>
+                <view class="match-display" wx:if="{{item.match != null && item.match !== ''}}">
+                  <text class="match-num">{{item.match}}%</text>
+                  <text class="match-label">匹配</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{partners.length === 0}}">
+        <image src="/images/empty-partner.png" mode="aspectFit" />
+        <text>TA还没有发布搭子</text>
+      </view>
+    </view>
+  </block>
+</view>

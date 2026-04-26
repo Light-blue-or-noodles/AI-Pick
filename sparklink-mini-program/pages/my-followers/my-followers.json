@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "我的粉丝",
+  "usingComponents": {
+    "network-image": "/components/network-image/network-image"
+  },
+  "enablePullDownRefresh": true
+}
