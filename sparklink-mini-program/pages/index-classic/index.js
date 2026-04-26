@@ -1,4 +1,4 @@
-// pages/index-classic/index.js — 历史首页（从原 index 保留）
+// pages/index-classic/index.js — 历史首页；已不在 app.json 注册且 packOptions 忽略本目录以减小主包。若需恢复：写回 pages 并从 project.config packOptions.ignore 去掉本文件夹。
 const app = getApp();
 const recommendFeedback = require('../../utils/recommendFeedback.js');
 const { mapPartnerForList } = require('../../utils/partnerListMap.js');

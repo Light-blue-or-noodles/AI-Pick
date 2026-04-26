@@ -340,31 +340,6 @@
 
 /* 旧版底部 member-info 已合并到 .partner-header，此处由 .partner-header .member-count 统一样式 */
 
-/* 发布按钮：方案 B 精致小胶囊，与活动页统一 */
-.publish-btn {
-  position: fixed;
-  right: 32rpx;
-  bottom: calc(178rpx + env(safe-area-inset-bottom));
-  width: 62rpx;
-  height: 62rpx;
-  background: rgba(255, 255, 255, 0.96);
-  border: 2rpx solid rgba(255, 255, 255, 0.9);
-  border-radius: 9999rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3rpx 12rpx rgba(0, 0, 0, 0.10);
-  backdrop-filter: blur(12rpx);
-  z-index: 100;
-}
-
-.publish-btn-icon {
-  font-size: 34rpx;
-  font-weight: 500;
-  color: var(--primary-color);
-  line-height: 1;
-}
-
 /* 弹窗 */
 .modal-mask {
   position: fixed;

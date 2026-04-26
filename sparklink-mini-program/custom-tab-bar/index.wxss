@@ -17,7 +17,7 @@
   border: 1rpx solid rgba(0, 0, 0, 0.04);
   z-index: 1000;
   backdrop-filter: blur(24rpx);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tab-item {
@@ -250,4 +250,73 @@
 
 .tab-item.active .icon-profile-body {
   background: rgba(95, 179, 168, 0.32);
+}
+
+/* 中间发布：浅薄荷底 + 圆角粗「+」；translateY 微调使按钮上沿与其它 Tab 图标区上沿齐平 */
+.tab-item--publish {
+  position: relative;
+  z-index: 2;
+  justify-content: center;
+}
+
+.tab-item--publish.active {
+  background: transparent;
+}
+
+.tab-icon-wrap--publish {
+  width: 68rpx;
+  height: 68rpx;
+  margin-top: 0;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  transform: translateY(-6rpx);
+}
+
+.icon-publish-fab {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 22rpx;
+  background: linear-gradient(165deg, #eaf8f5 0%, #d8f0eb 40%, #c0e8e0 100%);
+  border: 3rpx solid rgba(95, 179, 168, 0.45);
+  box-shadow: 0 6rpx 18rpx rgba(95, 179, 168, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.icon-publish-cross {
+  position: relative;
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.icon-publish-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #5fb3a8;
+  border-radius: 9999rpx;
+  box-sizing: border-box;
+}
+
+.icon-publish-bar--h {
+  width: 36rpx;
+  height: 10rpx;
+  transform: translate(-50%, -50%);
+}
+
+.icon-publish-bar--v {
+  width: 10rpx;
+  height: 36rpx;
+  transform: translate(-50%, -50%);
+}
+
+.tab-item--publish:active .tab-icon-wrap--publish {
+  transform: translateY(-6rpx) scale(0.96);
+}
+
+.tab-item--publish:active .icon-publish-fab {
+  opacity: 0.92;
 }

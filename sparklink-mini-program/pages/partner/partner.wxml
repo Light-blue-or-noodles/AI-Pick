@@ -90,8 +90,4 @@
     <text>加载中...</text>
   </view>
 
-  <!-- 发布按钮：跳转到发布搭子二级页 -->
-  <view class="publish-btn" bindtap="goToPublish">
-    <text class="publish-btn-icon">+</text>
-  </view>
 </view>

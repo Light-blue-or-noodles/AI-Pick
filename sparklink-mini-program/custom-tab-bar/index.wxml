@@ -1,18 +1,25 @@
 <view class="tab-bar">
   <view
-    class="tab-item {{selected === index ? 'active' : ''}}"
+    class="tab-item {{item.isPublish ? 'tab-item--publish' : ''}} {{selected === index ? 'active' : ''}}"
     wx:for="{{list}}"
-    wx:key="pagePath"
+    wx:key="key"
     data-index="{{index}}"
-    bindtap="switchTab"
+    bindtap="onTabTap"
   >
-    <view class="tab-icon-wrap">
+    <view class="tab-icon-wrap {{item.isPublish ? 'tab-icon-wrap--publish' : ''}}">
       <view
         class="tab-badge"
         wx:if="{{item.key === 'message' && imUnreadBadgeText}}"
       >{{imUnreadBadgeText}}</view>
+      <!-- 中间：发布（圆角粗条十字，与文案行对齐） -->
+      <view wx:if="{{item.isPublish}}" class="icon-publish-fab">
+        <view class="icon-publish-cross">
+          <view class="icon-publish-bar icon-publish-bar--h"></view>
+          <view class="icon-publish-bar icon-publish-bar--v"></view>
+        </view>
+      </view>
       <!-- 首页：小房子 -->
-      <view wx:if="{{item.key === 'home'}}" class="icon icon-home">
+      <view wx:elif="{{item.key === 'home'}}" class="icon icon-home">
         <view class="icon-home-roof"></view>
         <view class="icon-home-body"></view>
         <view class="icon-home-door"></view>
@@ -41,6 +48,6 @@
         <view class="icon-profile-body"></view>
       </view>
     </view>
-    <text class="tab-text">{{item.text}}</text>
+    <text wx:if="{{!item.isPublish}}" class="tab-text">{{item.text}}</text>
   </view>
 </view>

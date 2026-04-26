@@ -5,6 +5,7 @@ Component({
     list: [
       { pagePath: '/pages/index/index', text: '首页', key: 'home' },
       { pagePath: '/pages/partner/partner', text: '搭子', key: 'partner' },
+      { key: 'publish', isPublish: true },
       { pagePath: '/pages/message/message', text: '消息', key: 'message' },
       { pagePath: '/pages/profile/profile', text: '我的', key: 'profile' }
     ]
@@ -41,9 +42,13 @@ Component({
       this.setData({ imUnreadBadgeText: text });
     },
 
-    switchTab(e) {
+    onTabTap(e) {
       const index = e.currentTarget.dataset.index;
       const item = this.data.list[index];
+      if (item.isPublish) {
+        wx.navigateTo({ url: '/pages/partner-publish/partner-publish' });
+        return;
+      }
       const pages = getCurrentPages();
       const current = pages[pages.length - 1];
       const currentPath = current ? '/' + current.route : '';

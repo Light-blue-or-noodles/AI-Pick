@@ -135,13 +135,6 @@ Page({
     });
   },
 
-  // 跳转到发布搭子二级页
-  goToPublish() {
-    wx.navigateTo({
-      url: '/pages/partner-publish/partner-publish'
-    });
-  },
-
   // 查看详情
   goToDetail(e) {
     const id = e.currentTarget.dataset.id;

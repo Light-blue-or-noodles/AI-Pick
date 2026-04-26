@@ -15,7 +15,7 @@
     "useCompilerPlugins": false,
     "minifyWXML": true,
     "compileWorklet": false,
-    "uploadWithSourceMap": true,
+    "uploadWithSourceMap": false,
     "packNpmManually": false,
     "minifyWXSS": true,
     "localPlugins": false,
@@ -27,7 +27,13 @@
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "suffix", "value": ".md" },
+      { "type": "folder", "value": "pages/index-classic" },
+      { "type": "file", "value": "color-palettes.png" },
+      { "type": "file", "value": "app.json.bak" },
+      { "type": "file", "value": "package-lock.json" }
+    ],
     "include": []
   },
   "appid": "wx4bdbaf380a183caa",

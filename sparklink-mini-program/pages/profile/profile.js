@@ -172,7 +172,7 @@ Page({
     setTimeout(function () {
       if (typeof that.getTabBar === 'function') {
         const bar = that.getTabBar();
-        if (bar) bar.setData({ selected: 3 });
+        if (bar) bar.setData({ selected: 4 });
       }
     }, 0);
     // 只在此处拉用户资料：避免与 onLoad 各调一次 /api/user/info 导致并发、首屏头像竞态
