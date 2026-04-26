@@ -70,6 +70,25 @@ App({
   },
 
   /**
+   * 从后台回到前台时校验会话（节流）：库重置后本地仍为旧 userId 时，尽早走 /api/user/info 触发 clearLoginState。
+   */
+  onShow() {
+    const token = wx.getStorageSync('token');
+    const userId = wx.getStorageSync('userId');
+    if (!token || userId == null || userId === '') {
+      return;
+    }
+    const now = Date.now();
+    if (this._lastSessionCheckAt && now - this._lastSessionCheckAt < 20000) {
+      return;
+    }
+    this._lastSessionCheckAt = now;
+    this.globalData.token = token;
+    this.globalData.userId = userId;
+    this.getUserInfo();
+  },
+
+  /**
    * 会话失效或用户已在服务端不存在（如库重置后本地仍为旧 userId）时统一清理，避免 IM/接口继续用幽灵账号。
    */
   clearLoginState() {

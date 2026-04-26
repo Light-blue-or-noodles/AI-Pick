@@ -67,8 +67,7 @@ public class IMServiceImpl implements IMService {
         }
         User u = userMapper.selectById(userId);
         if (u == null) {
-            log.warn("ensureImAccountForUser 用户不存在 userId={}", userId);
-            return;
+            throw new BusinessException("用户不存在");
         }
         importUserToIm(u.getId(), u.getNickname(), AvatarUtil.sanitizeForResponse(u.getAvatar()));
     }
