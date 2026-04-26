@@ -166,7 +166,7 @@ Page({
       return;
     }
     this.setData({ isLoading: true });
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     const header = { 'content-type': 'application/json' };
@@ -180,7 +180,7 @@ Page({
         const data = res.data;
         if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
           const raw = data.data != null ? data.data : data;
-          const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+          const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
           const toFullUrl = (path) => {
             if (!path || typeof path !== 'string') return '';
             if (path.startsWith('http')) return (app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path);

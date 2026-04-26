@@ -28,7 +28,7 @@ Page({
 
   // 先请求接口拉取最新个人信息，再填充表单（避免编辑资料显示错误）
   fetchUserProfile() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     const fallback = () => {
@@ -64,7 +64,7 @@ Page({
     const genderMap = { 0: '保密', 1: '男', 2: '女' };
     const rawGender = userInfo.gender;
     const genderText = (typeof rawGender === 'number' && genderMap[rawGender]) ? genderMap[rawGender] : (userInfo.gender || '');
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     // 与「我的」页 profile.js 的 toFullUrl 一致：Spring context-path 为 /api，本站静态资源为 baseUrl + '/api' + /static/...
     // 错写成 baseUrl + /static/... 会请求到无路由的 /static/，在 Network 里看到 404
     let avatar = userInfo.avatar || '/images/default-avatar.png';
@@ -113,7 +113,7 @@ Page({
   },
 
   uploadAvatar(filePath) {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     if (!userId || !token) {
@@ -274,12 +274,12 @@ Page({
     this.setData({ isSaving: true });
     wx.showLoading({ title: '保存中...' });
 
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     const existing = this.data._userInfo || wx.getStorageSync('userInfo') || {};
 
-    const base = app.globalData.baseUrl || 'http://localhost:8080';
+    const base = app.globalData.baseUrl || 'https://www.aipick.cloud';
     let avatarVal = this.data.avatar || existing.avatar || '';
     // 不保存本地临时地址（开发者工具 __tmp__、wxfile 等），只保存已上传或后端返回的 URL
     const isTempLocalUrl = (url) => !url || typeof url !== 'string' || url.startsWith('wxfile://') ||

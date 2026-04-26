@@ -68,7 +68,7 @@ wechat-mini-program/
 
 ```javascript
 globalData: {
-  baseUrl: 'http://localhost:8080'
+  baseUrl: 'https://www.aipick.cloud'
 }
 ```
 
@@ -83,7 +83,7 @@ globalData: {
 
 - 需要在微信公众平台注册小程序并获取 AppID
 - TabBar 图标需要自行准备（images 目录下）
-- 后端 API 需要先启动（localhost:8080）
+- 默认请求远程 API（`https://www.aipick.cloud`）；本地后端调试见 `局域网真机调试.md`（`app.js` 中 `USE_LAN`）
 
 ## 技术栈
 

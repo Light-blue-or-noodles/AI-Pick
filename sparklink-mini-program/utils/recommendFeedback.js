@@ -62,7 +62,7 @@ function postRecommendFeedback(options) {
     return Promise.reject(new Error('not_logged_in'));
   }
 
-  const baseUrl = baseUrlOpt || app.globalData.baseUrl || 'http://localhost:8080';
+  const baseUrl = baseUrlOpt || app.globalData.baseUrl || 'https://www.aipick.cloud';
   let qs = `userId=${encodeURIComponent(userId)}&targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}&feedbackType=${encodeURIComponent(feedbackType)}`;
   if (matchScore != null && matchScore !== '') {
     qs += `&matchScore=${encodeURIComponent(matchScore)}`;

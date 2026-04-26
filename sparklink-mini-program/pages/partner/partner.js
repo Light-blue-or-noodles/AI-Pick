@@ -8,7 +8,7 @@ const { mapPartnerForList } = require('../../utils/partnerListMap.js');
  * @returns {Promise<Array>} 搭子列表（已映射为页面所需结构）
  */
 function fetchPartnerList(scopeType) {
-  const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+  const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
   const header = { 'Content-Type': 'application/json' };
   const token = app.globalData.token || wx.getStorageSync('token');
   const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');

@@ -189,7 +189,7 @@ Page({
   async loadUserInfo() {
     this.setData({ loadingUser: true });
     try {
-      const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+      const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
       const res = await request({
         url: `${baseUrl}/api/user/info`,
         method: 'GET'
@@ -274,7 +274,7 @@ Page({
   async loadStats() {
     this.setData({ loadingStats: true });
     try {
-      const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+      const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
       let partners = 0;
       let followers = 0;
       let following = 0;

@@ -113,7 +113,7 @@ Page({
   loginWithCode(code, wxUserInfo) {
     wx.showLoading({ title: '登录中...' });
 
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const data = { code };
     /* 不传微信占位昵称「微信用户」，避免服务端把库里已改好的昵称覆盖掉；头像仍可单独同步 */
     if (wxUserInfo && (wxUserInfo.nickName || wxUserInfo.avatarUrl)) {
@@ -174,7 +174,7 @@ Page({
    */
   useTestAccount() {
     wx.showLoading({ title: '测试登录中...' });
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     wx.request({
       url: `${baseUrl}/api/user/test-login`,
       method: 'POST',

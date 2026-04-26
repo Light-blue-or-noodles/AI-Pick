@@ -23,7 +23,7 @@ Page({
   },
 
   fetchList() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     if (!token || userId == null || userId === '') {
@@ -78,7 +78,7 @@ Page({
       content: '确定删除该搭子？删除后无法恢复。',
       success: (modalRes) => {
         if (!modalRes.confirm) return;
-        const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+        const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
         const token = app.globalData.token || wx.getStorageSync('token');
         const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
         wx.request({

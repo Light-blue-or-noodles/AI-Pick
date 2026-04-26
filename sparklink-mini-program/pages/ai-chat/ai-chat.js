@@ -63,7 +63,7 @@ Page({
       return;
     }
     const app = getApp();
-    const baseUrl = (app && app.globalData && app.globalData.baseUrl) ? String(app.globalData.baseUrl).replace(/\/$/, '') : 'http://localhost:8080';
+    const baseUrl = (app && app.globalData && app.globalData.baseUrl) ? String(app.globalData.baseUrl).replace(/\/$/, '') : 'https://www.aipick.cloud';
     const token = wx.getStorageSync('token');
     const userId = wx.getStorageSync('userId');
     wx.request({
@@ -142,7 +142,7 @@ Page({
 
     // 调用后端 API 获取 AI 回复
     const userId = wx.getStorageSync('userId') || '';
-    const baseUrl = (getApp() && getApp().globalData && getApp().globalData.baseUrl) ? String(getApp().globalData.baseUrl).replace(/\/$/, '') : 'http://localhost:8080';
+    const baseUrl = (getApp() && getApp().globalData && getApp().globalData.baseUrl) ? String(getApp().globalData.baseUrl).replace(/\/$/, '') : 'https://www.aipick.cloud';
     wx.request({
       url: `${baseUrl}/api/chat`,
       method: 'POST',
@@ -160,7 +160,7 @@ Page({
           const payload = (res.data && res.data.data !== undefined) ? res.data.data : res.data;
           let { reply = '', recommends = [], sessionId: newSessionId } = payload || {};
           const app = getApp();
-          const baseUrl = (app.globalData && app.globalData.baseUrl) ? String(app.globalData.baseUrl).replace(/\/$/, '') : 'http://localhost:8080';
+          const baseUrl = (app.globalData && app.globalData.baseUrl) ? String(app.globalData.baseUrl).replace(/\/$/, '') : 'https://www.aipick.cloud';
           const toFullUrl = (path) => {
             if (!path) return '';
             if (path.startsWith('http')) return (app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path);

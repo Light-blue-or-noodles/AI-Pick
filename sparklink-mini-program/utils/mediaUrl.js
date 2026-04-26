@@ -11,9 +11,9 @@ function getBaseUrl(explicit) {
     const app = typeof getApp === 'function' ? getApp() : null;
     return (app && app.globalData && app.globalData.baseUrl
       ? String(app.globalData.baseUrl)
-      : 'http://localhost:8080').replace(/\/$/, '');
+      : 'https://www.aipick.cloud').replace(/\/$/, '');
   } catch (e) {
-    return 'http://localhost:8080';
+    return 'https://www.aipick.cloud';
   }
 }
 

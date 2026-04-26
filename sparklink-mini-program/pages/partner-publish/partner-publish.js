@@ -75,7 +75,7 @@ Page({
 
   /** 是否已填写公司/学校名称（用于同事、校友可见范围） */
   loadOrgFlags() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     const local = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
@@ -343,7 +343,7 @@ Page({
   },
 
   uploadCover(filePath) {
-    const baseUrl = (app.globalData && app.globalData.baseUrl) || 'http://localhost:8080';
+    const baseUrl = (app.globalData && app.globalData.baseUrl) || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     wx.showLoading({ title: '上传中' });
@@ -393,7 +393,7 @@ Page({
       return;
     }
     const hints = this.buildAiHints();
-    const baseUrl = (app.globalData && app.globalData.baseUrl) || 'http://localhost:8080';
+    const baseUrl = (app.globalData && app.globalData.baseUrl) || 'https://www.aipick.cloud';
     wx.showLoading({ title: 'AI 生成中...' });
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
@@ -481,7 +481,7 @@ Page({
 
   onSubmit() {
     if (!this.validateForm()) return;
-    const baseUrl = (app.globalData && app.globalData.baseUrl) || 'http://localhost:8080';
+    const baseUrl = (app.globalData && app.globalData.baseUrl) || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     if (!token || userId == null) {

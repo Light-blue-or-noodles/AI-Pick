@@ -8,7 +8,7 @@ const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 const toFullUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+  const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
   return baseUrl + '/api' + (path.startsWith('/') ? path : '/' + path);
 };
 

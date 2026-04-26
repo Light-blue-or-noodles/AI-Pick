@@ -21,7 +21,7 @@ const TYPE_NAMES = {
 
 function mapPartnerForList(p, baseUrl) {
   const app = getApp();
-  const base = baseUrl || 'http://localhost:8080';
+  const base = baseUrl || 'https://www.aipick.cloud';
   const norm = (u) => {
     if (!u || (typeof u === 'string' && u.startsWith('/images'))) return u || '';
     return app.normalizeImageUrl ? app.normalizeImageUrl(u, base) : (u.startsWith('http') ? u : (base + '/api' + (u.startsWith('/') ? u : '/' + u)));

@@ -84,7 +84,7 @@ Page({
   //   const randomDefault = defaultFortunes[Math.floor(Math.random() * defaultFortunes.length)];
 
   //   request({
-  //     url: 'http://localhost:8080/api/fortune/today',
+  //     url: 'https://www.aipick.cloud/api/fortune/today',
   //     method: 'GET'
   //   })
   //     .then((res) => {
@@ -105,7 +105,7 @@ Page({
 
   // 附近动态：搭子列表（Pick 搭，取最新几条）
   loadNearbyDynamics() {
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     request({
       url: `${baseUrl}/api/partner`,
       method: 'GET',
@@ -118,7 +118,7 @@ Page({
       .then((res) => {
         const body = res && res.data;
         const records = (body && body.data && Array.isArray(body.data.records)) ? body.data.records : [];
-        const base = app.globalData.baseUrl || 'http://localhost:8080';
+        const base = app.globalData.baseUrl || 'https://www.aipick.cloud';
         const list = records.slice(0, 3).map((raw) => {
           const m = mapPartnerForList(raw, base);
           return {
@@ -153,7 +153,7 @@ Page({
       targetType: recommendFeedback.TARGET_PARTNER,
       targetId,
       matchScore,
-      baseUrl: app.globalData.baseUrl || 'http://localhost:8080',
+      baseUrl: app.globalData.baseUrl || 'https://www.aipick.cloud',
       onNeedLogin: () => {
         wx.showToast({ title: '请先登录后再反馈', icon: 'none' });
       },
@@ -214,7 +214,7 @@ Page({
       });
     };
 
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
 
     const loadWithGeo = (lat, lon) => {
       let url = `${baseUrl}/api/home/recommend`;

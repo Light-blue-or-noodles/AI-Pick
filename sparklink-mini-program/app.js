@@ -2,9 +2,8 @@
 const envConfig = require('./config/env.js');
 const IMService = require('./utils/im');
 
-// 局域网真机调试：仅开发版生效；体验版/正式版始终用 config/env.js 的 production（云上 HTTPS）
-// USE_LAN=true 并填本机 IPv4；ERR_CONNECTION_REFUSED 时检查本机 8080 与同一 Wi‑Fi
-const USE_LAN = true;
+// 局域网真机调试：仅开发版生效；设为 true 并填 LAN_IP 时请求本机后端，否则与 env.js 一致（当前默认走远程）
+const USE_LAN = false;
 const LAN_IP = '192.168.1.173';
 
 function getBaseUrl() {

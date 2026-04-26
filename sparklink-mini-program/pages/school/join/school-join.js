@@ -28,7 +28,7 @@ Page({
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
     if (!token || userId == null || userId === '') return;
-    const baseUrl = app.globalData.baseUrl || 'http://localhost:8080';
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     wx.request({
       url: `${baseUrl}/api/user/info`,
       method: 'GET',
