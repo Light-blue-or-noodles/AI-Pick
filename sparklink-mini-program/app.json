@@ -65,6 +65,10 @@
       }
     ]
   },
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseLocation"
+  ],
   "permission": {
     "scope.userLocation": {
       "desc": "用于首页推荐附近搭子、搭子发布选点"
