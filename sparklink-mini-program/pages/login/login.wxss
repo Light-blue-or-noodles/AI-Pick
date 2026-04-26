@@ -1,8 +1,8 @@
-/* pages/login/login.wxss - 暖白色背景 */
+/* pages/login/login.wxss - 白底 */
 
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #FDF8F5 0%, #FAF6F2 50%, #F8F4F0 100%);
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;

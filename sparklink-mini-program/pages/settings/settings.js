@@ -2,6 +2,20 @@
 const app = getApp();
 const IMService = require('../../utils/im');
 
+/** 清缓存时保留的本地键（登录态、资料、IM、隐私设置页持久化） */
+const STORAGE_KEYS_KEEP_ON_CLEAR_CACHE = new Set([
+  'token',
+  'userId',
+  'userInfo',
+  'userNickname',
+  'userAvatar',
+  'isLoggedIn',
+  'imUserSig',
+  'imUserID',
+  'imSdkAppId',
+  'privacySettings'
+]);
+
 Page({
   data: {
     // Account settings
@@ -98,18 +112,36 @@ Page({
     this.setData({ profileVisibility: value });
   },
 
-  // Clear cache
+  // Clear cache（保留登录与账号相关 storage，仅删临时数据如 AI session、筛选条件等）
   onClearCache() {
     wx.showModal({
       title: '提示',
-      content: '确定要清空缓存吗？',
+      content:
+        '将清除筛选条件、AI/聊天会话缓存等临时数据，登录状态会保留。确定继续吗？',
       success: (res) => {
-        if (res.confirm) {
-          // Clear cache
-          const tempFiles = wx.getStorageInfoSync();
-          wx.clearStorageSync();
-          
-          wx.showToast({ title: '缓存已清空', icon: 'success' });
+        if (!res.confirm) {
+          return;
+        }
+        try {
+          const info = wx.getStorageInfoSync();
+          const keys = info.keys || [];
+          keys.forEach((key) => {
+            if (!STORAGE_KEYS_KEEP_ON_CLEAR_CACHE.has(key)) {
+              wx.removeStorageSync(key);
+            }
+          });
+          try {
+            const g = getApp();
+            if (g && g.globalData && Array.isArray(g.globalData._networkTrace)) {
+              g.globalData._networkTrace = [];
+            }
+          } catch (e) {
+            /* ignore */
+          }
+          wx.showToast({ title: '缓存已清理', icon: 'success' });
+        } catch (e) {
+          console.warn('onClearCache', e);
+          wx.showToast({ title: '清理失败', icon: 'none' });
         }
       }
     });

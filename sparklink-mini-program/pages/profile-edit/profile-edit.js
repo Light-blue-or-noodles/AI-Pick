@@ -60,10 +60,25 @@ Page({
     });
   },
 
-  fillFormFromUserInfo(userInfo) {
+  /**
+   * 接口/缓存中的 gender 转为编辑页选项文案；兼容 number 与 string。
+   * 若只判断 typeof===number，JSON 里的 1 会变成字符串 "1"，导致无法匹配「男」，
+   * 保存时 _genderForPayload 之前会误提交 0（保密）。
+   */
+  _normalizeGenderToLabel(raw) {
+    if (raw === null || raw === undefined || raw === '') {
+      return '';
+    }
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw).trim(), 10);
+    if (Number.isNaN(n)) {
+      return '';
+    }
     const genderMap = { 0: '保密', 1: '男', 2: '女' };
-    const rawGender = userInfo.gender;
-    const genderText = (typeof rawGender === 'number' && genderMap[rawGender]) ? genderMap[rawGender] : (userInfo.gender || '');
+    return Object.prototype.hasOwnProperty.call(genderMap, n) ? genderMap[n] : '';
+  },
+
+  fillFormFromUserInfo(userInfo) {
+    const genderText = this._normalizeGenderToLabel(userInfo.gender);
     const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
     // 与「我的」页 profile.js 的 toFullUrl 一致：Spring context-path 为 /api，本站静态资源为 baseUrl + '/api' + /static/...
     // 错写成 baseUrl + /static/... 会请求到无路由的 /static/，在 Network 里看到 404
@@ -201,10 +216,21 @@ Page({
     this.setData({ gender: this.data.genderOptions[index] });
   },
 
-  _genderToCode() {
+  /**
+   * 未选中有效选项时不提交 gender，避免库里原为男/女却被误改成 0（保密）。
+   * 用户明确点「保密」时 data.gender 为「保密」，返回 0。
+   */
+  _genderForPayload() {
     const g = this.data.gender;
-    if (g === '男') return 1;
-    if (g === '女') return 2;
+    if (g === '' || g === null || g === undefined) {
+      return undefined;
+    }
+    if (g === '男') {
+      return 1;
+    }
+    if (g === '女') {
+      return 2;
+    }
     return 0;
   },
 
@@ -291,7 +317,6 @@ Page({
     }
     const payload = {
       nickname: (this.data.nickname || '').trim(),
-      gender: this._genderToCode(),
       avatar: avatarVal,
       birthday: (this.data.birthday || '').trim() || null,
       bio: this.data.bio || '',
@@ -299,6 +324,10 @@ Page({
       companyName: existing.companyName || null,
       schoolName: existing.schoolName || null
     };
+    const genderCode = this._genderForPayload();
+    if (genderCode !== undefined) {
+      payload.gender = genderCode;
+    }
 
     wx.request({
       url: `${baseUrl}/api/user/info`,
