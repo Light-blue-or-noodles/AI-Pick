@@ -1,10 +1,11 @@
 // 环境配置
+// 生产环境须使用 HTTPS 域名；正式/体验版请求域名需在「微信公众平台 → 开发 → 开发管理 → 服务器域名」中配置 request 合法域名（如 https://www.aipick.cloud），不可只填 IP。
 const ENV = {
   development: {
     baseUrl: 'http://localhost:8080'
   },
   production: {
-    baseUrl: 'http://59.110.0.107:8080'
+    baseUrl: 'https://www.aipick.cloud'
   }
 };
 

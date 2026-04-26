@@ -2,15 +2,17 @@
 const envConfig = require('./config/env.js');
 const IMService = require('./utils/im');
 
-// 局域网真机调试：USE_LAN=true 并填本机 en0 的 IPv4（终端 ifconfig 查看；变了要改）
-// ERR_CONNECTION_REFUSED：本机需启动 sparklink-backend 且 8080 在监听，手机/模拟器与电脑同 Wi‑Fi
+// 局域网真机调试：仅开发版生效；体验版/正式版始终用 config/env.js 的 production（云上 HTTPS）
+// USE_LAN=true 并填本机 IPv4；ERR_CONNECTION_REFUSED 时检查本机 8080 与同一 Wi‑Fi
 const USE_LAN = true;
 const LAN_IP = '192.168.1.173';
 
 function getBaseUrl() {
-  // 优先使用局域网配置（真机调试时）
-  if (USE_LAN && LAN_IP) return `http://${LAN_IP}:8080`;
-  // 使用环境配置
+  const isDevelop =
+    typeof __wxConfig !== 'undefined' && __wxConfig.envVersion === 'develop';
+  if (isDevelop && USE_LAN && LAN_IP) {
+    return `http://${LAN_IP}:8080`;
+  }
   return envConfig.baseUrl;
 }
 
