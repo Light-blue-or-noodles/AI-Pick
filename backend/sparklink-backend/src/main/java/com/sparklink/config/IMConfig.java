@@ -43,6 +43,12 @@ public class IMConfig {
      */
     private String avatarPublicBaseUrl = "";
 
+    /**
+     * 当 {@link #avatarPublicBaseUrl} 为主机是 IPv4 的地址（如 ECS 公网 IP:8080）时，IM FaceUrl 改用它（须为备案 HTTPS 域名，如 https://www.example.com/api）。
+     * 小程序 downloadFile / TIM 拉头像无法稳定使用未配置在合法域名中的 IP。
+     */
+    private String avatarPublicHttpsBase = "";
+
     public Long getSdkAppId() {
         return sdkAppId;
     }
@@ -89,5 +95,13 @@ public class IMConfig {
 
     public void setAvatarPublicBaseUrl(String avatarPublicBaseUrl) {
         this.avatarPublicBaseUrl = avatarPublicBaseUrl;
+    }
+
+    public String getAvatarPublicHttpsBase() {
+        return avatarPublicHttpsBase;
+    }
+
+    public void setAvatarPublicHttpsBase(String avatarPublicHttpsBase) {
+        this.avatarPublicHttpsBase = avatarPublicHttpsBase;
     }
 }

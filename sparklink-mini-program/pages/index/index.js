@@ -1,6 +1,7 @@
 // pages/index/index.js — 新首页
 Page({
   onShow() {
+    const app = getApp();
     const that = this;
     setTimeout(function () {
       if (typeof that.getTabBar === 'function') {
@@ -9,7 +10,13 @@ Page({
           bar.setData({ selected: 0 });
         }
       }
+      if (app && typeof app.refreshTabBarUnreadBadge === 'function') {
+        app.refreshTabBarUnreadBadge();
+      }
     }, 0);
+    if (app && typeof app.trySyncImUnreadForTabPages === 'function') {
+      app.trySyncImUnreadForTabPages();
+    }
   },
 
   onQuickGame() {

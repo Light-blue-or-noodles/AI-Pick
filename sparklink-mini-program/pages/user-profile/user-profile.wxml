@@ -100,6 +100,7 @@
                     mediaKind="avatar"
                   />
                   <text class="author-name">{{item.author.name}}</text>
+                  <text class="author-distance" wx:if="{{item.distance}}">| {{item.distance}}</text>
                 </view>
                 <view class="match-display" wx:if="{{item.match != null && item.match !== ''}}">
                   <text class="match-num">{{item.match}}%</text>

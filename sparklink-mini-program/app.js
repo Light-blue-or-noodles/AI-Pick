@@ -45,6 +45,9 @@ function safeUpdateTabBarUnread(count) {
   }
 }
 
+/** 非消息 Tab 进入首页/搭子/我的时拉 IM 未读，避免从未进过消息页时节标恒为 0 */
+const IM_TAB_SYNC_MIN_INTERVAL_MS = 10000;
+
 App({
   globalData: {
     userInfo: null,
@@ -62,6 +65,42 @@ App({
     const n = Math.max(0, Math.floor(Number(count) || 0));
     this.globalData.imUnreadCount = n;
     safeUpdateTabBarUnread(n);
+  },
+
+  /**
+   * 用当前 globalData 刷新自定义 Tab「消息」角标（切换 Tab 时立即对齐，不发起请求）
+   */
+  refreshTabBarUnreadBadge() {
+    safeUpdateTabBarUnread(this.globalData.imUnreadCount || 0);
+  },
+
+  /**
+   * 在首页/搭子/我的等 Tab 显示时尝试 IM 登录并同步未读（此前仅消息页、聊天页会 initAndLogin）
+   */
+  trySyncImUnreadForTabPages() {
+    const token = this.globalData.token || wx.getStorageSync('token');
+    const userId =
+      this.globalData.userId != null && this.globalData.userId !== ''
+        ? this.globalData.userId
+        : wx.getStorageSync('userId');
+    if (!token || userId == null || userId === '') {
+      return;
+    }
+    const now = Date.now();
+    if (
+      this._lastImTabSyncAt &&
+      now - this._lastImTabSyncAt < IM_TAB_SYNC_MIN_INTERVAL_MS
+    ) {
+      return;
+    }
+    this._lastImTabSyncAt = now;
+    IMService.initAndLogin()
+      .then(() => {
+        IMService.syncUnreadBadgeFromSdk();
+      })
+      .catch((e) => {
+        console.warn('trySyncImUnreadForTabPages', e);
+      });
   },
 
   onLaunch() {

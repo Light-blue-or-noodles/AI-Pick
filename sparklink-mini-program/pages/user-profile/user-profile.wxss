@@ -351,11 +351,13 @@ page {
   align-items: center;
   padding-top: 20rpx;
   border-top: 1rpx solid var(--border-color);
+  gap: 16rpx;
 }
 
 .author-info {
   display: flex;
   align-items: center;
+  flex: 1;
   min-width: 0;
 }
 
@@ -371,9 +373,23 @@ page {
 .author-name {
   font-size: var(--font-sm);
   color: var(--text-secondary);
+  flex-shrink: 0;
+  max-width: 400rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 与搭子 tab 一致：资料页若展示地址行则单行省略 */
+.author-distance {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  margin-left: 8rpx;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .match-display {

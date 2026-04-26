@@ -292,11 +292,15 @@
   align-items: center;
   padding-top: 20rpx;
   border-top: 1rpx solid var(--border-color);
+  gap: 16rpx;
 }
 
+/* 左侧：头像 + 昵称（单行优先）+ 竖线后地址（过长省略） */
 .author-info {
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .author-avatar {
@@ -304,23 +308,35 @@
   height: 48rpx;
   border-radius: 50%;
   margin-right: 12rpx;
+  flex-shrink: 0;
 }
 
 .author-name {
   font-size: var(--font-sm);
   color: var(--text-secondary);
+  flex-shrink: 0;
+  max-width: 400rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .author-distance {
   font-size: var(--font-xs);
   color: var(--text-tertiary);
   margin-left: 8rpx;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 匹配度显示 */
 .match-display {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%);
   padding: 8rpx 16rpx;
   border-radius: var(--radius-full);

@@ -1,0 +1,145 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 顶部欢迎区已隐藏 -->
+  <view class="header header-hidden" wx:if="{{false}}">
+    <view class="welcome-text">
+      <text class="greeting">你好，</text>
+      <text class="username">{{userInfo.nickname || '朋友'}}</text>
+    </view>
+    <view class="header-subtitle">今天想找谁一起玩？</view>
+  </view>
+
+  <!-- AI 智能助手入口 - 放大突出 -->
+  <view class="ai-entry" bindtap="goToAIChat">
+    <view class="ai-icon">
+      <image src="/images/ai-icon.png" mode="aspectFit" />
+    </view>
+    <view class="ai-content">
+      <text class="ai-title">AI 智能助手</text>
+      <text class="ai-desc">帮你找到志同道合的搭子</text>
+    </view>
+    <view class="ai-arrow">
+      <image src="/images/arrow-right.png" mode="aspectFit" />
+    </view>
+  </view>
+
+  <!-- 快捷入口：找搭子 -->
+  <view class="quick-links">
+    <view class="link-item" bindtap="goToPartner">
+      <view class="link-icon">
+        <view class="link-icon-inner icon-home-partner">
+          <view class="home-partner-head home-partner-head-left"></view>
+          <view class="home-partner-head home-partner-head-right"></view>
+          <view class="home-partner-body home-partner-body-left"></view>
+          <view class="home-partner-body home-partner-body-right"></view>
+        </view>
+      </view>
+      <text class="link-text">找搭子</text>
+    </view>
+  </view>
+
+  <!-- 今日运势模块 - 暂时注释，后期可能恢复使用
+  <view class="fortune-section" wx:if="{{fortune}}">
+    <view class="section-header">
+      <text class="section-title">今日运势</text>
+      <text class="section-more">了解更多</text>
+    </view>
+    <view class="fortune-card">
+      <view class="fortune-icon">{{fortune.icon}}</view>
+      <view class="fortune-info">
+        <text class="fortune-type">{{fortune.type}}</text>
+        <text class="fortune-desc">{{fortune.desc}}</text>
+      </view>
+      <view class="fortune-score">
+        <text class="score-num">{{fortune.score}}</text>
+        <text class="score-label">分</text>
+      </view>
+    </view>
+  </view>
+  -->
+
+  <!-- 附近动态 -->
+  <view class="nearby-section">
+    <view class="section-header">
+      <text class="section-title">附近搭子</text>
+      <text class="section-more" bindtap="goToNearby">查看更多</text>
+    </view>
+    <view class="nearby-list">
+      <block wx:for="{{nearbyDynamics}}" wx:key="id">
+        <view class="nearby-item" bindtap="goToDetail" data-type="{{item.type}}" data-id="{{item.id}}">
+          <network-image class="nearby-avatar" customClass="nearby-avatar" url="{{item.avatar}}" defaultSrc="/images/default-avatar.png" mode="aspectFill" />
+          <view class="nearby-content">
+            <view class="nearby-header">
+              <text class="nearby-name">{{item.name}}</text>
+              <text class="nearby-time">{{item.time}}</text>
+            </view>
+            <text class="nearby-text">{{item.content}}</text>
+            <view class="nearby-images" wx:if="{{item.images && item.images.length > 0}}">
+              <network-image class="nearby-img" customClass="nearby-img" url="{{img}}" defaultSrc="/images/partner-banner.jpg" mode="aspectFill" wx:for="{{item.images}}" wx:key="*this" wx:for-item="img" />
+            </view>
+            <view class="nearby-meta">
+              <text class="meta-location">📍 {{item.location}}</text>
+              <text class="meta-like">❤️ {{item.likeCount}}</text>
+              <text class="meta-comment">💬 {{item.commentCount}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 快来Pick 你的搭子 -->
+  <view class="section-header">
+    <text class="section-title">快来Pick 你的搭子</text>
+    <text class="section-more" bindtap="refreshRecommend">换一批</text>
+  </view>
+
+  <!-- 推荐列表：左侧小图 + 右侧文案 -->
+  <view class="recommend-list" wx:if="{{!isLoading}}">
+    <block wx:for="{{recommendations}}" wx:key="id">
+      <view class="recommend-card">
+        <view class="recommend-card-main" bindtap="goToPartnerDetail" data-id="{{item.id}}">
+          <network-image class="recommend-thumb" customClass="recommend-thumb" url="{{item.cover}}" defaultSrc="/images/partner-banner.jpg" mode="aspectFill" mediaKind="cover" />
+          <view class="recommend-body">
+            <view class="recommend-info">
+              <view class="recommend-header">
+                <text class="recommend-name">{{item.title || item.name}}</text>
+                <view class="match-badge" wx:if="{{item.match}}">
+                  <text class="match-num">{{item.match}}%</text>
+                  <text class="match-label">匹配</text>
+                </view>
+              </view>
+              <view class="recommend-line" wx:if="{{item.typeName}}"><text class="rec-label">类型</text> {{item.typeName}}</view>
+              <view class="recommend-line" wx:if="{{item.preference}}"><text class="rec-label">偏好</text> {{item.preference}}</view>
+              <view class="recommend-line nick-line"><text class="rec-label">发布者</text> {{item.name}}</view>
+              <view class="recommend-tags">
+                <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+                <text class="distance-tag" wx:if="{{item.distance}}">{{item.distance}}</text>
+              </view>
+              <view class="recommend-meta">
+                <view class="meta-item" wx:if="{{item.distance}}">
+                  <image class="meta-icon" src="/images/location.png" mode="aspectFit" />
+                  <text>地理位置 约 {{item.distance}}</text>
+                </view>
+                <view class="meta-item" wx:if="{{item.tagsText}}">
+                  <text class="meta-tag-icon">🏷</text>
+                  <text>搭子标签 {{item.tagsText}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="recommend-action" catchtap="noop">
+          <view class="btn-rec btn-skip" bindtap="onRecommendSkip" data-id="{{item.id}}" data-match="{{item.match}}">跳过</view>
+          <view class="btn-rec btn-incompat" bindtap="onRecommendNotCompat" data-id="{{item.id}}" data-match="{{item.match}}">不合</view>
+          <view class="btn-rec btn-chat" bindtap="onRecommendChat" data-id="{{item.id}}" data-match="{{item.match}}">聊聊</view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:else>
+    <text>加载中...</text>
+  </view>
+</view>

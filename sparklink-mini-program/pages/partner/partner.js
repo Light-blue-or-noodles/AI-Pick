@@ -87,13 +87,20 @@ Page({
   },
 
   onShow() {
+    const app = getApp();
     const that = this;
     setTimeout(function () {
       if (typeof that.getTabBar === 'function') {
         const bar = that.getTabBar();
         if (bar) bar.setData({ selected: 1 });
       }
+      if (app && typeof app.refreshTabBarUnreadBadge === 'function') {
+        app.refreshTabBarUnreadBadge();
+      }
     }, 0);
+    if (app && typeof app.trySyncImUnreadForTabPages === 'function') {
+      app.trySyncImUnreadForTabPages();
+    }
   },
 
   // 加载搭子列表（按当前选中的展示范围：同事搭/校友搭/Pick搭）

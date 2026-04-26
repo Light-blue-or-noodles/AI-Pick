@@ -28,6 +28,9 @@ Page({
         const bar = that.getTabBar();
         if (bar) bar.setData({ selected: 3 });
       }
+      if (app && typeof app.refreshTabBarUnreadBadge === 'function') {
+        app.refreshTabBarUnreadBadge();
+      }
     }, 0);
 
     const token = wx.getStorageSync('token');

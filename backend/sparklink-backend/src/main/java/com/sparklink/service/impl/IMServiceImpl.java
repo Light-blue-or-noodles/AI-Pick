@@ -6,6 +6,7 @@ import com.sparklink.entity.User;
 import com.sparklink.mapper.UserMapper;
 import com.sparklink.service.IMService;
 import com.sparklink.util.AvatarUtil;
+import com.sparklink.util.MediaPathUtil;
 import com.sparklink.util.IMUserSigUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -216,7 +217,7 @@ public class IMServiceImpl implements IMService {
         if (StringUtils.hasText(nickname)) {
             body.put("Nick", truncateNick(nickname));
         }
-        String faceForIm = resolveFaceUrlForIm(faceUrl, imConfig.getAvatarPublicBaseUrl());
+        String faceForIm = resolveFaceUrlForIm(faceUrl);
         if (StringUtils.hasText(faceForIm)) {
             body.put("FaceUrl", faceForIm);
         }
@@ -268,29 +269,92 @@ public class IMServiceImpl implements IMService {
         return nickname.substring(0, NICK_MAX_CHARS);
     }
 
-    private static boolean isAbsoluteHttpUrl(String url) {
-        if (!StringUtils.hasText(url)) {
-            return false;
-        }
-        String lower = url.toLowerCase();
-        return lower.startsWith("https://") || lower.startsWith("http://");
-    }
-
     /**
-     * 得到可写入 IM FaceUrl 的绝对地址：已是 http(s) 则原样；否则在配置了公网前缀时拼接 /static/... 类路径。
+     * 生成 IM {@code FaceUrl}：本站头像必须为公网 HTTPS 可访问；库内 {@code /static/...} 由公网前缀拼接。
+     * 若配置的 {@code avatar-public-base-url} 为 {@code http://公网IP:8080/api}，则改用 {@code avatar-public-https-base}，
+     * 避免小程序与 TIM 客户端无法加载头像。
      */
-    static String resolveFaceUrlForIm(String faceUrl, String avatarPublicBaseUrl) {
+    private String resolveFaceUrlForIm(String faceUrl) {
         if (!StringUtils.hasText(faceUrl)) {
             return null;
         }
-        String t = faceUrl.trim();
-        if (isAbsoluteHttpUrl(t)) {
-            return t;
-        }
-        if (!t.startsWith("/") || !StringUtils.hasText(avatarPublicBaseUrl)) {
+        String pathOrHttps = toImFacePathOrExternalHttps(faceUrl.trim());
+        if (!StringUtils.hasText(pathOrHttps)) {
             return null;
         }
-        String base = avatarPublicBaseUrl.trim().replaceAll("/+$", "");
-        return base + t;
+        if (pathOrHttps.startsWith("https://")) {
+            return pathOrHttps;
+        }
+        if (!pathOrHttps.startsWith("/static/")) {
+            return null;
+        }
+        String base = pickImAvatarPublicBase(
+                imConfig.getAvatarPublicBaseUrl(), imConfig.getAvatarPublicHttpsBase());
+        if (!StringUtils.hasText(base)) {
+            log.warn("IM FaceUrl 跳过：未配置可用的头像公网前缀（或 https 回退），path={}", pathOrHttps);
+            return null;
+        }
+        return base + pathOrHttps;
+    }
+
+    /**
+     * 收成 IM 可用的「/static/...」或外站 https 完整 URL；拒绝把内网 http 绝对地址原样写入 IM。
+     */
+    static String toImFacePathOrExternalHttps(String raw) {
+        if (!StringUtils.hasText(raw)) {
+            return null;
+        }
+        String s = AvatarUtil.sanitizeForResponse(raw);
+        if (!StringUtils.hasText(s)) {
+            s = MediaPathUtil.normalizeForResponse(raw.trim());
+        }
+        if (!StringUtils.hasText(s)) {
+            return null;
+        }
+        s = s.trim();
+        if (s.startsWith("https://")) {
+            return s;
+        }
+        if (s.startsWith("/static/")) {
+            return s;
+        }
+        if (s.startsWith("http://")) {
+            String again = MediaPathUtil.normalizeForResponse(s);
+            if (StringUtils.hasText(again) && again.startsWith("/static/")) {
+                return again;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 主配置为 IPv4 主机时采用 HTTPS 回退前缀；否则使用主配置（去尾斜杠）。
+     */
+    static String pickImAvatarPublicBase(String primary, String httpsFallback) {
+        String fb = trimImBase(httpsFallback);
+        if (!StringUtils.hasText(primary)) {
+            return fb;
+        }
+        String p = trimImBase(primary);
+        if (!StringUtils.hasText(p)) {
+            return fb;
+        }
+        try {
+            URI u = URI.create(p);
+            String host = u.getHost();
+            if (host != null && host.matches("^\\d{1,3}(\\.\\d{1,3}){3}$")) {
+                return fb;
+            }
+        } catch (Exception ignored) {
+            // 非标准 URI 时仍尝试作为主前缀使用
+        }
+        return p;
+    }
+
+    private static String trimImBase(String base) {
+        if (!StringUtils.hasText(base)) {
+            return null;
+        }
+        return base.trim().replaceAll("/+$", "");
     }
 }

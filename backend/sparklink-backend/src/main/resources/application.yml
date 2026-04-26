@@ -122,6 +122,8 @@ tencent:
     # 库内相对路径 /static/... 拼 FaceUrl 时使用。生产为公网 HTTPS（与 application-prod 默认一致）；本地可用 LAN IP。
     # 微信头像等为 https 完整链时可直接同步到 IM。
     avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:http://192.168.1.173:8080/api}
+    # 当 avatar-public-base-url 为 http://公网IP:端口 时，IM FaceUrl 使用此处 HTTPS 域名（本地可留空）
+    avatar-public-https-base: ${TENCENT_IM_AVATAR_PUBLIC_HTTPS:}
 
 # 阿里云内容安全（绿网）配置
 # 申请地址：https://www.aliyun.com/product/lvwang

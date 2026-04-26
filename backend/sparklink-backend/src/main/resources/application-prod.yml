@@ -115,3 +115,5 @@ tencent:
     rest-api-host: ${TENCENT_IM_REST_HOST:https://console.tim.qq.com}
     # account_import 的 FaceUrl 须为腾讯云可访问的 HTTPS；默认与线上 API 域名一致（含 /api，后接 /static/...）
     avatar-public-base-url: ${TENCENT_IM_AVATAR_PUBLIC_BASE:https://www.aipick.cloud/api}
+    # 若线上误将 TENCENT_IM_AVATAR_PUBLIC_BASE 配成 http://IP:8080/api，仍用此处 HTTPS 域名写 IM FaceUrl
+    avatar-public-https-base: ${TENCENT_IM_AVATAR_PUBLIC_HTTPS:https://www.aipick.cloud/api}
