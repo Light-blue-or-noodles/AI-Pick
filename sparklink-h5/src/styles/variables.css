@@ -1,0 +1,24 @@
+:root {
+  --primary-color: #5fb3a8;
+  --primary-light: #7fc4ba;
+  --primary-dark: #4a9a90;
+  --primary-bg: #e8f6f5;
+  --bg-color: #f5faf9;
+  --bg-white: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --border-color: #eeeeee;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+  --page-horizontal: 16px;
+  --tab-bar-height: 56px;
+  --tab-bar-float-radius: 24px;
+  --tab-bar-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --font-base: 14px;
+  --font-lg: 16px;
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}

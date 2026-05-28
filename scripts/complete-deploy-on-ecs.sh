@@ -55,6 +55,9 @@ if command -v nginx &>/dev/null; then
 server {
   listen 80;
   server_name _;
+  root /var/www/sparklink-h5;
+  index index.html;
+  client_max_body_size 6m;
   location /api/ {
     proxy_pass http://127.0.0.1:8080/api/;
     proxy_set_header Host $host;
@@ -62,8 +65,13 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
   }
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
 }
 NGXEOF
+  mkdir -p /var/www/sparklink-h5
+  echo "H5 静态目录已创建: /var/www/sparklink-h5（请用 scripts/deploy-h5.sh 上传 dist）"
   nginx -t && systemctl restart nginx && echo "Nginx 已重启"
 else
   echo "未安装 Nginx，跳过。可用: yum install -y nginx 或 apt install -y nginx"
