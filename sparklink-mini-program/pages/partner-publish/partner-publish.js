@@ -50,7 +50,9 @@ Page({
     latitude: null,
     longitude: null,
     locationDisplay: '',
-    memberCount: 3,
+    memberCount: 1,
+    memberCountMin: 1,
+    memberCountMax: 20,
     scopeSelected: { public: true, colleague: false, alumni: false },
     titleLength: 0,
     descLength: 0,
@@ -62,7 +64,8 @@ Page({
     ],
     hasCompany: false,
     hasSchool: false,
-    isPublishing: false
+    isPublishing: false,
+    isAiLoading: false
   },
 
   onLoad() {
@@ -270,15 +273,58 @@ Page({
     this.setData({ partnerType: type });
   },
 
+  clampMemberCount(value) {
+    const min = this.data.memberCountMin || 1;
+    const max = this.data.memberCountMax || 20;
+    const n = Math.floor(Number(value));
+    if (!Number.isFinite(n)) {
+      return min;
+    }
+    return Math.min(max, Math.max(min, n));
+  },
+
+  onCountInput(e) {
+    const raw = String(e.detail.value ?? '').trim();
+    if (raw === '') {
+      this.setData({ memberCount: '' });
+      return;
+    }
+    const digits = raw.replace(/\D/g, '');
+    if (digits === '') {
+      this.setData({ memberCount: '' });
+      return;
+    }
+    let n = parseInt(digits, 10);
+    const max = this.data.memberCountMax || 20;
+    if (n > max) {
+      n = max;
+    }
+    this.setData({ memberCount: n });
+  },
+
+  onCountBlur() {
+    const min = this.data.memberCountMin || 1;
+    const current = this.data.memberCount;
+    if (current === '' || current == null) {
+      this.setData({ memberCount: min });
+      return;
+    }
+    this.setData({ memberCount: this.clampMemberCount(current) });
+  },
+
   onDecreaseCount() {
-    if (this.data.memberCount > 2) {
-      this.setData({ memberCount: this.data.memberCount - 1 });
+    const min = this.data.memberCountMin || 1;
+    const cur = this.clampMemberCount(this.data.memberCount);
+    if (cur > min) {
+      this.setData({ memberCount: cur - 1 });
     }
   },
 
   onIncreaseCount() {
-    if (this.data.memberCount < 20) {
-      this.setData({ memberCount: this.data.memberCount + 1 });
+    const max = this.data.memberCountMax || 20;
+    const cur = this.clampMemberCount(this.data.memberCount);
+    if (cur < max) {
+      this.setData({ memberCount: cur + 1 });
     }
   },
 
@@ -387,6 +433,9 @@ Page({
   },
 
   onAIComplete() {
+    if (this.data.isAiLoading) {
+      return;
+    }
     const { title, partnerType, selectedPreferences, description } = this.data;
     if (!title || !partnerType) {
       wx.showToast({ title: '请先填写标题和类型', icon: 'none' });
@@ -394,6 +443,7 @@ Page({
     }
     const hints = this.buildAiHints();
     const baseUrl = (app.globalData && app.globalData.baseUrl) || 'https://www.aipick.cloud';
+    this.setData({ isAiLoading: true });
     wx.showLoading({ title: 'AI 生成中...' });
     const token = app.globalData.token || wx.getStorageSync('token');
     const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
@@ -415,6 +465,7 @@ Page({
       },
       success: (res) => {
         wx.hideLoading();
+        this.setData({ isAiLoading: false });
         const body = res.data;
         if (res.statusCode === 200 && body && body.code === 0 && body.data) {
           const text = String(body.data);
@@ -427,6 +478,7 @@ Page({
       },
       fail: () => {
         wx.hideLoading();
+        this.setData({ isAiLoading: false });
         wx.showToast({ title: '网络错误', icon: 'none' });
       }
     });
@@ -480,6 +532,9 @@ Page({
   },
 
   onSubmit() {
+    if (this.data.isPublishing) {
+      return;
+    }
     if (!this.validateForm()) return;
     const baseUrl = (app.globalData && app.globalData.baseUrl) || 'https://www.aipick.cloud';
     const token = app.globalData.token || wx.getStorageSync('token');
@@ -504,7 +559,7 @@ Page({
       preference: preferenceStr,
       type: typeInt,
       scopes,
-      targetCount: this.data.memberCount,
+      targetCount: this.clampMemberCount(this.data.memberCount),
       coverImage: this.data.coverImage || undefined
     };
     if (planIso) {

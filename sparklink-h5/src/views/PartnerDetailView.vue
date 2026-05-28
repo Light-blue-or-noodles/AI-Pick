@@ -1,7 +1,7 @@
 <template>
   <div class="detail page page--no-tab">
     <PageNavBar title="搭子详情" />
-    <van-loading v-if="loading" class="loading-center" />
+    <DetailPageSkeleton v-if="pending && !detail" />
     <template v-else-if="detail">
       <div class="detail__cover">
         <NetworkImage
@@ -56,28 +56,47 @@
         </van-button>
       </div>
     </template>
-    <p v-else class="empty-hint">加载失败</p>
+    <p v-else-if="!pending" class="empty-hint">加载失败</p>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import { get, post } from '@/utils/request';
 import { useAuthStore } from '@/stores/auth';
+import { usePageLoad } from '@/composables/usePageLoad';
 import { navigateToChat } from '@/utils/navigateToChat';
 import PageNavBar from '@/components/PageNavBar.vue';
 import NetworkImage from '@/components/NetworkImage.vue';
+import DetailPageSkeleton from '@/components/skeleton/DetailPageSkeleton.vue';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
-const detail = ref(null);
-const loading = ref(true);
 const applying = ref(false);
 const applied = ref(false);
+
+const partnerId = computed(() => String(route.params.id || ''));
+
+const { data: detail, pending, load } = usePageLoad(
+  async () => {
+    const res = await get(`/api/partner/${partnerId.value}`);
+    return res.data || null;
+  },
+  {
+    cacheKey: () => (partnerId.value ? `partner-detail:${partnerId.value}` : null),
+    empty: null
+  }
+);
+
+watch(partnerId, () => {
+  if (partnerId.value) {
+    load();
+  }
+});
 
 const PARTNER_TYPES = [
   '宠物搭子', '电影搭子', '音乐搭子', '逛街搭子', '运动搭子',
@@ -118,18 +137,6 @@ const canApply = computed(() => {
 
 const applyLabel = computed(() => (applied.value ? '已申请' : '申请加入'));
 
-async function loadDetail() {
-  loading.value = true;
-  try {
-    const res = await get(`/api/partner/${route.params.id}`);
-    detail.value = res.data || null;
-  } catch {
-    detail.value = null;
-  } finally {
-    loading.value = false;
-  }
-}
-
 async function goChat() {
   const uid = detail.value?.userId || detail.value?.creatorId;
   if (!uid) {
@@ -153,7 +160,7 @@ async function onApply() {
   }
   applying.value = true;
   try {
-    await post(`/api/partner/${route.params.id}/apply`, {});
+    await post(`/api/partner/${partnerId.value}/apply`, {});
     applied.value = true;
     showToast('申请已提交');
   } catch (e) {
@@ -162,8 +169,6 @@ async function onApply() {
     applying.value = false;
   }
 }
-
-onMounted(loadDetail);
 </script>
 
 <style scoped>
@@ -180,9 +185,8 @@ onMounted(loadDetail);
 }
 
 .detail__body {
-  margin: -20px 16px 16px;
-  padding: 16px;
-  position: relative;
+  margin: 16px;
+  padding: 20px;
 }
 
 .detail__body h2 {
@@ -193,21 +197,27 @@ onMounted(loadDetail);
 .detail__meta {
   color: var(--text-secondary);
   font-size: 14px;
+  margin: 0 0 12px;
 }
 
-.detail__desc,
+.detail__desc {
+  margin: 12px 0;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
 .detail__pref,
 .detail__addr {
-  margin-top: 12px;
   font-size: 14px;
-  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 8px 0;
 }
 
 .detail__publisher {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 16px;
+  margin: 16px 0;
   font-size: 14px;
 }
 
@@ -219,12 +229,6 @@ onMounted(loadDetail);
 }
 
 .detail__btn {
-  margin-top: 12px;
-}
-
-.loading-center {
-  display: flex;
-  justify-content: center;
-  padding: 48px;
+  margin-top: 10px;
 }
 </style>

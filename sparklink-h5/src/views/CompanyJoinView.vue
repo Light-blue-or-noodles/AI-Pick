@@ -72,11 +72,11 @@ async function onSubmit() {
   }
 }
 
-onMounted(async () => {
-  if (auth.isLoggedIn) {
-    await auth.fetchUserInfo();
-  }
+onMounted(() => {
   syncFromUser();
+  if (auth.isLoggedIn) {
+    auth.fetchUserInfo().then(() => syncFromUser()).catch(() => {});
+  }
 });
 </script>
 

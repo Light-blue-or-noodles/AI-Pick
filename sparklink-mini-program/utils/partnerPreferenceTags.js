@@ -41,5 +41,5 @@ module.exports = {
     { label: '玄学', icon: '☯️' },
     { label: '养生局', icon: '💚' }
   ],
-  MAX_SELECT: 20
+  MAX_SELECT: 3
 };

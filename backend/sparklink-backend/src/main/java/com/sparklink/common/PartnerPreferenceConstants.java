@@ -58,7 +58,7 @@ public final class PartnerPreferenceConstants {
 
     private static final Set<String> ALLOWED = Collections.unmodifiableSet(new LinkedHashSet<>(ORDERED_LABELS));
 
-    private static final int MAX_TAGS = 20;
+    private static final int MAX_TAGS = 3;
 
     private PartnerPreferenceConstants() {
     }

@@ -14,7 +14,8 @@
   --radius-lg: 14px;
   --radius-full: 9999px;
   --page-horizontal: 16px;
-  --tab-bar-height: 56px;
+  --tab-bar-height: 70px;
+  --tab-bar-float-gap: 10px;
   --tab-bar-float-radius: 24px;
   --tab-bar-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
   --font-base: 14px;

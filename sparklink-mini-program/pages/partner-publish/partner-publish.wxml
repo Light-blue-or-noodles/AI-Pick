@@ -1,140 +1,220 @@
 <wxs src="./partner-publish.wxs" module="pref" />
 <view class="container">
-  <view class="form">
-    <view class="form-item">
-      <view class="form-label-row">
-        <text class="form-label">标题</text>
-        <text class="form-count">{{titleLength}}/50</text>
-      </view>
-      <input class="form-input" placeholder="请输入搭子标题" value="{{title}}" maxlength="50" bindinput="onTitleInput" />
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">封面（单张）</text>
-      <view class="cover-row">
-        <view class="cover-preview" wx:if="{{coverImage}}" bindtap="chooseCover">
-          <network-image class="cover-img" customClass="cover-img" url="{{coverImage}}" defaultSrc="/images/partner-banner.jpg" mode="aspectFill" mediaKind="cover" />
-          <text class="cover-tip">点击更换</text>
+  <scroll-view class="publish-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="publish-form">
+      <!-- 基础信息 -->
+      <view class="form-card">
+        <view class="form-item">
+          <view class="form-label-row">
+            <text class="form-label">标题</text>
+            <text class="form-count">{{titleLength}}/50</text>
+          </view>
+          <input
+            class="form-input"
+            placeholder="请输入搭子标题"
+            value="{{title}}"
+            maxlength="50"
+            bindinput="onTitleInput"
+          />
         </view>
-        <view class="cover-placeholder" wx:else bindtap="chooseCover">
-          <text>+ 上传封面</text>
+
+        <view class="form-item">
+          <text class="form-label">封面（单张）</text>
+          <view class="cover-row">
+            <view class="cover-preview" wx:if="{{coverImage}}" bindtap="chooseCover">
+              <network-image
+                class="cover-img"
+                customClass="cover-img"
+                url="{{coverImage}}"
+                defaultSrc="/images/partner-banner.jpg"
+                mode="aspectFill"
+                mediaKind="cover"
+              />
+              <text class="cover-tip">点击更换</text>
+            </view>
+            <view class="cover-placeholder" wx:else bindtap="chooseCover">
+              <text class="cover-plus">+</text>
+              <text class="cover-upload-text">上传封面</text>
+            </view>
+            <view class="cover-clear" wx:if="{{coverImage}}" catchtap="clearCover">
+              <text>清除</text>
+            </view>
+          </view>
         </view>
-        <view class="cover-clear" wx:if="{{coverImage}}" catchtap="clearCover">
-          <text>清除</text>
+
+        <view class="form-item">
+          <view class="form-label-line">
+            <text class="form-label">搭子类型</text>
+            <text class="required-mark">*</text>
+          </view>
+          <view class="type-tags">
+            <text
+              class="type-tag {{partnerType === item ? 'active' : ''}}"
+              wx:for="{{partnerTypes}}"
+              wx:key="*this"
+              bindtap="onSelectType"
+              data-index="{{index}}"
+            >{{item}}</text>
+          </view>
         </view>
-      </view>
-    </view>
 
-    <view class="form-item">
-      <text class="form-label">搭子类型 *</text>
-      <view class="type-tags">
-        <text class="type-tag {{partnerType === item ? 'active' : ''}}" wx:for="{{partnerTypes}}" wx:key="*this" bindtap="onSelectType" data-index="{{index}}">{{item}}</text>
-      </view>
-    </view>
-
-    <view class="form-item">
-      <view class="form-label-row">
-        <text class="form-label">搭子偏好 *</text>
-        <text class="form-count">已选 {{selectedCount}}/{{maxPrefSelect}}</text>
-      </view>
-      <text class="form-hint">可多选，最多 {{maxPrefSelect}} 个</text>
-      <view class="pref-tags">
-        <view
-          class="pref-tag {{pref.includes(selectedPreferences, item.label) ? 'active' : ''}}"
-          wx:for="{{preferenceTagList}}"
-          wx:key="label"
-          bindtap="onTogglePreference"
-          data-label="{{item.label}}"
-        >
-          <text class="pref-tag-ico">{{item.icon}}</text>
-          <text class="pref-tag-txt">{{item.label}}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="form-item">
-      <view class="form-label-row">
-        <text class="form-label">详情 *</text>
-        <text class="form-count">{{descLength}}/300</text>
-      </view>
-      <textarea class="form-textarea" placeholder="描述你的搭子需求、时间期望等" value="{{description}}" maxlength="300" bindinput="onDescInput" />
-    </view>
-
-    <view class="form-item">
-      <view class="form-label-row">
-        <text class="form-label">开始时间（可选）</text>
-        <text class="form-link" wx:if="{{planDate || planTimeStr || planEndDate || planEndTimeStr}}" catchtap="clearPlanTime">清除</text>
-      </view>
-      <text class="form-hint">需选择日期与时刻；仅选时刻时会自动用当天日期，否则无法保存到服务器</text>
-      <view class="datetime-row">
-        <picker mode="date" value="{{planDate}}" start="{{planDateStart}}" bindchange="onPlanDateChange">
-          <view class="picker-box">{{planDate || '选择日期'}}</view>
-        </picker>
-        <picker mode="time" value="{{planTimeStr}}" bindchange="onPlanTimeChange">
-          <view class="picker-box">{{planTimeStr || '选择时间'}}</view>
-        </picker>
-      </view>
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">结束时间（可选）</text>
-      <text class="form-hint">与开始时间共同展示为时间范围；需先选开始时间</text>
-      <view class="datetime-row">
-        <picker mode="date" value="{{planEndDate}}" start="{{planDate || planDateStart}}" bindchange="onPlanEndDateChange">
-          <view class="picker-box">{{planEndDate || '选择日期'}}</view>
-        </picker>
-        <picker mode="time" value="{{planEndTimeStr}}" bindchange="onPlanEndTimeChange">
-          <view class="picker-box">{{planEndTimeStr || '选择时间'}}</view>
-        </picker>
-      </view>
-    </view>
-
-    <view class="form-item">
-      <view class="form-label-row">
-        <text class="form-label">集合地点（可选）</text>
-        <text class="form-link" wx:if="{{locationDisplay}}" catchtap="clearLocation">清除</text>
-      </view>
-      <text class="form-hint">地图选点，保存名称与坐标（GCJ-02）便于附近匹配与推荐</text>
-      <view class="location-row">
-        <view class="location-pick" bindtap="onChooseLocation">
-          <text wx:if="{{locationDisplay}}">{{locationDisplay}}</text>
-          <text wx:else class="location-placeholder">点击在地图上选点</text>
+        <view class="form-item form-item--last-in-card">
+          <view class="form-label-row">
+            <view class="form-label-line">
+              <text class="form-label">搭子偏好</text>
+              <text class="required-mark">*</text>
+            </view>
+            <text class="form-count {{selectedCount >= maxPrefSelect ? 'form-count--full' : ''}}">已选 {{selectedCount}}/{{maxPrefSelect}}</text>
+          </view>
+          <text class="form-hint">可多选，最多 {{maxPrefSelect}} 个</text>
+          <view class="pref-tags">
+            <view
+              class="pref-tag {{pref.includes(selectedPreferences, item.label) ? 'active' : ''}}"
+              wx:for="{{preferenceTagList}}"
+              wx:key="label"
+              bindtap="onTogglePreference"
+              data-label="{{item.label}}"
+            >
+              <text class="pref-tag-ico">{{item.icon}}</text>
+              <text class="pref-tag-txt">{{item.label}}</text>
+            </view>
+          </view>
         </view>
       </view>
-    </view>
 
-    <view class="form-item">
-      <text class="form-label">人数</text>
-      <view class="counter">
-        <view class="counter-btn {{memberCount <= 2 ? 'disabled' : ''}}" bindtap="onDecreaseCount"><text>-</text></view>
-        <view class="counter-value"><text class="count-number">{{memberCount}}</text><text class="count-unit">人</text></view>
-        <view class="counter-btn {{memberCount >= 20 ? 'disabled' : ''}}" bindtap="onIncreaseCount"><text>+</text></view>
+      <!-- 详情 -->
+      <view class="form-card">
+        <view class="form-item form-item--last-in-card">
+          <view class="form-label-row">
+            <view class="form-label-line">
+              <text class="form-label">详情</text>
+              <text class="required-mark">*</text>
+            </view>
+            <text class="form-count">{{descLength}}/300</text>
+          </view>
+          <textarea
+            class="form-textarea"
+            placeholder="描述你的搭子需求、时间期望等"
+            value="{{description}}"
+            maxlength="300"
+            bindinput="onDescInput"
+          />
+        </view>
+      </view>
+
+      <!-- 时间地点 -->
+      <view class="form-card">
+        <view class="form-item">
+          <view class="form-label-row">
+            <text class="form-label">开始时间（可选）</text>
+            <text class="form-link" wx:if="{{planDate || planTimeStr || planEndDate || planEndTimeStr}}" catchtap="clearPlanTime">清除</text>
+          </view>
+          <text class="form-hint">需选择日期与时刻；仅选时刻时会自动用当天日期，否则无法保存到服务器</text>
+          <view class="datetime-row">
+            <picker mode="date" value="{{planDate}}" start="{{planDateStart}}" bindchange="onPlanDateChange">
+              <view class="picker-box">
+                <text class="picker-text {{planDate ? 'picker-text--filled' : ''}}">{{planDate || '选择日期'}}</text>
+              </view>
+            </picker>
+            <picker mode="time" value="{{planTimeStr}}" bindchange="onPlanTimeChange">
+              <view class="picker-box">
+                <text class="picker-text {{planTimeStr ? 'picker-text--filled' : ''}}">{{planTimeStr || '选择时间'}}</text>
+              </view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">结束时间（可选）</text>
+          <text class="form-hint">与开始时间共同展示为时间范围；需先选开始时间</text>
+          <view class="datetime-row">
+            <picker mode="date" value="{{planEndDate}}" start="{{planDate || planDateStart}}" bindchange="onPlanEndDateChange">
+              <view class="picker-box">
+                <text class="picker-text {{planEndDate ? 'picker-text--filled' : ''}}">{{planEndDate || '选择日期'}}</text>
+              </view>
+            </picker>
+            <picker mode="time" value="{{planEndTimeStr}}" bindchange="onPlanEndTimeChange">
+              <view class="picker-box">
+                <text class="picker-text {{planEndTimeStr ? 'picker-text--filled' : ''}}">{{planEndTimeStr || '选择时间'}}</text>
+              </view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="form-item form-item--last-in-card">
+          <view class="form-label-row">
+            <text class="form-label">集合地点（可选）</text>
+            <text class="form-link" wx:if="{{locationDisplay}}" catchtap="clearLocation">清除</text>
+          </view>
+          <text class="form-hint">地图选点，保存名称与坐标（GCJ-02）便于附近匹配与推荐</text>
+          <view class="location-pick" bindtap="onChooseLocation">
+            <text wx:if="{{locationDisplay}}">{{locationDisplay}}</text>
+            <text wx:else class="location-placeholder">点击在地图上选点</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 人数与可见范围 -->
+      <view class="form-card form-card--settings">
+        <view class="form-item form-item--counter">
+          <text class="form-label">人数</text>
+          <text class="form-hint form-hint--counter">点击中间数字可直接输入，或使用两侧按钮调整（{{memberCountMin}}–{{memberCountMax}} 人）</text>
+          <view class="counter-panel">
+            <view class="counter">
+              <view class="counter-btn {{memberCount <= memberCountMin ? 'disabled' : ''}}" bindtap="onDecreaseCount">
+                <text>-</text>
+              </view>
+              <view class="counter-value">
+                <input
+                  class="count-input"
+                  type="number"
+                  value="{{memberCount}}"
+                  maxlength="2"
+                  adjust-position="{{true}}"
+                  confirm-type="done"
+                  aria-label="人数"
+                  bindinput="onCountInput"
+                  bindblur="onCountBlur"
+                />
+                <text class="count-unit">人</text>
+              </view>
+              <view class="counter-btn {{memberCount >= memberCountMax ? 'disabled' : ''}}" bindtap="onIncreaseCount">
+                <text>+</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item form-item--scope">
+          <view class="form-label-row">
+            <view class="form-label-line">
+              <text class="form-label">可见范围</text>
+              <text class="required-mark">*</text>
+            </view>
+            <text class="form-optional">可多选</text>
+          </view>
+          <view class="scope-tags">
+            <text
+              class="scope-tag {{scopeSelected[item.value] ? 'active' : ''}} {{(item.value === 'colleague' && !hasCompany) || (item.value === 'alumni' && !hasSchool) ? 'disabled' : ''}}"
+              wx:for="{{scopes}}"
+              wx:key="value"
+              bindtap="onToggleScope"
+              data-value="{{item.value}}"
+            >{{item.label}}</text>
+          </view>
+          <text class="scope-hint" wx:if="{{!hasCompany || !hasSchool}}">开启「同事」「校友」需先在个人中心完成加入公司 / 加入学校</text>
+        </view>
       </view>
     </view>
+  </scroll-view>
 
-    <view class="form-item">
-      <text class="form-label">可见范围 *（可多选）</text>
-      <view class="scope-tags">
-        <text
-          class="scope-tag {{scopeSelected[item.value] ? 'active' : ''}} {{(item.value === 'colleague' && !hasCompany) || (item.value === 'alumni' && !hasSchool) ? 'disabled' : ''}}"
-          wx:for="{{scopes}}"
-          wx:key="value"
-          bindtap="onToggleScope"
-          data-value="{{item.value}}"
-        >{{item.label}}</text>
-      </view>
-      <text class="scope-hint" wx:if="{{!hasCompany || !hasSchool}}">开启「同事」「校友」需先在个人中心完成加入公司 / 加入学校</text>
-    </view>
-
-    <view class="divider"></view>
-
-    <view class="ai-btn" bindtap="onAIComplete">
+  <view class="publish-footer">
+    <view class="ai-btn {{isAiLoading ? 'ai-btn--disabled' : ''}}" bindtap="onAIComplete">
       <text class="ai-icon">🤖</text>
-      <text class="ai-text">AI 帮我完善详情</text>
+      <text class="ai-text">{{isAiLoading ? 'AI 生成中...' : 'AI 帮我完善详情'}}</text>
     </view>
-
-    <view class="submit-btn" bindtap="onSubmit">
-      <text>发布搭子</text>
+    <view class="submit-btn {{isPublishing ? 'submit-btn--disabled' : ''}}" bindtap="onSubmit">
+      <text>{{isPublishing ? '发布中...' : '发布搭子'}}</text>
     </view>
   </view>
 </view>

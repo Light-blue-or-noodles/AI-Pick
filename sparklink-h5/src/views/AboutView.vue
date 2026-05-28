@@ -20,10 +20,20 @@ const apiBase = computed(() => getApiBaseUrl() || '(开发代理 /api)');
 </script>
 
 <style scoped>
+.settings-sub {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+
+.settings-sub :deep(.van-nav-bar) {
+  background: var(--bg-white);
+}
+
 .about {
-  margin: 16px;
-  padding: 24px;
+  margin: 12px var(--page-horizontal);
+  padding: 28px 20px;
   text-align: center;
+  box-shadow: 0 2px 12px rgba(74, 154, 144, 0.06);
 }
 
 .about h2 {

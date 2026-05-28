@@ -14,34 +14,31 @@
           <span v-if="activeScope === i" class="scope-tab__line" />
         </button>
       </div>
-      <button type="button" class="partner-filter-btn" @click="$router.push({ name: 'partner-filter' })">
-        筛选
-      </button>
     </div>
-    <van-pull-refresh v-model="refreshing" @refresh="loadPartners">
-      <van-loading v-if="loading && !displayPartners.length" class="loading-center" />
+    <van-pull-refresh v-model="refreshing" @refresh="onPullRefresh">
+      <PartnerListSkeleton v-if="pending && !partners.length" />
       <div v-else class="partner__list">
         <PartnerCard
-          v-for="p in displayPartners"
+          v-for="p in partners"
           :key="p.id"
           :item="p"
           @click="goDetail(p.id)"
         />
-        <p v-if="!loading && !displayPartners.length" class="empty-hint">暂无搭子</p>
+        <p v-if="!pending && !partners.length" class="empty-hint">暂无搭子</p>
       </div>
     </van-pull-refresh>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onActivated, inject, watch } from 'vue';
+import { ref, computed, watch, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { get } from '@/utils/request';
 import { getApiBaseUrl } from '@/config/env';
 import { mapPartnerForList } from '@/utils/partnerListMap';
-import { loadPartnerFilter } from '@/composables/usePartnerFilter';
-import { applyPartnerFilter } from '@/utils/applyPartnerFilter';
+import { usePageLoad } from '@/composables/usePageLoad';
 import PartnerCard from '@/components/PartnerCard.vue';
+import PartnerListSkeleton from '@/components/skeleton/PartnerListSkeleton.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -54,18 +51,13 @@ const scopeTabs = [
 ];
 
 const activeScope = ref(0);
-const partners = ref([]);
-const loading = ref(false);
 const refreshing = ref(false);
-const filter = ref(loadPartnerFilter());
 
-const displayPartners = computed(() => applyPartnerFilter(partners.value, filter.value));
+const scopeKey = computed(() => scopeTabs[activeScope.value]?.key || 'platform');
 
-async function loadPartners() {
-  loading.value = true;
-  try {
-    const scope = scopeTabs[activeScope.value]?.key || 'platform';
-    const res = await get('/api/partner', { scopeType: scope });
+const { data: partners, pending, load, refresh } = usePageLoad(
+  async () => {
+    const res = await get('/api/partner', { scopeType: scopeKey.value });
     let rawList = [];
     if (Array.isArray(res.data)) {
       rawList = res.data;
@@ -73,36 +65,42 @@ async function loadPartners() {
       rawList = res.data.records || [];
     }
     const base = getApiBaseUrl();
-    partners.value = rawList.map((item) => mapPartnerForList(item, base));
+    return rawList.map((item) => mapPartnerForList(item, base));
+  },
+  {
+    cacheKey: () => `partner-list:${scopeKey.value}`,
+    empty: [],
+    reloadOnActivated: true
+  }
+);
+
+async function onPullRefresh() {
+  refreshing.value = true;
+  try {
+    await refresh();
   } catch {
-    partners.value = [];
+    /* ignore */
   } finally {
-    loading.value = false;
     refreshing.value = false;
   }
 }
 
 function selectScope(index) {
+  if (activeScope.value === index) {
+    return;
+  }
   activeScope.value = index;
-  loadPartners();
+  load();
 }
 
 function goDetail(id) {
   router.push({ name: 'partner-detail', params: { id: String(id) } });
 }
 
-function refreshFilterAndList() {
-  filter.value = loadPartnerFilter();
-  loadPartners();
-}
-
-onMounted(refreshFilterAndList);
-onActivated(refreshFilterAndList);
-
 if (tabReselectKey) {
   watch(tabReselectKey, () => {
     if (route.name === 'partner') {
-      refreshFilterAndList();
+      refresh().catch(() => {});
     }
   });
 }
@@ -110,9 +108,6 @@ if (tabReselectKey) {
 
 <style scoped>
 .partner-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 8px var(--page-horizontal) 0;
   background: var(--bg-color);
   position: sticky;
@@ -122,7 +117,6 @@ if (tabReselectKey) {
 
 .scope-tabs {
   display: flex;
-  flex: 1;
   gap: 4px;
 }
 
@@ -153,25 +147,7 @@ if (tabReselectKey) {
   background: var(--primary-color);
 }
 
-.partner-filter-btn {
-  flex-shrink: 0;
-  margin-left: 8px;
-  padding: 6px 12px;
-  border: 1px solid var(--primary-color);
-  border-radius: var(--radius-full);
-  background: #fff;
-  color: var(--primary-color);
-  font-size: 13px;
-  cursor: pointer;
-}
-
 .partner__list {
   padding: 12px var(--page-horizontal);
-}
-
-.loading-center {
-  display: flex;
-  justify-content: center;
-  padding: 48px;
 }
 </style>

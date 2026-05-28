@@ -1,7 +1,7 @@
 <template>
   <div class="user-profile page page--no-tab">
     <PageNavBar title="用户主页" />
-    <van-loading v-if="loading" class="loading-center" />
+    <UserProfileSkeleton v-if="pending && !user" />
     <template v-else-if="user">
       <div class="user-profile__head theme-gradient">
         <img :src="avatarUrl" class="user-profile__avatar" alt="" />
@@ -32,29 +32,48 @@
         </van-button>
       </div>
     </template>
-    <p v-else class="empty-hint">用户不存在</p>
+    <p v-else-if="!pending" class="empty-hint">用户不存在</p>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import { get, post } from '@/utils/request';
 import { resolveMediaUrl } from '@/utils/mediaUrl';
 import { getApiBaseUrl } from '@/config/env';
 import { useAuthStore } from '@/stores/auth';
+import { usePageLoad } from '@/composables/usePageLoad';
 import { navigateToChat } from '@/utils/navigateToChat';
 import PageNavBar from '@/components/PageNavBar.vue';
+import UserProfileSkeleton from '@/components/skeleton/UserProfileSkeleton.vue';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
-const user = ref(null);
-const loading = ref(true);
 const following = ref(false);
 const followLoading = ref(false);
+
+const profileId = computed(() => String(route.params.id || ''));
+
+const { data: user, pending, load } = usePageLoad(
+  async () => {
+    const res = await get(`/api/user/${profileId.value}/profile`);
+    return res.data || null;
+  },
+  {
+    cacheKey: () => (profileId.value ? `user-profile:${profileId.value}` : null),
+    empty: null
+  }
+);
+
+watch(profileId, () => {
+  if (profileId.value) {
+    load();
+  }
+});
 
 const isSelf = computed(() => String(user.value?.id) === String(auth.userId));
 
@@ -68,33 +87,32 @@ const bio = computed(() => {
   return String(b).trim();
 });
 
-async function load() {
-  loading.value = true;
+async function loadFollowState() {
+  if (!auth.isLoggedIn || !user.value || isSelf.value) {
+    following.value = false;
+    return;
+  }
   try {
-    const id = route.params.id;
-    const res = await get(`/api/user/${id}/profile`);
-    user.value = res.data || null;
-    if (auth.isLoggedIn && user.value) {
-      const chk = await get(`/api/user/follow/check/${id}`, {}, { suppressErrorToast: true });
-      following.value = !!chk.data?.following || chk.data === true;
-    }
+    const chk = await get(`/api/user/follow/check/${profileId.value}`, {}, { suppressErrorToast: true });
+    following.value = !!chk.data?.following || chk.data === true;
   } catch {
-    user.value = null;
-  } finally {
-    loading.value = false;
+    following.value = false;
   }
 }
 
+watch(user, () => {
+  loadFollowState();
+});
+
 async function toggleFollow() {
-  const id = route.params.id;
   followLoading.value = true;
   try {
     if (following.value) {
-      await post(`/api/user/${id}/follow`, { action: 'cancel' });
+      await post(`/api/user/${profileId.value}/follow`, { action: 'cancel' });
       following.value = false;
       showToast('已取消关注');
     } else {
-      await post(`/api/user/${id}/follow`, { action: 'follow' });
+      await post(`/api/user/${profileId.value}/follow`, { action: 'follow' });
       following.value = true;
       showToast('关注成功');
     }
@@ -112,8 +130,6 @@ function goChat() {
     avatar: user.value?.avatar
   });
 }
-
-onMounted(load);
 </script>
 
 <style scoped>
@@ -128,7 +144,7 @@ onMounted(load);
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
 }
 
 .user-profile__bio {
@@ -138,16 +154,10 @@ onMounted(load);
 }
 
 .user-profile__actions {
-  padding: 20px var(--page-horizontal);
+  padding: 20px 16px;
 }
 
 .user-profile__chat {
-  margin-top: 10px;
-}
-
-.loading-center {
-  display: flex;
-  justify-content: center;
-  padding: 48px;
+  margin-top: 12px;
 }
 </style>
