@@ -39,7 +39,6 @@ public class MemoryFacade {
         if (userId == null || !StringUtils.hasText(query)) {
             return null;
         }
-        memoryMetricsRecorder.recordSearchFailure();
         return null;
     }
 

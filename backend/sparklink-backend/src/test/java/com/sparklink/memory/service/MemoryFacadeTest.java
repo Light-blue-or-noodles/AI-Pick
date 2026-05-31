@@ -44,7 +44,7 @@ class MemoryFacadeTest {
         MemoryContext context = memoryFacade.recallForPrompt(10086L, "我喜欢打羽毛球");
         assertNull(context);
         verify(memoryMetricsRecorder, never()).recordSearchSuccess();
-        verify(memoryMetricsRecorder).recordSearchFailure();
+        verify(memoryMetricsRecorder, never()).recordSearchFailure();
     }
 
     @Test
