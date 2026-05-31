@@ -6,13 +6,17 @@ import com.sparklink.dto.ChatRequest;
 import com.sparklink.dto.ChatResponse;
 import com.sparklink.dto.NaturalLanguageSearchRequest;
 import com.sparklink.service.AiService;
+import com.sparklink.service.ChatService;
 import com.sparklink.service.NaturalLanguageSearchService;
 import com.sparklink.util.PromptSanitizer;
 import com.sparklink.vo.AiRecommendVO;
 import com.sparklink.vo.NaturalLanguageSearchVO;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,23 +25,25 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author AI-Pick
  */
+@Slf4j
 @RestController
 @RequestMapping("/ai")
 public class AiController {
 
     private final AiService aiService;
+    private final ChatService chatService;
     private final NaturalLanguageSearchService naturalLanguageSearchService;
 
-    public AiController(AiService aiService, NaturalLanguageSearchService naturalLanguageSearchService) {
+    public AiController(AiService aiService,
+                        ChatService chatService,
+                        NaturalLanguageSearchService naturalLanguageSearchService) {
         this.aiService = aiService;
+        this.chatService = chatService;
         this.naturalLanguageSearchService = naturalLanguageSearchService;
     }
 
     /**
      * AI 智能推荐：基于用户兴趣、行为、位置推荐搭子与活动
-     *
-     * @param request 推荐请求（兴趣类型、分类、数量等）
-     * @return 推荐结果，含匹配度
      */
     @PostMapping("/recommend")
     public Result<AiRecommendVO> recommend(@Valid @RequestBody AiRecommendRequest request) {
@@ -46,16 +52,20 @@ public class AiController {
     }
 
     /**
-     * AI 社交助手对话：找搭子、发现活动、优化个人资料（MVP 规则回复，后续可接大模型）
-     *
-     * @param request 对话请求（sessionId、message）
-     * @return sessionId 与 AI 回复内容
+     * @deprecated 兼容期接口，请迁移至 {@code POST /chat}。下一版本将删除。
      */
+    @Deprecated
     @PostMapping("/chat")
-    public Result<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
+    public Result<ChatResponse> chat(
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @Valid @RequestBody ChatRequest request,
+            HttpServletResponse response) {
+        log.warn("[DEPRECATED] POST /ai/chat invoked, migrate client to POST /chat");
+        response.setHeader("Deprecation", "true");
+        response.setHeader("Link", "</api/chat>; rel=\"successor-version\"");
         request.setMessage(PromptSanitizer.sanitize(request.getMessage()));
-        ChatResponse response = aiService.chat(request);
-        return Result.success("对话成功", response);
+        ChatResponse chatResponse = chatService.chat(userId, request);
+        return Result.success("对话成功", chatResponse);
     }
 
     /**

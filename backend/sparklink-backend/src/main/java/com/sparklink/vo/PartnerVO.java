@@ -106,6 +106,15 @@ public class PartnerVO {
     /** 是否关注 */
     private Boolean isFollowed;
 
+    /** 当前用户是否为发布者 */
+    private Boolean isOwner;
+
+    /** 当前用户是否已报名（应征中或已通过） */
+    private Boolean hasApplied;
+
+    /** 当前用户应征状态 0-待审核 1-已通过 */
+    private Integer applyStatus;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 

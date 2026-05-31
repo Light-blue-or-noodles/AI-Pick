@@ -190,6 +190,16 @@ public class GlobalExceptionHandler {
         return Result.error("系统异常，请稍后重试");
     }
 
+    @ExceptionHandler({
+            org.springframework.web.servlet.NoHandlerFoundException.class,
+            org.springframework.web.servlet.resource.NoResourceFoundException.class
+    })
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<Void> handleNoHandlerFound(Exception e) {
+        log.warn("接口不存在: {}", e.getMessage());
+        return Result.notFound("接口不存在");
+    }
+
     /**
      * 处理所有异常
      */

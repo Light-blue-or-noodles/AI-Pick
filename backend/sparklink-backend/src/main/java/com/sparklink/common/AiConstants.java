@@ -66,4 +66,7 @@ public class AiConstants {
     
     /** 最大历史消息加载数量 */
     public static final int MAX_HISTORY_MESSAGE_COUNT = 20;
+
+    /** AI 对话工具调用超时（毫秒） */
+    public static final long CHAT_TOOL_TIMEOUT_MS = 25_000L;
 }

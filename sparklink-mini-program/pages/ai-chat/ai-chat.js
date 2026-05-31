@@ -220,8 +220,12 @@ Page({
   },
 
   goToDetail(e) {
-    const { id } = e.currentTarget.dataset;
+    const { id, type } = e.currentTarget.dataset;
     if (!id) return;
+    if (type === 'activity') {
+      wx.showToast({ title: '活动详情暂未开放', icon: 'none' });
+      return;
+    }
     wx.navigateTo({
       url: `/pages/partner-detail/partner-detail?id=${id}`
     });

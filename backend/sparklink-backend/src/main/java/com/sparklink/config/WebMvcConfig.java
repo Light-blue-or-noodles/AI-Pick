@@ -87,6 +87,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/im/admin/batch-import-users",
                         "/api/static/**",
                         "/api/partner/list",
+                        "/api/partner/my",
+                        "/api/partner/my/**",
                         "/api/partner/*",
                         "/api/partner/filter",
                         "/api/activity/list",

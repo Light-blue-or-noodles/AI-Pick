@@ -10,6 +10,7 @@
     "pages/partner-detail/partner-detail",
     "pages/partner-publish/partner-publish",
     "pages/my-partner/my-partner",
+    "pages/my-joined-partner/my-joined-partner",
     "pages/my-following/my-following",
     "pages/my-followers/my-followers",
     "pages/user-profile/user-profile",

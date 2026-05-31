@@ -1,8 +1,6 @@
 package com.sparklink.service;
 
 import com.sparklink.dto.AiRecommendRequest;
-import com.sparklink.dto.ChatRequest;
-import com.sparklink.dto.ChatResponse;
 import com.sparklink.vo.AiRecommendVO;
 
 /**
@@ -19,12 +17,4 @@ public interface AiService {
      * @return 推荐结果（搭子+活动，含匹配度）
      */
     AiRecommendVO recommend(AiRecommendRequest request);
-
-    /**
-     * AI 社交助手对话：找搭子、发现活动、优化个人资料
-     *
-     * @param request 对话请求（sessionId、message）
-     * @return 会话ID 与 AI 回复内容
-     */
-    ChatResponse chat(ChatRequest request);
 }

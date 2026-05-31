@@ -31,7 +31,7 @@ public class ChatController {
      */
     @PostMapping
     public Result<ChatResponse> chat(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @Valid @RequestBody ChatRequest request) {
         request.setMessage(PromptSanitizer.sanitize(request.getMessage()));
         ChatResponse response = chatService.chat(userId, request);

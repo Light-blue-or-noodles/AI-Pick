@@ -387,7 +387,7 @@ Page({
     const token = wx.getStorageSync('token');
     const userId = wx.getStorageSync('userId');
     wx.request({
-      url: `${app.globalData.baseUrl}/api/ai/chat`,
+      url: `${app.globalData.baseUrl}/api/chat`,
       method: 'POST',
       header: {
         'Content-Type': 'application/json',
@@ -401,7 +401,11 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 0 && res.data.data) {
           const d = res.data.data;
-          const text = d.reply || d.response || '';
+          let text = d.reply || d.response || '';
+          if (d.recommends && d.recommends.length) {
+            const lines = d.recommends.map((r) => `• ${r.name || r.title || '推荐项'}`).join('\n');
+            text = `${text}${text ? '\n\n' : ''}为你推荐：\n${lines}`;
+          }
           if (d.sessionId) {
             wx.setStorageSync('sessionId', d.sessionId);
           }

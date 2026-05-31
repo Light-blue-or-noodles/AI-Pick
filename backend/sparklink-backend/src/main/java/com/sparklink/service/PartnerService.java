@@ -46,7 +46,7 @@ public interface PartnerService {
      * @param partnerId 搭子ID
      * @return 搭子详情
      */
-    PartnerVO getPartnerDetailVO(Long partnerId);
+    PartnerVO getPartnerDetailVO(Long partnerId, Long currentUserId);
 
     /**
      * 应征搭子
@@ -57,6 +57,14 @@ public interface PartnerService {
      * @return 应征记录
      */
     PartnerApply applyPartner(Long userId, Long partnerId, ApplyPartnerRequest request);
+
+    /**
+     * 取消报名（取消当前用户对搭子的应征）
+     *
+     * @param userId    用户ID
+     * @param partnerId 搭子ID
+     */
+    void cancelPartnerApply(Long userId, Long partnerId);
 
     /**
      * 获取搭子应征列表
@@ -83,6 +91,16 @@ public interface PartnerService {
      * @param applicantId 应征者ID
      */
     void rejectApplicant(Long userId, Long partnerId, Long applicantId);
+
+    /**
+     * 我参加的搭子数量（应征中或已通过，不含本人发布）
+     */
+    int countJoinedPartners(Long userId);
+
+    /**
+     * 我参加的搭子列表
+     */
+    List<PartnerVO> getJoinedPartners(Long userId);
 
     /**
      * 我的搭子列表

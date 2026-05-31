@@ -50,9 +50,9 @@
       </view>
 
       <view class="stats" wx:if="{{userInfo.isLogin}}">
-        <view class="stat-item" bindtap="goStatMyPartners" hover-class="stat-item--hover">
-          <text class="stat-value">{{stats.partners}}</text>
-          <text class="stat-label">我发布的搭子</text>
+        <view class="stat-item" bindtap="goStatJoinedPartners" hover-class="stat-item--hover">
+          <text class="stat-value">{{stats.joinedPartners}}</text>
+          <text class="stat-label">我参加的搭子</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item" bindtap="goStatFollowers" hover-class="stat-item--hover">
@@ -84,6 +84,6 @@
 
   <!-- 版本信息 -->
   <view class="version-info">
-    <text>Spark Link v0.0.1</text>
+    <text>Spark Link v0.2.1</text>
   </view>
 </view>

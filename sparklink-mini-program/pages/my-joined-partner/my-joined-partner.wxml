@@ -1,0 +1,63 @@
+<!-- 我参加的搭子：与搭子列表卡片一致，不含删除 -->
+<view class="container">
+  <view class="partner-list" wx:if="{{!isLoading}}">
+    <block wx:for="{{partners}}" wx:key="id">
+      <view class="partner-card" bindtap="goToDetail" data-id="{{item.id}}">
+        <view class="partner-cover-wrap">
+          <network-image
+            class="partner-cover"
+            customClass="partner-cover"
+            url="{{item.cover}}"
+            defaultSrc="/images/partner-banner.jpg"
+            mode="aspectFill"
+            mediaKind="cover"
+          />
+          <view class="partner-status-tag {{item.status}}">
+            {{item.statusLabel || (item.status === 'recruiting' ? '招募中' : (item.status === 'full' ? '已满' : '已结束'))}}
+          </view>
+        </view>
+        <view class="partner-body">
+          <view class="partner-header">
+            <view class="partner-category">{{item.typeName || item.category}}</view>
+            <view class="member-count">
+              <view class="member-count-ico" aria-label="人数">👥</view>
+              <text class="member-count-num">{{item.members}}/{{item.maxMembers}}人</text>
+            </view>
+          </view>
+          <view class="partner-title">{{item.title}}</view>
+          <view class="partner-pref" wx:if="{{item.preference}}">偏好：{{item.preference}}</view>
+          <view class="partner-tags">
+            <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+          <view class="partner-footer">
+            <view class="author-info">
+              <network-image
+                class="author-avatar"
+                customClass="author-avatar"
+                url="{{item.author.avatar}}"
+                defaultSrc="/images/default-avatar.png"
+                mode="aspectFill"
+                mediaKind="avatar"
+              />
+              <text class="author-name">{{item.author.name}}</text>
+              <text class="author-distance" wx:if="{{item.distance}}">| {{item.distance}}</text>
+            </view>
+            <view class="match-display" wx:if="{{item.match}}">
+              <text class="match-num">{{item.match}}%</text>
+              <text class="match-label">匹配</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{partners.length === 0}}">
+      <image src="/images/empty-partner.png" mode="aspectFit" />
+      <text>暂无参加的搭子</text>
+    </view>
+  </view>
+
+  <view class="loading" wx:else>
+    <text>加载中...</text>
+  </view>
+</view>

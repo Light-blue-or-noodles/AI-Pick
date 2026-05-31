@@ -15,7 +15,7 @@ import { computed } from 'vue';
 import PageNavBar from '@/components/PageNavBar.vue';
 import { getApiBaseUrl } from '@/config/env';
 
-const version = '0.1.0-h5';
+const version = '0.2.1-h5';
 const apiBase = computed(() => getApiBaseUrl() || '(开发代理 /api)');
 </script>
 

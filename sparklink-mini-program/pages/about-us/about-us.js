@@ -3,7 +3,7 @@ const app = getApp();
 
 Page({
   data: {
-    version: '1.0.0',
+    version: '0.2.1',
     buildDate: '2026-03-25'
   },
 

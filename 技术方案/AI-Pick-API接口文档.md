@@ -517,32 +517,53 @@ POST /message/read
 
 ## 六、AI 模块
 
-⚠️ **本模块所有接口需要登录认证**
+⚠️ **本模块所有接口需要登录认证**（`/chat` 的 `X-User-Id` 可选，未登录时无用户画像）
 
-### 6.1 AI 对话
+### 6.1 AI 对话（主入口）
+
 ```
-POST /ai/chat
+POST /chat
+Header: X-User-Id（可选）
 ```
+
 **请求参数：**
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | message | string | 是 | 用户消息 |
-| context | object | 否 | 上下文（位置、筛选条件等） |
+| sessionId | string | 否 | 会话 ID，空则服务端生成 |
 
 **响应：**
 ```json
 {
   "code": 0,
   "data": {
-    "reply": "为你找到了3个合适的搭子...",
-    "type": "recommend",
-    "data": {
-      "partners": [...],
-      "activities": [...]
-    }
+    "sessionId": "abc123",
+    "reply": "为你找到以下运动搭子…",
+    "recommends": [
+      {
+        "type": "partner",
+        "id": 1,
+        "name": "周末羽毛球",
+        "desc": "想找固定球友…",
+        "avatar": "/static/covers/partner-default.png",
+        "match": 80
+      }
+    ]
   }
 }
 ```
+
+**说明：** 后端优先 Spring AI 工具调用（`searchPartners` / `searchActivities` / `getUserContext`），失败时回落关键词规则召回。
+
+### 6.1.1 AI 对话（兼容废弃）
+
+```
+POST /ai/chat
+```
+
+> ⚠️ **已废弃**，响应头含 `Deprecation: true`，请迁移至 `POST /chat`。下一版本将删除。
+
+请求/响应与 `POST /chat` 相同。
 
 ### 6.2 AI 生成文案
 ```

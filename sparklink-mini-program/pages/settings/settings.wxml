@@ -69,6 +69,6 @@
 
   <!-- Version -->
   <view class="version">
-    <text>Spark Link v0.0.1</text>
+    <text>Spark Link v0.2.1</text>
   </view>
 </view>

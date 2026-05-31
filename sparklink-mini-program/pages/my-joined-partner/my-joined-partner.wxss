@@ -1,0 +1,14 @@
+@import '../partner/partner.wxss';
+
+.container {
+  padding-bottom: var(--tab-bar-padding);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  color: #999999;
+  font-size: 28rpx;
+}

@@ -110,12 +110,58 @@
         </div>
       </section>
 
-      <button v-if="auth.isLoggedIn" type="button" class="settings__logout" @click="onLogout">
+      <button v-if="auth.isLoggedIn" type="button" class="settings__logout" @click="showLogoutDialog = true">
         退出登录
       </button>
 
-      <p class="settings__ver">Spark Link v0.1.0-h5</p>
+      <p class="settings__ver">Spark Link v0.2.1-h5</p>
     </div>
+
+    <van-dialog
+      v-model:show="showLogoutDialog"
+      class="spark-logout-dialog"
+      overlay-class="spark-logout-dialog__overlay"
+      :show-confirm-button="false"
+      :show-cancel-button="false"
+      width="300px"
+      teleport="body"
+    >
+      <div class="logout-dialog">
+        <div class="logout-dialog__icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="24" fill="rgba(95, 179, 168, 0.12)" />
+            <path
+              d="M18 24h14M28 20l4 4-4 4"
+              stroke="var(--primary-color)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M16 16v16"
+              stroke="var(--primary-color)"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <h3 class="logout-dialog__title">确认退出登录？</h3>
+        <p class="logout-dialog__desc">退出后需重新登录，才能使用消息、报名等功能</p>
+        <div class="logout-dialog__actions">
+          <button type="button" class="logout-dialog__btn logout-dialog__btn--cancel" @click="showLogoutDialog = false">
+            取消
+          </button>
+          <button
+            type="button"
+            class="logout-dialog__btn logout-dialog__btn--confirm"
+            :disabled="logoutLoading"
+            @click="confirmLogout"
+          >
+            {{ logoutLoading ? '退出中...' : '确认退出' }}
+          </button>
+        </div>
+      </div>
+    </van-dialog>
   </div>
 </template>
 
@@ -133,6 +179,8 @@ const auth = useAuthStore();
 
 const messageNotification = ref(true);
 const newFollowerNotification = ref(true);
+const showLogoutDialog = ref(false);
+const logoutLoading = ref(false);
 
 function loadNotif() {
   try {
@@ -170,15 +218,21 @@ async function onClearCache() {
   }
 }
 
-async function onLogout() {
+async function confirmLogout() {
+  if (logoutLoading.value) {
+    return;
+  }
+  logoutLoading.value = true;
   try {
-    await showConfirmDialog({ title: '确认退出登录？' });
     await IMService.logout();
     auth.clearLoginState();
+    showLogoutDialog.value = false;
     showToast('已退出');
     router.replace({ name: 'login' });
   } catch {
-    /* cancel */
+    showToast('退出失败，请重试');
+  } finally {
+    logoutLoading.value = false;
   }
 }
 
@@ -310,5 +364,93 @@ onMounted(loadNotif);
   text-align: center;
   font-size: 12px;
   color: var(--text-tertiary);
+}
+</style>
+
+<style>
+.spark-logout-dialog__overlay {
+  background: rgba(20, 40, 38, 0.42) !important;
+  backdrop-filter: blur(4px);
+}
+
+.spark-logout-dialog.van-dialog {
+  top: 50%;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 16px 48px rgba(74, 154, 144, 0.18);
+}
+
+.spark-logout-dialog .van-dialog__content {
+  padding: 0;
+}
+
+.logout-dialog {
+  padding: 28px 22px 22px;
+  text-align: center;
+}
+
+.logout-dialog__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.logout-dialog__icon svg {
+  width: 52px;
+  height: 52px;
+}
+
+.logout-dialog__title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.logout-dialog__desc {
+  margin: 0 0 22px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.logout-dialog__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.logout-dialog__btn {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 22px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.logout-dialog__btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.logout-dialog__btn--cancel {
+  background: #f3f6f6;
+  color: var(--text-secondary);
+}
+
+.logout-dialog__btn--confirm {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  box-shadow: 0 4px 14px rgba(95, 179, 168, 0.35);
+}
+
+.logout-dialog__btn--confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 </style>

@@ -52,9 +52,9 @@
 
         <StatsRowSkeleton v-if="auth.isLoggedIn && statsPending" />
         <div v-else-if="auth.isLoggedIn && stats" class="stats">
-          <button type="button" class="stat-item" @click="$router.push({ name: 'my-partners' })">
-            <span class="stat-value">{{ stats.partners }}</span>
-            <span class="stat-label">我发布的搭子</span>
+          <button type="button" class="stat-item" @click="$router.push({ name: 'my-joined-partners' })">
+            <span class="stat-value">{{ stats.joinedPartners }}</span>
+            <span class="stat-label">我参加的搭子</span>
           </button>
           <span class="stat-divider" aria-hidden="true" />
           <button type="button" class="stat-item" @click="$router.push({ name: 'my-followers' })">
@@ -138,7 +138,7 @@ const { data: stats, pending: statsPending, refresh: refreshStats } = usePageLoa
     const us = userStats.data || {};
     const fs = followStats.data || {};
     return {
-      partners: us.partnerCount ?? us.partners ?? 0,
+      joinedPartners: us.joinedPartners ?? us.joinedPartnerCount ?? 0,
       followers: fs.followers ?? fs.followerCount ?? 0,
       following: fs.following ?? fs.followingCount ?? 0
     };

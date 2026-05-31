@@ -94,7 +94,7 @@ async function loadFollowState() {
   }
   try {
     const chk = await get(`/api/user/follow/check/${profileId.value}`, {}, { suppressErrorToast: true });
-    following.value = !!chk.data?.following || chk.data === true;
+    following.value = !!chk.data?.isFollowing;
   } catch {
     following.value = false;
   }

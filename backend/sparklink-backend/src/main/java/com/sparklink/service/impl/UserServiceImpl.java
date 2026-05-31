@@ -21,6 +21,7 @@ import com.sparklink.mapper.UserMapper;
 import com.sparklink.mapper.UserMessageMapper;
 import com.sparklink.service.FollowService;
 import com.sparklink.service.IMService;
+import com.sparklink.service.PartnerService;
 import com.sparklink.service.UserService;
 import com.sparklink.util.AvatarUtil;
 import com.sparklink.util.MediaPathUtil;
@@ -54,6 +55,7 @@ public class UserServiceImpl implements UserService {
     private final UserMessageMapper userMessageMapper;
     private final IMService imService;
     private final FollowService followService;
+    private final PartnerService partnerService;
     
     /** 公司/学校名称最小长度 */
     private static final int MIN_NAME_LENGTH = 2;
@@ -89,7 +91,8 @@ public class UserServiceImpl implements UserService {
                            ActivityRegistrationMapper activityRegistrationMapper,
                            UserMessageMapper userMessageMapper,
                            IMService imService,
-                           FollowService followService) {
+                           FollowService followService,
+                           PartnerService partnerService) {
         this.userMapper = userMapper;
         this.jwtUtils = jwtUtils;
         this.partnerMapper = partnerMapper;
@@ -98,6 +101,7 @@ public class UserServiceImpl implements UserService {
         this.userMessageMapper = userMessageMapper;
         this.imService = imService;
         this.followService = followService;
+        this.partnerService = partnerService;
     }
 
     @Override
@@ -491,6 +495,7 @@ public class UserServiceImpl implements UserService {
 
         Map<String, Integer> stats = new HashMap<>();
         stats.put("partners", (int) partners);
+        stats.put("joinedPartners", partnerService.countJoinedPartners(userId));
         stats.put("activities", (int) activities);
         stats.put("messages", (int) messages);
         stats.put("following", following);

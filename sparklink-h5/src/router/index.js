@@ -126,6 +126,12 @@ const routes = [
     meta: { title: '我发布的搭子', requiresAuth: true }
   },
   {
+    path: '/my/joined-partners',
+    name: 'my-joined-partners',
+    component: () => import('@/views/MyJoinedPartnersView.vue'),
+    meta: { title: '我参加的搭子', requiresAuth: true }
+  },
+  {
     path: '/my/following',
     name: 'my-following',
     component: () => import('@/views/MyFollowingView.vue'),

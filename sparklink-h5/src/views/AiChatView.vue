@@ -11,9 +11,9 @@
         <div v-if="msg.recommends?.length" class="ai-chat__recs">
           <div
             v-for="r in msg.recommends"
-            :key="r.id"
+            :key="`${r.type || 'partner'}-${r.id}`"
             class="ai-chat__rec card"
-            @click="$router.push({ name: 'partner-detail', params: { id: r.id } })"
+            @click="openRecommend(r)"
           >
             {{ r.title || r.name }}
           </div>
@@ -29,13 +29,15 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { showToast } from 'vant';
 import { post, get } from '@/utils/request';
 import { KEYS, getItem, setItem } from '@/utils/storage';
 import { normalizeImageUrl } from '@/utils/mediaUrl';
 import { getApiBaseUrl } from '@/config/env';
 
 const route = useRoute();
+const router = useRouter();
 const scrollEl = ref(null);
 const messages = ref([]);
 const inputValue = ref('');
@@ -83,6 +85,17 @@ function mapRecommends(recommends) {
     ...r,
     avatar: r.avatar ? normalizeImageUrl(r.avatar, base) : ''
   }));
+}
+
+function openRecommend(rec) {
+  if (!rec?.id) {
+    return;
+  }
+  if (rec.type === 'activity') {
+    showToast('活动详情暂未开放');
+    return;
+  }
+  router.push({ name: 'partner-detail', params: { id: rec.id } });
 }
 
 async function send(textFromQuick) {

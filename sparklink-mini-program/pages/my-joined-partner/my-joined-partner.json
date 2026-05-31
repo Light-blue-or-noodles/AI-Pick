@@ -1,4 +1,6 @@
 {
+  "navigationBarTitleText": "我参加的搭子",
+  "enablePullDownRefresh": true,
   "usingComponents": {
     "network-image": "/components/network-image/network-image"
   }

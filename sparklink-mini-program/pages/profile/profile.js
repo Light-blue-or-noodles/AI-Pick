@@ -83,7 +83,7 @@ Page({
       isLogin: false
     },
     stats: {
-      partners: 0,
+      joinedPartners: 0,
       followers: 0,
       following: 0
     },
@@ -275,7 +275,7 @@ Page({
     this.setData({ loadingStats: true });
     try {
       const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
-      let partners = 0;
+      let joinedPartners = 0;
       let followers = 0;
       let following = 0;
 
@@ -286,7 +286,9 @@ Page({
 
       if (res.data && res.data.code === 0) {
         const d = res.data.data || {};
-        partners = d.partners != null ? d.partners : 0;
+        if (d.joinedPartners != null) {
+          joinedPartners = d.joinedPartners;
+        }
         followers = d.followers != null ? d.followers : 0;
         following = d.following != null ? d.following : 0;
       } else {
@@ -294,6 +296,23 @@ Page({
           title: '获取统计信息失败',
           icon: 'none'
         });
+      }
+
+      // 线上未部署 joinedPartners 字段时，用参加列表长度兜底
+      if (res.data && res.data.code === 0 && (res.data.data || {}).joinedPartners == null) {
+        try {
+          const jr = await request({
+            url: `${baseUrl}/api/partner/my`,
+            method: 'GET',
+            data: { type: 'joined' }
+          });
+          if (jr.data && jr.data.code === 0) {
+            const list = Array.isArray(jr.data.data) ? jr.data.data : [];
+            joinedPartners = list.length;
+          }
+        } catch (e) {
+          // 保留默认值 0
+        }
       }
 
       // 关注数/粉丝数与列表接口同源（FollowController#getFollowStats），避免与其它统计字段来源不一致
@@ -317,7 +336,7 @@ Page({
 
       this.setData({
         stats: {
-          partners,
+          joinedPartners,
           followers,
           following
         }
@@ -360,13 +379,13 @@ Page({
     });
   },
 
-  // 顶部统计：与下方菜单「我发布的搭子」「我的关注」同路径
-  goStatMyPartners() {
+  // 顶部统计：我参加的搭子
+  goStatJoinedPartners() {
     if (!this.data.userInfo || !this.data.userInfo.isLogin) {
       wx.navigateTo({ url: '/pages/login/login' });
       return;
     }
-    wx.navigateTo({ url: '/pages/my-partner/my-partner' });
+    wx.navigateTo({ url: '/pages/my-joined-partner/my-joined-partner' });
   },
 
   goStatFollowing() {

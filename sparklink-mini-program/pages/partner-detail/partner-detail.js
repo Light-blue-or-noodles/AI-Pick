@@ -1,6 +1,6 @@
 // pages/partner-detail/partner-detail.js
 const app = getApp();
-const { get, post, getApiErrorMessage } = require('../../utils/request');
+const { get, post, del, getApiErrorMessage } = require('../../utils/request');
 const { navigateToChatWithPeer } = require('../../utils/navigateToChat.js');
 
 /**
@@ -125,12 +125,60 @@ function buildTimeRangeWithFallback(raw, planRange) {
   return '';
 }
 
+function resolvePlanTimeMeta(raw) {
+  const planRaw = pickPlanField(raw, [
+    'planTime',
+    'plan_time',
+    'planStartTime',
+    'plan_start_time'
+  ]);
+  const planEndRaw = pickPlanField(raw, ['planEndTime', 'plan_end_time', 'planEnd', 'plan_end']);
+  const range = buildPlanTimeRangeDisplay(planRaw, planEndRaw);
+  const createRaw = pickPlanField(raw, ['createTime', 'create_time']);
+  const publishTime = createRaw != null && createRaw !== '' ? formatPlanDateTime(createRaw) : '';
+  if (range) {
+    return {
+      hasPlanTime: true,
+      primary: range,
+      secondary: ''
+    };
+  }
+  return {
+    hasPlanTime: false,
+    primary: '待定',
+    secondary: publishTime ? `发布于 ${publishTime}` : ''
+  };
+}
+
+function parseLocationMeta(raw) {
+  if (raw == null || String(raw).trim() === '') {
+    return null;
+  }
+  const text = String(raw).trim();
+  const parts = text.split(/\s*[·•|｜]\s*/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return {
+      primary: parts[0],
+      secondary: parts.slice(1).join(' ')
+    };
+  }
+  return {
+    primary: text,
+    secondary: ''
+  };
+}
+
 Page({
   data: {
     partnerId: null,
     partnerInfo: null,
     isLoading: true,
     isFollowing: false,
+    hasApplied: false,
+    isOwner: false,
+    isFull: false,
+    remainSpots: 0,
+    joining: false,
     showMoreMenu: false,
     showMatchPanel: false,
     matchResult: null
@@ -160,89 +208,179 @@ Page({
       .catch(() => {});
   },
 
+  mapPartnerDetail(raw) {
+    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
+    const toFullUrl = (path) => {
+      if (!path || typeof path !== 'string') return '';
+      if (path.startsWith('http')) return app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path;
+      const p = path.startsWith('/') ? path : '/' + path;
+      if (p.indexOf('/api/') === 0) return baseUrl + p;
+      return baseUrl + '/api' + p;
+    };
+    const prefRaw = raw.preference || '';
+    const preferenceTags = String(prefRaw)
+      .split(/[,，、\s]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const planRaw = pickPlanField(raw, [
+      'planTime',
+      'plan_time',
+      'planStartTime',
+      'plan_start_time'
+    ]);
+    const planEndRaw = pickPlanField(raw, ['planEndTime', 'plan_end_time', 'planEnd', 'plan_end']);
+    const planTimeDisplay = planRaw != null && planRaw !== '' ? formatPlanDateTime(planRaw) : '';
+    const planTimeMeta = resolvePlanTimeMeta(raw);
+    const locationRaw = raw.address || raw.location || '';
+    const locationMeta = parseLocationMeta(locationRaw);
+    const targetCount = raw.maxParticipants != null ? raw.maxParticipants : raw.targetCount;
+    const currentCount = raw.currentParticipants != null ? raw.currentParticipants : raw.currentCount;
+    const maxP = targetCount != null ? Number(targetCount) : 0;
+    const curP = currentCount != null ? Number(currentCount) : 0;
+    const remainSpots = maxP > 0 ? Math.max(0, maxP - curP) : 0;
+    const isFull = maxP > 0 && curP >= maxP;
+    return {
+      partnerInfo: {
+        id: raw.id,
+        userId: raw.userId,
+        title: raw.title || '搭子',
+        nickname: raw.nickname || '用户',
+        avatar: toFullUrl(raw.avatar) || '/images/default-avatar.png',
+        coverImage: toFullUrl(raw.coverImage) || '',
+        typeName: raw.typeName || '',
+        preference: prefRaw,
+        preferenceTags,
+        scopeName: raw.scopeName || '公开',
+        description: raw.description || raw.content || '',
+        bio: raw.description || raw.content || '暂无详情',
+        targetCount,
+        currentCount,
+        location: locationRaw,
+        locationMeta,
+        planTime: planRaw,
+        planEndTime: planEndRaw,
+        planTimeDisplay,
+        planTimeMeta,
+        matchScore: raw.matchScore,
+        status: raw.status
+      },
+      isFollowing: !!raw.isFollowed || !!raw.isFollowing,
+      hasApplied: !!raw.hasApplied,
+      isOwner: !!raw.isOwner,
+      isFull,
+      remainSpots
+    };
+  },
+
   fetchPartnerDetail(id) {
     if (id == null || id === '' || String(id) === 'undefined') {
       this.setData({ isLoading: false });
       return;
     }
     this.setData({ isLoading: true });
-    const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
-    const token = app.globalData.token || wx.getStorageSync('token');
-    const userId = app.globalData.userId != null ? app.globalData.userId : wx.getStorageSync('userId');
-    const header = { 'content-type': 'application/json' };
-    if (token) header['Authorization'] = 'Bearer ' + token;
-    if (userId) header['X-User-Id'] = String(userId);
-    wx.request({
-      url: `${baseUrl}/api/partner/${id}`,
-      method: 'GET',
-      header,
-      success: (res) => {
-        const data = res.data;
-        if (res.statusCode === 200 && data && (data.code === 0 || data.code === 200)) {
-          const raw = data.data != null ? data.data : data;
-          const baseUrl = app.globalData.baseUrl || 'https://www.aipick.cloud';
-          const toFullUrl = (path) => {
-            if (!path || typeof path !== 'string') return '';
-            if (path.startsWith('http')) return (app.normalizeImageUrl ? app.normalizeImageUrl(path, baseUrl) : path);
-            const p = path.startsWith('/') ? path : '/' + path;
-            if (p.indexOf('/api/') === 0) return baseUrl + p;
-            return baseUrl + '/api' + p;
-          };
-          const prefRaw = raw.preference || '';
-          const preferenceTags = String(prefRaw)
-            .split(/[,，、\s]+/)
-            .map((s) => s.trim())
-            .filter((s) => s.length > 0);
-          const planRaw = pickPlanField(raw, [
-            'planTime',
-            'plan_time',
-            'planStartTime',
-            'plan_start_time'
-          ]);
-          const planEndRaw = pickPlanField(raw, ['planEndTime', 'plan_end_time', 'planEnd', 'plan_end']);
-          const planTimeDisplay = planRaw != null && planRaw !== '' ? formatPlanDateTime(planRaw) : '';
-          const planTimeRangeDisplay = buildTimeRangeWithFallback(
-            raw,
-            buildPlanTimeRangeDisplay(planRaw, planEndRaw)
-          );
-          const partnerInfo = {
-            id: raw.id,
-            userId: raw.userId,
-            title: raw.title || '搭子',
-            nickname: raw.nickname || '用户',
-            avatar: toFullUrl(raw.avatar) || '/images/default-avatar.png',
-            coverImage: toFullUrl(raw.coverImage) || '',
-            typeName: raw.typeName || '',
-            preference: prefRaw,
-            preferenceTags,
-            scopeName: raw.scopeName || '公开',
-            description: raw.description || raw.content || '',
-            bio: raw.description || raw.content || '暂无详情',
-            targetCount: raw.maxParticipants != null ? raw.maxParticipants : raw.targetCount,
-            currentCount: raw.currentParticipants != null ? raw.currentParticipants : raw.currentCount,
-            location: raw.address || raw.location || '',
-            planTime: planRaw,
-            planEndTime: planEndRaw,
-            planTimeDisplay,
-            planTimeRangeDisplay,
-            matchScore: raw.matchScore
-          };
-          this.setData({
-            partnerInfo,
-            isFollowing: !!raw.isFollowing,
-            isLoading: false
-          });
-          if (partnerInfo.userId) {
-            this.checkFollowStatus(partnerInfo.userId);
-          }
-        } else {
+    get(`/api/partner/${id}`, {}, { suppressErrorToast: true })
+      .then((res) => {
+        const raw = res && res.data != null ? res.data : res;
+        if (!raw || typeof raw !== 'object') {
           this.setData({ partnerInfo: null, isLoading: false });
-          wx.showToast({ title: (data && data.message) || '加载失败', icon: 'none' });
+          wx.showToast({ title: '加载失败', icon: 'none' });
+          return;
         }
-      },
-      fail: () => {
+        const mapped = this.mapPartnerDetail(raw);
+        this.setData({
+          ...mapped,
+          isLoading: false
+        });
+        if (mapped.partnerInfo.userId) {
+          this.checkFollowStatus(mapped.partnerInfo.userId);
+        }
+      })
+      .catch((err) => {
         this.setData({ partnerInfo: null, isLoading: false });
-        wx.showToast({ title: '加载失败', icon: 'none' });
+        wx.showToast({ title: getApiErrorMessage(err, '加载失败'), icon: 'none' });
+      });
+  },
+
+  ensureLoginForJoin() {
+    const token = wx.getStorageSync('token') || (app.globalData && app.globalData.token);
+    if (token) {
+      return true;
+    }
+    wx.showModal({
+      title: '提示',
+      content: '登录后方可报名搭子',
+      confirmText: '去登录',
+      success: (r) => {
+        if (r.confirm) {
+          wx.navigateTo({ url: '/pages/login/login' });
+        }
+      }
+    });
+    return false;
+  },
+
+  onJoinPartner() {
+    const partner = this.data.partnerInfo;
+    const partnerId = this.data.partnerId;
+    if (!partner || !partnerId) {
+      return;
+    }
+    if (this.data.isOwner) {
+      return;
+    }
+    if (!this.ensureLoginForJoin()) {
+      return;
+    }
+
+    if (this.data.hasApplied) {
+      wx.showModal({
+        title: '取消报名',
+        content: `确定要取消「${partner.title}」的报名吗？`,
+        success: (res) => {
+          if (!res.confirm) {
+            return;
+          }
+          this.setData({ joining: true });
+          del(`/api/partner/${partnerId}/apply`, {}, { suppressErrorToast: true })
+            .then(() => {
+              wx.showToast({ title: '已取消报名', icon: 'success' });
+              this.fetchPartnerDetail(partnerId);
+            })
+            .catch((err) => {
+              wx.showToast({ title: getApiErrorMessage(err, '取消失败'), icon: 'none' });
+            })
+            .finally(() => {
+              this.setData({ joining: false });
+            });
+        }
+      });
+      return;
+    }
+
+    if (this.data.isFull) {
+      wx.showToast({ title: '名额已满', icon: 'none' });
+      return;
+    }
+
+    wx.showModal({
+      title: '报名参加',
+      content: `确定要报名「${partner.title}」吗？`,
+      success: (res) => {
+        if (!res.confirm) {
+          return;
+        }
+        this.setData({ joining: true });
+        post(`/api/partner/${partnerId}/apply`, {}, { suppressErrorToast: true })
+          .then(() => {
+            wx.showToast({ title: '报名成功', icon: 'success' });
+            this.fetchPartnerDetail(partnerId);
+          })
+          .catch((err) => {
+            wx.showToast({ title: getApiErrorMessage(err, '报名失败'), icon: 'none' });
+          })
+          .finally(() => {
+            this.setData({ joining: false });
+          });
       }
     });
   },

@@ -98,7 +98,8 @@ POST   /api/activity/ai/recommend # AI 智能推荐
 
 ### AI 模块
 ```
-POST   /api/ai/chat            # AI 对话（首页）
+POST   /api/chat                # AI 对话（主入口，Tools + fallback）
+POST   /api/ai/chat             # AI 对话（兼容废弃，转发 /chat）
 POST   /api/ai/generate-text   # AI 生成文本
 POST   /api/ai/recommend       # AI 智能推荐
 POST   /api/ai/search          # AI 智能搜索

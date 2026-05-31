@@ -17,6 +17,7 @@ import com.sparklink.entity.User;
 import com.sparklink.mapper.PartnerApplyMapper;
 import com.sparklink.mapper.PartnerMapper;
 import com.sparklink.mapper.UserMapper;
+import com.sparklink.service.FollowService;
 import com.sparklink.service.PartnerService;
 import com.sparklink.util.AvatarUtil;
 import com.sparklink.util.MediaPathUtil;
@@ -43,11 +44,14 @@ public class PartnerServiceImpl implements PartnerService {
     private final PartnerMapper partnerMapper;
     private final PartnerApplyMapper partnerApplyMapper;
     private final UserMapper userMapper;
+    private final FollowService followService;
 
-    public PartnerServiceImpl(PartnerMapper partnerMapper, PartnerApplyMapper partnerApplyMapper, UserMapper userMapper) {
+    public PartnerServiceImpl(PartnerMapper partnerMapper, PartnerApplyMapper partnerApplyMapper,
+                              UserMapper userMapper, FollowService followService) {
         this.partnerMapper = partnerMapper;
         this.partnerApplyMapper = partnerApplyMapper;
         this.userMapper = userMapper;
+        this.followService = followService;
     }
 
     @Override
@@ -263,7 +267,7 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
     @Override
-    public PartnerVO getPartnerDetailVO(Long partnerId) {
+    public PartnerVO getPartnerDetailVO(Long partnerId, Long currentUserId) {
         Partner partner = partnerMapper.selectById(partnerId);
         if (partner == null) {
             throw new BusinessException("搭子不存在");
@@ -273,7 +277,33 @@ public class PartnerServiceImpl implements PartnerService {
         partnerMapper.updateById(partner);
 
         User author = partner.getUserId() != null ? userMapper.selectById(partner.getUserId()) : null;
-        return toPartnerVO(partner, author);
+        PartnerVO vo = toPartnerVO(partner, author);
+        fillApplyStateForViewer(vo, partner, currentUserId);
+        if (currentUserId != null && partner.getUserId() != null) {
+            vo.setIsFollowed(followService.isFollowing(currentUserId, partner.getUserId()));
+        }
+        return vo;
+    }
+
+    private void fillApplyStateForViewer(PartnerVO vo, Partner partner, Long currentUserId) {
+        if (currentUserId == null || partner == null) {
+            return;
+        }
+        boolean isOwner = partner.getUserId() != null && partner.getUserId().equals(currentUserId);
+        vo.setIsOwner(isOwner);
+        if (isOwner) {
+            vo.setHasApplied(false);
+            vo.setApplyStatus(null);
+            return;
+        }
+        LambdaQueryWrapper<PartnerApply> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PartnerApply::getPartnerId, partner.getId())
+                .eq(PartnerApply::getUserId, currentUserId)
+                .in(PartnerApply::getStatus, 0, 1)
+                .last("LIMIT 1");
+        PartnerApply apply = partnerApplyMapper.selectOne(wrapper);
+        vo.setHasApplied(apply != null);
+        vo.setApplyStatus(apply != null ? apply.getStatus() : null);
     }
 
     @Override
@@ -284,13 +314,22 @@ public class PartnerServiceImpl implements PartnerService {
             throw new BusinessException("搭子不存在");
         }
 
-        // 检查是否已应征
+        if (partner.getUserId() != null && partner.getUserId().equals(userId)) {
+            throw new BusinessException("不能报名自己发布的搭子");
+        }
+
+        if (partner.getStatus() != null && partner.getStatus() == 1) {
+            throw new BusinessException("该搭子已满");
+        }
+
+        // 检查是否已报名（待审核或已通过）
         LambdaQueryWrapper<PartnerApply> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PartnerApply::getPartnerId, partnerId)
-                .eq(PartnerApply::getUserId, userId);
+                .eq(PartnerApply::getUserId, userId)
+                .in(PartnerApply::getStatus, 0, 1);
         long count = partnerApplyMapper.selectCount(wrapper);
         if (count > 0) {
-            throw new BusinessException("您已应征过此搭子");
+            throw new BusinessException("您已报名过此搭子");
         }
 
         // 检查是否已满
@@ -316,6 +355,38 @@ public class PartnerServiceImpl implements PartnerService {
         partnerMapper.updateById(partner);
 
         return apply;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelPartnerApply(Long userId, Long partnerId) {
+        Partner partner = partnerMapper.selectById(partnerId);
+        if (partner == null) {
+            throw new BusinessException("搭子不存在");
+        }
+        if (partner.getUserId() != null && partner.getUserId().equals(userId)) {
+            throw new BusinessException("发布者无需取消报名");
+        }
+
+        LambdaQueryWrapper<PartnerApply> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PartnerApply::getPartnerId, partnerId)
+                .eq(PartnerApply::getUserId, userId)
+                .in(PartnerApply::getStatus, 0, 1)
+                .last("LIMIT 1");
+        PartnerApply apply = partnerApplyMapper.selectOne(wrapper);
+        if (apply == null) {
+            throw new BusinessException("您未报名此搭子");
+        }
+
+        partnerApplyMapper.deleteById(apply.getId());
+
+        int current = partner.getCurrentCount() == null ? 1 : partner.getCurrentCount();
+        int next = Math.max(1, current - 1);
+        partner.setCurrentCount(next);
+        if (next < partner.getTargetCount()) {
+            partner.setStatus(0);
+        }
+        partnerMapper.updateById(partner);
     }
 
     @Override
@@ -386,18 +457,43 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
     @Override
+    public int countJoinedPartners(Long userId) {
+        List<Long> partnerIds = findJoinedPartnerIds(userId);
+        return partnerIds == null ? 0 : partnerIds.size();
+    }
+
+    @Override
+    public List<PartnerVO> getJoinedPartners(Long userId) {
+        List<Long> partnerIds = findJoinedPartnerIds(userId);
+        if (partnerIds == null || partnerIds.isEmpty()) {
+            return List.of();
+        }
+        LambdaQueryWrapper<Partner> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Partner::getId, partnerIds)
+                .orderByDesc(Partner::getCreateTime);
+        return toPartnerVOList(partnerMapper.selectList(wrapper));
+    }
+
+    /**
+     * 我参加的搭子：仅用户主动报名他人的搭子（排除发布时自动写入的「发起者」记录）
+     */
+    private List<Long> findJoinedPartnerIds(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        List<Long> ids = partnerApplyMapper.selectJoinedPartnerIds(userId);
+        return ids == null ? List.of() : ids;
+    }
+
+    @Override
     public List<PartnerVO> getMyPartners(Long userId, String type) {
         LambdaQueryWrapper<Partner> wrapper = new LambdaQueryWrapper<>();
 
         if ("joined".equals(type)) {
-            LambdaQueryWrapper<PartnerApply> applyWrapper = new LambdaQueryWrapper<>();
-            applyWrapper.eq(PartnerApply::getUserId, userId)
-                    .eq(PartnerApply::getStatus, 1);
-            List<PartnerApply> applies = partnerApplyMapper.selectList(applyWrapper);
-            if (applies.isEmpty()) {
+            List<Long> partnerIds = findJoinedPartnerIds(userId);
+            if (partnerIds.isEmpty()) {
                 return List.of();
             }
-            List<Long> partnerIds = applies.stream().map(PartnerApply::getPartnerId).toList();
             wrapper.in(Partner::getId, partnerIds);
         } else {
             // created、published、null：仅我发布的搭子

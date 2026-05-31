@@ -108,16 +108,38 @@ public class PartnerController {
     }
 
     /**
+     * 我的搭子：默认仅返回当前用户发布的搭子（type=created 或 published）；type=joined 返回我参加的
+     */
+    @GetMapping("/my")
+    public Result<List<PartnerVO>> getMyPartners(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(required = false) String type) {
+        List<PartnerVO> list = partnerService.getMyPartners(userId, type);
+        return Result.success(list);
+    }
+
+    /**
+     * 我参加的搭子列表（与 /my?type=joined 等价）
+     */
+    @GetMapping("/my/joined")
+    public Result<List<PartnerVO>> getJoinedPartners(@RequestHeader("X-User-Id") Long userId) {
+        List<PartnerVO> list = partnerService.getJoinedPartners(userId);
+        return Result.success(list);
+    }
+
+    /**
      * 搭子详情
      */
     @GetMapping("/{id}")
-    public Result<PartnerVO> getPartnerDetail(@PathVariable Long id) {
-        PartnerVO vo = partnerService.getPartnerDetailVO(id);
+    public Result<PartnerVO> getPartnerDetail(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        PartnerVO vo = partnerService.getPartnerDetailVO(id, userId);
         return Result.success(vo);
     }
 
     /**
-     * 应征搭子
+     * 报名搭子
      */
     @PostMapping("/{id}/apply")
     public Result<PartnerApply> applyPartner(
@@ -125,7 +147,18 @@ public class PartnerController {
             @PathVariable Long id,
             @RequestBody(required = false) ApplyPartnerRequest request) {
         PartnerApply apply = partnerService.applyPartner(userId, id, request);
-        return Result.success("应征成功", apply);
+        return Result.success("报名成功", apply);
+    }
+
+    /**
+     * 取消报名
+     */
+    @DeleteMapping("/{id}/apply")
+    public Result<Void> cancelPartnerApply(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long id) {
+        partnerService.cancelPartnerApply(userId, id);
+        return Result.success("取消报名成功", null);
     }
 
     /**
@@ -159,17 +192,6 @@ public class PartnerController {
             @RequestParam Long applicantId) {
         partnerService.rejectApplicant(userId, partnerId, applicantId);
         return Result.success("拒绝成功", null);
-    }
-
-    /**
-     * 我的搭子：默认仅返回当前用户发布的搭子（type=created 或 published）；type=joined 返回应征通过的
-     */
-    @GetMapping("/my")
-    public Result<List<PartnerVO>> getMyPartners(
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestParam(required = false) String type) {
-        List<PartnerVO> list = partnerService.getMyPartners(userId, type);
-        return Result.success(list);
     }
 
     /**
