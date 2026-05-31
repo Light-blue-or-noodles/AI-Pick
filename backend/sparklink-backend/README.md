@@ -173,13 +173,15 @@ export DASHSCOPE_API_KEY=你的密钥
 memory:
   library:
     enabled: true
-    knowledgebase-id: 5eb944ee565c400d8fb71e6ab119dfe3
+    knowledgebase-id: ${MEMORY_LIBRARY_KNOWLEDGEBASE_ID:your-knowledgebase-id}
     similarity-threshold: 0.6
     max-results: 8
 ```
 
 说明：
 - `DASHSCOPE_API_KEY` 为空时，依赖 DashScope 的能力不可用；
+- `knowledgebase-id` 不要写入真实值，使用占位符并通过环境变量覆盖；
+- 示例：`export MEMORY_LIBRARY_KNOWLEDGEBASE_ID=你的真实KnowledgeBaseId`；
 - `knowledgebase-id` 需与阿里云 DashScope 侧已创建的 Knowledge Base 对应；
 - 生产环境建议通过环境变量或配置中心覆盖以上参数，不要将密钥写死在仓库。
 

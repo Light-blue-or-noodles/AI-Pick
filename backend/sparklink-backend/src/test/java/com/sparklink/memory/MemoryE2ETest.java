@@ -1,6 +1,7 @@
 package com.sparklink.memory;
 
-import com.sparklink.memory.model.MemoryEvent;
+import com.sparklink.memory.metrics.MemoryMetricsRecorder;
+import com.sparklink.memory.queue.MemoryEventConsumer;
 import com.sparklink.memory.queue.MemoryEventProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,9 @@ import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -38,12 +42,19 @@ class MemoryE2ETest {
     private StringRedisTemplate producerRedisTemplate;
 
     @Mock
+    private StringRedisTemplate consumerRedisTemplate;
+
+    @Mock
     private StreamOperations<String, Object, Object> producerStreamOperations;
+
+    @Mock
+    private ValueOperations<String, String> consumerValueOperations;
 
     private final List<MapRecord<String, Object, Object>> mainStreamRecords = new ArrayList<>();
     private final InMemoryMemoryLibraryStub memoryLibraryStub = new InMemoryMemoryLibraryStub();
 
     private MemoryEventProducer memoryEventProducer;
+    private MemoryEventConsumer memoryEventConsumer;
 
     @BeforeEach
     void setUp() {
@@ -58,7 +69,12 @@ class MemoryE2ETest {
                     return RecordId.autoGenerate();
                 });
 
+        when(consumerRedisTemplate.opsForValue()).thenReturn(consumerValueOperations);
+        when(consumerValueOperations.setIfAbsent(anyString(), eq("1"), eq(MemoryEventConsumer.IDEMPOTENCY_TTL)))
+                .thenReturn(Boolean.TRUE);
+
         memoryEventProducer = new MemoryEventProducer(producerRedisTemplate);
+        memoryEventConsumer = buildConsumerThroughRuntimeWiring();
     }
 
     @Test
@@ -90,10 +106,27 @@ class MemoryE2ETest {
 
     private void consumeMainStream() {
         for (MapRecord<String, Object, Object> record : mainStreamRecords) {
-            MemoryEvent event = MemoryEvent.fromStreamBody(new LinkedHashMap<>(record.getValue()));
-            memoryLibraryStub.addMemory(event.getMemoryUserId(), event.getMessages());
+            memoryEventConsumer.consumeRecord(record);
         }
         mainStreamRecords.clear();
+    }
+
+    private MemoryEventConsumer buildConsumerThroughRuntimeWiring() {
+        try {
+            Constructor<MemoryEventConsumer> constructor = MemoryEventConsumer.class.getDeclaredConstructor(
+                    StringRedisTemplate.class,
+                    MemoryEventConsumer.MemoryAddExecutor.class,
+                    MemoryMetricsRecorder.class
+            );
+            constructor.setAccessible(true);
+            return constructor.newInstance(
+                    consumerRedisTemplate,
+                    (MemoryEventConsumer.MemoryAddExecutor) memoryLibraryStub::addMemory,
+                    new MemoryMetricsRecorder()
+            );
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException("初始化 MemoryEventConsumer 测试实例失败", ex);
+        }
     }
 
     private List<Map<String, String>> conversation(String userMessage, String assistantMessage) {
