@@ -24,6 +24,7 @@ import com.sparklink.vo.PartnerVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
  * @author AI-Pick
  */
 @Service
+@Slf4j
 public class AiServiceImpl implements AiService {
 
     private static final Random RANDOM = new Random();
@@ -102,7 +104,7 @@ public class AiServiceImpl implements AiService {
         List<PartnerVO> partnerVOList = buildPartnerVOWithScore(partners, request, profile);
         List<ActivityVO> activityVOList = buildActivityVOWithScore(activities, request, profile);
         String userInput = buildRecommendMemoryInput(request, profile);
-        MemoryContext memoryContext = memoryFacade.recallForPrompt(request.getUserId(), userInput);
+        MemoryContext memoryContext = safeRecall(request.getUserId(), userInput);
 
         partnerVOList.sort(Comparator.comparing(PartnerVO::getMatchScore, Comparator.nullsLast(Comparator.reverseOrder())));
         activityVOList.sort(Comparator.comparing(ActivityVO::getMatchScore, Comparator.nullsLast(Comparator.reverseOrder())));
@@ -623,6 +625,32 @@ public class AiServiceImpl implements AiService {
         return "推荐请求: category=" + (category.isEmpty() ? "未指定" : category) + ", interests=" + interests;
     }
 
+    private MemoryContext safeRecall(Long userId, String userInput) {
+        try {
+            return memoryFacade.recallForPrompt(userId, userInput);
+        } catch (Exception ex) {
+            log.warn("memory recall failed in ai recommend, userId={}, reason={}", userId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private String safeMergePrompt(String prompt, MemoryContext memoryContext, Long userId) {
+        try {
+            return memoryFacade.mergePrompt(prompt, memoryContext);
+        } catch (Exception ex) {
+            log.warn("memory merge failed in ai recommend, userId={}, reason={}", userId, ex.getMessage());
+            return prompt;
+        }
+    }
+
+    private void safeEnqueue(Long userId, String userInput, String modelOutput) {
+        try {
+            memoryFacade.enqueueConversation(userId, userInput, modelOutput);
+        } catch (Exception ex) {
+            log.warn("memory enqueue failed in ai recommend, userId={}, reason={}", userId, ex.getMessage());
+        }
+    }
+
     /**
      * 百炼模型对 Top 候选重打分；失败则保留规则分
      */
@@ -647,13 +675,13 @@ public class AiServiceImpl implements AiService {
             return;
         }
         String prompt = buildRankPrompt(profile, pTop, aTop);
-        String mergedPrompt = memoryFacade.mergePrompt(prompt, memoryContext);
+        String mergedPrompt = safeMergePrompt(prompt, memoryContext, userId);
         try {
             String raw = chatModel.call(mergedPrompt);
             Map<String, Integer> scoreMap = parseAiScoreMap(raw);
             applyPartnerAiScores(partners, scoreMap);
             applyActivityAiScores(activities, scoreMap);
-            memoryFacade.enqueueConversation(userId, userInput, raw);
+            safeEnqueue(userId, userInput, raw);
         } catch (Exception ignored) {
             // 保留规则分
         }

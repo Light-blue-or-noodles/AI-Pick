@@ -29,6 +29,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -150,5 +151,56 @@ class AiServiceMemoryHookTest {
         } finally {
             RequestContextHolder.resetRequestAttributes();
         }
+    }
+
+    @Test
+    void recommend_shouldFailOpenWhenMemoryHooksThrow() {
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        AiServiceImpl aiService = new AiServiceImpl(
+                partnerMapper,
+                activityMapper,
+                userMapper,
+                recommendFeedbackService,
+                chatModelProvider,
+                memoryFacade
+        );
+        AiRecommendRequest request = new AiRecommendRequest();
+        request.setUserId(10010L);
+        request.setPartnerLimit(1);
+        request.setActivityLimit(1);
+
+        Partner partner = new Partner();
+        partner.setId(77L);
+        partner.setUserId(20001L);
+        partner.setStatus(0);
+        partner.setScope(1);
+        partner.setType(5);
+        partner.setTitle("跑步搭子");
+        partner.setContent("晨跑");
+        partner.setPlanTime(LocalDateTime.now().plusDays(1));
+        when(partnerMapper.selectList(any())).thenReturn(List.of(partner));
+
+        Activity activity = new Activity();
+        activity.setId(88L);
+        activity.setUserId(30001L);
+        activity.setStatus(1);
+        activity.setCategory("运动");
+        activity.setTitle("周末跑步局");
+        activity.setDescription("轻松跑");
+        activity.setStartTime(LocalDateTime.now().plusDays(1));
+        when(activityMapper.selectList(any())).thenReturn(List.of(activity));
+
+        when(userMapper.selectById(10010L)).thenReturn(null);
+        when(userMapper.selectBatchIds(any())).thenReturn(List.of());
+        when(recommendFeedbackService.findNegativeTargetIds(any(), anyInt())).thenReturn(java.util.Set.of());
+        when(recommendFeedbackService.countNegativeByPartnerType(any())).thenReturn(Map.of());
+        when(recommendFeedbackService.countNegativeByActivityCategory(any())).thenReturn(Map.of());
+
+        when(memoryFacade.recallForPrompt(eq(10010L), anyString())).thenThrow(new RuntimeException("recall error"));
+        when(chatModel.call(anyString())).thenReturn("[{\"kind\":\"partner\",\"id\":77,\"score\":86}]");
+
+        AiRecommendVO result = aiService.recommend(request);
+        assertNotNull(result);
+        assertTrue(result.getPartners() != null);
     }
 }

@@ -4,6 +4,7 @@ import com.sparklink.dto.PartnerAiRequest;
 import com.sparklink.memory.model.MemoryContext;
 import com.sparklink.memory.service.MemoryFacade;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -13,6 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * 搭子详情文案 AI 润色（≤300 字）
  */
 @Service
+@Slf4j
 public class PartnerAiTextService {
 
     private final ChatModel chatModel;
@@ -26,7 +28,7 @@ public class PartnerAiTextService {
     public String enhanceDescription(PartnerAiRequest req) {
         Long userId = resolveUserId();
         String userInput = buildUserInput(req);
-        MemoryContext memoryContext = memoryFacade.recallForPrompt(userId, userInput);
+        MemoryContext memoryContext = safeRecall(userId, userInput);
         StringBuilder system = new StringBuilder();
         system.append("你是帮用户写「找搭子」详情介绍的助手。要求：");
         system.append("1）根据标题、类型、偏好扩展为一段自然、真诚的说明；");
@@ -52,19 +54,19 @@ public class PartnerAiTextService {
         userContent.append("输出一段即可，不要分段标题。");
 
         String fullPrompt = system + "\n\n用户输入：\n" + userContent;
-        String mergedPrompt = memoryFacade.mergePrompt(fullPrompt, memoryContext);
+        String mergedPrompt = safeMerge(fullPrompt, memoryContext, userId);
         String text = chatModel.call(mergedPrompt);
         if (text == null) {
-            memoryFacade.enqueueConversation(userId, userInput, "");
+            safeEnqueue(userId, userInput, "");
             return "";
         }
         text = text.trim();
         if (text.length() > 300) {
             String truncated = text.substring(0, 300);
-            memoryFacade.enqueueConversation(userId, userInput, truncated);
+            safeEnqueue(userId, userInput, truncated);
             return truncated;
         }
-        memoryFacade.enqueueConversation(userId, userInput, text);
+        safeEnqueue(userId, userInput, text);
         return text;
     }
 
@@ -90,5 +92,31 @@ public class PartnerAiTextService {
             return number.longValue();
         }
         return null;
+    }
+
+    private MemoryContext safeRecall(Long userId, String userInput) {
+        try {
+            return memoryFacade.recallForPrompt(userId, userInput);
+        } catch (Exception ex) {
+            log.warn("memory recall failed in partner-ai, userId={}, reason={}", userId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private String safeMerge(String prompt, MemoryContext memoryContext, Long userId) {
+        try {
+            return memoryFacade.mergePrompt(prompt, memoryContext);
+        } catch (Exception ex) {
+            log.warn("memory merge failed in partner-ai, userId={}, reason={}", userId, ex.getMessage());
+            return prompt;
+        }
+    }
+
+    private void safeEnqueue(Long userId, String userInput, String modelOutput) {
+        try {
+            memoryFacade.enqueueConversation(userId, userInput, modelOutput);
+        } catch (Exception ex) {
+            log.warn("memory enqueue failed in partner-ai, userId={}, reason={}", userId, ex.getMessage());
+        }
     }
 }

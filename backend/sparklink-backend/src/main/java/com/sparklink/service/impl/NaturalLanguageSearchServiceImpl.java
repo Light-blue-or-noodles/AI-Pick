@@ -9,6 +9,7 @@ import com.sparklink.service.NaturalLanguageSearchService;
 import com.sparklink.service.SearchService;
 import com.sparklink.vo.NaturalLanguageSearchVO;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -19,6 +20,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * @author AI-Pick
  */
 @Service
+@Slf4j
 public class NaturalLanguageSearchServiceImpl implements NaturalLanguageSearchService {
 
     private final SearchService searchService;
@@ -33,10 +35,10 @@ public class NaturalLanguageSearchServiceImpl implements NaturalLanguageSearchSe
     public NaturalLanguageSearchVO search(NaturalLanguageSearchRequest request) {
         Long userId = resolveUserId(request);
         String userInput = request.getQuery();
-        MemoryContext context = memoryFacade.recallForPrompt(userId, userInput);
-        String mergedQuery = memoryFacade.mergePrompt(userInput, context);
+        MemoryContext context = safeRecall(userId, userInput);
+        String mergedQuery = safeMerge(userInput, context, userId);
         NaturalLanguageSearchRequest mergedRequest = new NaturalLanguageSearchRequest();
-        mergedRequest.setUserId(request.getUserId());
+        mergedRequest.setUserId(userId);
         mergedRequest.setLimit(request.getLimit());
         mergedRequest.setQuery(mergedQuery);
 
@@ -45,8 +47,34 @@ public class NaturalLanguageSearchServiceImpl implements NaturalLanguageSearchSe
         vo.setActivities(result.getActivities());
         vo.setPartners(result.getPartners());
         vo.setParsed(toNlSearchQuerySpec(result.getCriteria()));
-        memoryFacade.enqueueConversation(userId, userInput, buildModelOutput(result));
+        safeEnqueue(userId, userInput, buildModelOutput(result));
         return vo;
+    }
+
+    private MemoryContext safeRecall(Long userId, String userInput) {
+        try {
+            return memoryFacade.recallForPrompt(userId, userInput);
+        } catch (Exception ex) {
+            log.warn("memory recall failed in nl-search, userId={}, reason={}", userId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private String safeMerge(String userInput, MemoryContext context, Long userId) {
+        try {
+            return memoryFacade.mergePrompt(userInput, context);
+        } catch (Exception ex) {
+            log.warn("memory merge failed in nl-search, userId={}, reason={}", userId, ex.getMessage());
+            return userInput;
+        }
+    }
+
+    private void safeEnqueue(Long userId, String userInput, String modelOutput) {
+        try {
+            memoryFacade.enqueueConversation(userId, userInput, modelOutput);
+        } catch (Exception ex) {
+            log.warn("memory enqueue failed in nl-search, userId={}, reason={}", userId, ex.getMessage());
+        }
     }
 
     private static Long resolveUserId(NaturalLanguageSearchRequest request) {

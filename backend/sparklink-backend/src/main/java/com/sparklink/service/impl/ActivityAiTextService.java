@@ -4,6 +4,7 @@ import com.sparklink.dto.ActivityAiRequest;
 import com.sparklink.memory.model.MemoryContext;
 import com.sparklink.memory.service.MemoryFacade;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * @author AI-Pick
  */
 @Service
+@Slf4j
 public class ActivityAiTextService {
 
     private final ChatModel chatModel;
@@ -37,7 +39,7 @@ public class ActivityAiTextService {
     public String enhanceDescription(ActivityAiRequest req) {
         Long userId = resolveUserId();
         String userInput = buildUserInput(req);
-        MemoryContext memoryContext = memoryFacade.recallForPrompt(userId, userInput);
+        MemoryContext memoryContext = safeRecall(userId, userInput);
         // System 提示：告知模型角色与约束
         StringBuilder system = new StringBuilder();
         system.append("你是一个帮用户润色线下活动介绍文案的助手，要求：");
@@ -79,10 +81,10 @@ public class ActivityAiTextService {
 
         // 使用 ChatModel 简化接口：system 提示 + 用户内容拼成一个消息
         String fullPrompt = system + "\n\n用户输入：\n" + userContent;
-        String mergedPrompt = memoryFacade.mergePrompt(fullPrompt, memoryContext);
+        String mergedPrompt = safeMerge(fullPrompt, memoryContext, userId);
         String text = chatModel.call(mergedPrompt);
         String output = text != null ? text.trim() : "";
-        memoryFacade.enqueueConversation(userId, userInput, output);
+        safeEnqueue(userId, userInput, output);
         return output;
     }
 
@@ -111,6 +113,32 @@ public class ActivityAiTextService {
             return number.longValue();
         }
         return null;
+    }
+
+    private MemoryContext safeRecall(Long userId, String userInput) {
+        try {
+            return memoryFacade.recallForPrompt(userId, userInput);
+        } catch (Exception ex) {
+            log.warn("memory recall failed in activity-ai, userId={}, reason={}", userId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private String safeMerge(String prompt, MemoryContext memoryContext, Long userId) {
+        try {
+            return memoryFacade.mergePrompt(prompt, memoryContext);
+        } catch (Exception ex) {
+            log.warn("memory merge failed in activity-ai, userId={}, reason={}", userId, ex.getMessage());
+            return prompt;
+        }
+    }
+
+    private void safeEnqueue(Long userId, String userInput, String modelOutput) {
+        try {
+            memoryFacade.enqueueConversation(userId, userInput, modelOutput);
+        } catch (Exception ex) {
+            log.warn("memory enqueue failed in activity-ai, userId={}, reason={}", userId, ex.getMessage());
+        }
     }
 }
 
