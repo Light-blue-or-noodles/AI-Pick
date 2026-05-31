@@ -110,6 +110,13 @@ storage:
   local:
     root-dir: ${upload.dir:uploads}
 
+memory:
+  library:
+    enabled: true
+    knowledgebase-id: 5eb944ee565c400d8fb71e6ab119dfe3
+    similarity-threshold: 0.6
+    max-results: 8
+
 # 腾讯云即时通信 IM（UserSig 仅在后端签发；密钥勿提交公开仓库，生产务必用环境变量覆盖）
 tencent:
   im:
