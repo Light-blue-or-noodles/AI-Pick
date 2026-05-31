@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sparklink.memory.config.MemoryLibraryProperties;
 import com.sparklink.memory.model.MemoryContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -32,6 +33,7 @@ public class MemoryLibraryClient {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
+    @Autowired
     public MemoryLibraryClient(MemoryLibraryProperties properties) {
         this(properties, new ObjectMapper(), new RestTemplate());
     }
@@ -52,11 +54,11 @@ public class MemoryLibraryClient {
 
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("user_id", userId);
-        payload.put("query", query);
-        payload.set("knowledgebase_ids", buildKnowledgebaseIdsNode());
-        payload.put("max_results", properties.getMaxResults() == null ? 8 : properties.getMaxResults());
+        payload.put("memory_library_id", resolveMemoryLibraryId());
+        payload.set("messages", buildSearchMessagesNode(query));
+        payload.put("top_k", properties.getMaxResults() == null ? 8 : properties.getMaxResults());
         if (properties.getSimilarityThreshold() != null) {
-            payload.put("similarity_threshold", properties.getSimilarityThreshold());
+            payload.put("min_score", properties.getSimilarityThreshold());
         }
         return payload;
     }
@@ -67,7 +69,7 @@ public class MemoryLibraryClient {
 
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("user_id", userId);
-        payload.set("knowledgebase_ids", buildKnowledgebaseIdsNode());
+        payload.put("memory_library_id", resolveMemoryLibraryId());
 
         ArrayNode messageNodes = payload.putArray("messages");
         for (Map<String, String> message : messages) {
@@ -104,14 +106,19 @@ public class MemoryLibraryClient {
         return fieldValue;
     }
 
-    private ArrayNode buildKnowledgebaseIdsNode() {
+    private ArrayNode buildSearchMessagesNode(String query) {
+        ArrayNode messages = objectMapper.createArrayNode();
+        ObjectNode userMessage = messages.addObject();
+        userMessage.put("role", "user");
+        userMessage.put("content", query);
+        return messages;
+    }
+
+    private String resolveMemoryLibraryId() {
         Assert.notNull(properties, "memoryLibraryProperties 不能为空");
         String knowledgebaseId = properties.getKnowledgebaseId();
         Assert.isTrue(StringUtils.hasText(knowledgebaseId), "knowledgebaseId 不能为空");
-
-        ArrayNode knowledgebaseIds = objectMapper.createArrayNode();
-        knowledgebaseIds.add(knowledgebaseId);
-        return knowledgebaseIds;
+        return knowledgebaseId.trim();
     }
 
     private JsonNode invokeAndExtractData(String url, ObjectNode payload) {
@@ -206,7 +213,7 @@ public class MemoryLibraryClient {
     }
 
     private String buildSearchUrl() {
-        return normalizeBaseUrl() + "/search";
+        return normalizeBaseUrl() + "/memory_nodes/search";
     }
 
     private String buildAddUrl() {
