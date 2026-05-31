@@ -157,6 +157,52 @@ X-User-Id: <用户ID>
 - 方法注释: 使用 Javadoc 风格
 - 常量定义: 使用枚举或常量类
 
+## Memory Library 配置与运维
+
+### 1) 必填配置
+
+- DashScope API Key（建议通过环境变量注入）：
+
+```bash
+export DASHSCOPE_API_KEY=你的密钥
+```
+
+- 记忆库 ID（`application.yml`）：
+
+```yaml
+memory:
+  library:
+    enabled: true
+    knowledgebase-id: 5eb944ee565c400d8fb71e6ab119dfe3
+    similarity-threshold: 0.6
+    max-results: 8
+```
+
+说明：
+- `DASHSCOPE_API_KEY` 为空时，依赖 DashScope 的能力不可用；
+- `knowledgebase-id` 需与阿里云 DashScope 侧已创建的 Knowledge Base 对应；
+- 生产环境建议通过环境变量或配置中心覆盖以上参数，不要将密钥写死在仓库。
+
+### 2) Redis Stream 运行说明
+
+Memory 异步写入链路使用 Redis Stream，默认键如下：
+- 主队列：`memory:events:main`
+- 重试队列：`memory:events:retry`
+- 死信队列：`memory:events:dlq`
+- 幂等键前缀：`memory:event:idempotent:`
+
+建议巡检项：
+- `memory:events:main` 长度是否持续堆积（消费者是否异常）；
+- `memory:events:retry` 是否突增（外部依赖抖动）；
+- 幂等键 TTL 是否正常过期（避免重复消费和键泄漏）。
+
+### 3) DLQ 运维建议
+
+- 触发场景：超过最大重试次数、不可重试异常、原始消息反序列化失败；
+- 排障优先级：先看 `failure_reason`，再结合上游请求和日志定位；
+- 处置流程：修复根因后，按需将 DLQ 事件回放到主队列或人工补偿；
+- 安全要求：DLQ 记录中的敏感字段会做脱敏，但运维侧仍需遵守最小权限与日志访问审计策略。
+
 ## License
 
 MIT
