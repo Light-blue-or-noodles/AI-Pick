@@ -50,19 +50,24 @@ public class MemoryLibraryClient {
 
         ArrayNode messageNodes = payload.putArray("messages");
         for (Map<String, String> message : messages) {
+            String role = requireMessageField(message, "role");
+            String content = requireMessageField(message, "content");
             ObjectNode messageNode = messageNodes.addObject();
-            if (message == null || message.isEmpty()) {
-                continue;
-            }
-            for (Map.Entry<String, String> entry : message.entrySet()) {
-                if (entry.getValue() != null) {
-                    messageNode.put(entry.getKey(), entry.getValue());
-                } else {
-                    messageNode.putNull(entry.getKey());
-                }
-            }
+            messageNode.put("role", role);
+            messageNode.put("content", content);
         }
         return payload;
+    }
+
+    private String requireMessageField(Map<String, String> message, String fieldName) {
+        if (message == null || message.isEmpty()) {
+            throw new IllegalArgumentException("message 不能为空");
+        }
+        String fieldValue = message.get(fieldName);
+        if (!StringUtils.hasText(fieldValue)) {
+            throw new IllegalArgumentException("message." + fieldName + " 不能为空");
+        }
+        return fieldValue;
     }
 
     private ArrayNode buildKnowledgebaseIdsNode() {

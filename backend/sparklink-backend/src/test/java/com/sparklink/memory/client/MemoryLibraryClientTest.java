@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sparklink.memory.config.MemoryLibraryProperties;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MemoryLibraryClientTest {
 
@@ -54,5 +56,78 @@ class MemoryLibraryClientTest {
         assertEquals("你好", payload.path("messages").get(0).path("content").asText());
         assertEquals("assistant", payload.path("messages").get(1).path("role").asText());
         assertEquals("你好，我在", payload.path("messages").get(1).path("content").asText());
+    }
+
+    @Test
+    void buildAddPayload_withNullMessage_throwsIllegalArgumentException() {
+        MemoryLibraryProperties properties = new MemoryLibraryProperties();
+        MemoryLibraryClient client = new MemoryLibraryClient(properties);
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "user", "content", "ok"));
+        messages.add(null);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> client.buildAddPayload("sparklink:user:10010", messages));
+    }
+
+    @Test
+    void buildAddPayload_withEmptyMessage_throwsIllegalArgumentException() {
+        MemoryLibraryProperties properties = new MemoryLibraryProperties();
+        MemoryLibraryClient client = new MemoryLibraryClient(properties);
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", "user", "content", "ok"),
+                Map.of()
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> client.buildAddPayload("sparklink:user:10010", messages));
+    }
+
+    @Test
+    void buildAddPayload_withMissingRole_throwsIllegalArgumentException() {
+        MemoryLibraryProperties properties = new MemoryLibraryProperties();
+        MemoryLibraryClient client = new MemoryLibraryClient(properties);
+        List<Map<String, String>> messages = List.of(
+                Map.of("content", "only-content")
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> client.buildAddPayload("sparklink:user:10010", messages));
+    }
+
+    @Test
+    void buildAddPayload_withMissingContent_throwsIllegalArgumentException() {
+        MemoryLibraryProperties properties = new MemoryLibraryProperties();
+        MemoryLibraryClient client = new MemoryLibraryClient(properties);
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", "user")
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> client.buildAddPayload("sparklink:user:10010", messages));
+    }
+
+    @Test
+    void buildAddPayload_withBlankRole_throwsIllegalArgumentException() {
+        MemoryLibraryProperties properties = new MemoryLibraryProperties();
+        MemoryLibraryClient client = new MemoryLibraryClient(properties);
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", " ", "content", "hello")
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> client.buildAddPayload("sparklink:user:10010", messages));
+    }
+
+    @Test
+    void buildAddPayload_withBlankContent_throwsIllegalArgumentException() {
+        MemoryLibraryProperties properties = new MemoryLibraryProperties();
+        MemoryLibraryClient client = new MemoryLibraryClient(properties);
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", "user", "content", " ")
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> client.buildAddPayload("sparklink:user:10010", messages));
     }
 }
