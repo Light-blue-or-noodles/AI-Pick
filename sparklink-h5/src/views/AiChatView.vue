@@ -128,6 +128,18 @@ function persistCurrentConversation() {
   saveConversationCache(sid, messages.value);
 }
 
+function getQuickQueryText() {
+  const quick = route.query.quick;
+  if (!quick) {
+    return '';
+  }
+  try {
+    return decodeURIComponent(String(quick)).trim();
+  } catch {
+    return String(quick).trim();
+  }
+}
+
 async function loadHistory() {
   const sid = sessionId.value.trim();
   if (!sid) {
@@ -260,9 +272,12 @@ async function send(textFromQuick) {
 onMounted(async () => {
   sessionId.value = getItem(sessionKey.value) || '';
   await loadHistory();
-  const quick = route.query.quick;
-  if (quick && !messages.value.length) {
-    send(decodeURIComponent(String(quick)));
+  scrollBottom();
+  const quickText = getQuickQueryText();
+  if (quickText) {
+    await send(quickText);
+    const { quick: _quick, ...restQuery } = route.query;
+    router.replace({ name: 'ai-chat', query: restQuery });
   }
 });
 </script>

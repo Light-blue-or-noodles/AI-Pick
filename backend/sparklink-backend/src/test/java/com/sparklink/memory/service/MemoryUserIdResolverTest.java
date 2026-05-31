@@ -16,4 +16,14 @@ class MemoryUserIdResolverTest {
     void resolve_withNullUserId_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> MemoryUserIdResolver.resolve(null));
     }
+
+    @Test
+    void resolve_withEnvironmentTag_returnsEnvironmentScopedIdentityKey() {
+        assertEquals("sparklink:dev:user:10086", MemoryUserIdResolver.resolve(10086L, "DEV"));
+    }
+
+    @Test
+    void resolve_withBlankEnvironmentTag_fallbacksToLegacyIdentityKey() {
+        assertEquals("sparklink:user:10086", MemoryUserIdResolver.resolve(10086L, "  "));
+    }
 }

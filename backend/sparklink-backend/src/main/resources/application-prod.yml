@@ -105,6 +105,10 @@ storage:
   local:
     root-dir: ${upload.dir:uploads}
 
+memory:
+  library:
+    environment-tag: ${MEMORY_LIBRARY_ENVIRONMENT_TAG:prod}
+
 # 腾讯云 IM（生产环境必须注入，勿在文件中写密钥）
 tencent:
   im:

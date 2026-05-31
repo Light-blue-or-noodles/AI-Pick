@@ -117,6 +117,7 @@ memory:
   library:
     enabled: true
     knowledgebase-id: ${MEMORY_LIBRARY_KNOWLEDGEBASE_ID:5eb944ee565c400d8fb71e6ab119dfe3}
+    environment-tag: ${MEMORY_LIBRARY_ENVIRONMENT_TAG:dev}
     api-key: ${DASHSCOPE_API_KEY:}
     base-url: ${MEMORY_LIBRARY_BASE_URL:https://dashscope.aliyuncs.com/api/v2/apps/memory}
     similarity-threshold: 0.6

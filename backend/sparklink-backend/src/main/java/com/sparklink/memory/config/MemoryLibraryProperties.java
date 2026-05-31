@@ -43,6 +43,11 @@ public class MemoryLibraryProperties {
     private Integer maxResults = 8;
 
     /**
+     * 记忆身份环境标识（例如 dev、prod）。
+     */
+    private String environmentTag = "";
+
+    /**
      * 是否启用消费者轮询。
      */
     private boolean consumerEnabled = true;
@@ -103,6 +108,14 @@ public class MemoryLibraryProperties {
 
     public void setMaxResults(Integer maxResults) {
         this.maxResults = maxResults;
+    }
+
+    public String getEnvironmentTag() {
+        return environmentTag;
+    }
+
+    public void setEnvironmentTag(String environmentTag) {
+        this.environmentTag = environmentTag;
     }
 
     public boolean isConsumerEnabled() {

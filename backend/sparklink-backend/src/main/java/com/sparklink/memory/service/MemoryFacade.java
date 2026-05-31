@@ -2,6 +2,7 @@ package com.sparklink.memory.service;
 
 import cn.hutool.core.util.IdUtil;
 import com.sparklink.memory.client.MemoryLibraryClient;
+import com.sparklink.memory.config.MemoryLibraryProperties;
 import com.sparklink.memory.filter.MemoryFieldWhitelistFilter;
 import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryContext;
@@ -28,22 +29,39 @@ public class MemoryFacade {
     private final MemoryEventProducer memoryEventProducer;
     private final MemoryLibraryClient memoryLibraryClient;
     private final MemoryMetricsRecorder memoryMetricsRecorder;
+    private final String memoryEnvironmentTag;
 
     public MemoryFacade(MemoryEventProducer memoryEventProducer, MemoryLibraryClient memoryLibraryClient) {
-        this(memoryEventProducer, memoryLibraryClient, new MemoryMetricsRecorder());
+        this(memoryEventProducer, memoryLibraryClient, new MemoryMetricsRecorder(), "");
     }
 
     MemoryFacade(MemoryEventProducer memoryEventProducer, MemoryMetricsRecorder memoryMetricsRecorder) {
-        this(memoryEventProducer, null, memoryMetricsRecorder);
+        this(memoryEventProducer, null, memoryMetricsRecorder, "");
+    }
+
+    public MemoryFacade(MemoryEventProducer memoryEventProducer,
+                        MemoryLibraryClient memoryLibraryClient,
+                        MemoryMetricsRecorder memoryMetricsRecorder) {
+        this(memoryEventProducer, memoryLibraryClient, memoryMetricsRecorder, "");
     }
 
     @Autowired
     public MemoryFacade(MemoryEventProducer memoryEventProducer,
                         MemoryLibraryClient memoryLibraryClient,
-                        MemoryMetricsRecorder memoryMetricsRecorder) {
+                        MemoryMetricsRecorder memoryMetricsRecorder,
+                        MemoryLibraryProperties memoryLibraryProperties) {
+        this(memoryEventProducer, memoryLibraryClient, memoryMetricsRecorder,
+                memoryLibraryProperties == null ? "" : memoryLibraryProperties.getEnvironmentTag());
+    }
+
+    private MemoryFacade(MemoryEventProducer memoryEventProducer,
+                         MemoryLibraryClient memoryLibraryClient,
+                         MemoryMetricsRecorder memoryMetricsRecorder,
+                         String memoryEnvironmentTag) {
         this.memoryEventProducer = memoryEventProducer;
         this.memoryLibraryClient = memoryLibraryClient;
         this.memoryMetricsRecorder = memoryMetricsRecorder;
+        this.memoryEnvironmentTag = memoryEnvironmentTag;
     }
 
     /**
@@ -57,7 +75,7 @@ public class MemoryFacade {
             if (memoryLibraryClient == null) {
                 return MemoryContext.empty();
             }
-            String memoryUserId = MemoryUserIdResolver.resolve(userId);
+            String memoryUserId = MemoryUserIdResolver.resolve(userId, memoryEnvironmentTag);
             MemoryContext context = memoryLibraryClient.searchMemory(memoryUserId, query);
             if (context == null || context.isEmpty()) {
                 return MemoryContext.empty();
@@ -115,7 +133,7 @@ public class MemoryFacade {
             return;
         }
         try {
-            String memoryUserId = MemoryUserIdResolver.resolve(userId);
+            String memoryUserId = MemoryUserIdResolver.resolve(userId, memoryEnvironmentTag);
             List<Map<String, String>> messages = List.of(
                     Map.of("role", "user", "content", userMessage),
                     Map.of("role", "assistant", "content", assistantMessage)
