@@ -10,6 +10,9 @@ server:
 app:
   allow-test-login: ${ALLOW_TEST_LOGIN:true}
   im-batch-import-secret: ${IM_BATCH_IMPORT_SECRET:}
+  chat:
+    tools-enabled: ${CHAT_TOOLS_ENABLED:true}
+    tools-timeout-ms: ${CHAT_TOOLS_TIMEOUT_MS:25000}
 
 spring:
   application:
@@ -113,9 +116,14 @@ storage:
 memory:
   library:
     enabled: true
-    knowledgebase-id: 5eb944ee565c400d8fb71e6ab119dfe3
+    knowledgebase-id: ${MEMORY_LIBRARY_KNOWLEDGEBASE_ID:5eb944ee565c400d8fb71e6ab119dfe3}
+    api-key: ${DASHSCOPE_API_KEY:}
+    base-url: ${MEMORY_LIBRARY_BASE_URL:https://dashscope.aliyuncs.com/api/v2/apps/memory}
     similarity-threshold: 0.6
     max-results: 8
+    consumer-enabled: ${MEMORY_LIBRARY_CONSUMER_ENABLED:true}
+    consumer-poll-interval-ms: ${MEMORY_LIBRARY_CONSUMER_POLL_INTERVAL_MS:2000}
+    consumer-batch-size: ${MEMORY_LIBRARY_CONSUMER_BATCH_SIZE:50}
 
 # 腾讯云即时通信 IM（UserSig 仅在后端签发；密钥勿提交公开仓库，生产务必用环境变量覆盖）
 tencent:

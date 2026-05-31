@@ -1,5 +1,6 @@
 package com.sparklink.memory.service;
 
+import com.sparklink.memory.client.MemoryLibraryClient;
 import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryContext;
 import com.sparklink.memory.queue.MemoryEventProducer;
@@ -14,8 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -32,19 +34,41 @@ class MemoryFacadeTest {
     @Mock
     private MemoryMetricsRecorder memoryMetricsRecorder;
 
+    @Mock
+    private MemoryLibraryClient memoryLibraryClient;
+
     private MemoryFacade memoryFacade;
 
     @BeforeEach
     void setUp() {
-        memoryFacade = new MemoryFacade(memoryEventProducer, memoryMetricsRecorder);
+        memoryFacade = new MemoryFacade(memoryEventProducer, memoryLibraryClient, memoryMetricsRecorder);
     }
 
     @Test
-    void recallForPrompt_whenNoRecallImplementation_returnsNullContext() {
+    void recallForPrompt_whenSearchReturnsData_shouldFilterSensitiveAndCountSuccess() {
+        when(memoryLibraryClient.searchMemory(eq("sparklink:user:10086"), eq("我喜欢打羽毛球")))
+                .thenReturn(MemoryContext.of(
+                        List.of("用户偏好羽毛球活动"),
+                        Map.of("年龄", "28", "爱好", "羽毛球")
+                ));
+
         MemoryContext context = memoryFacade.recallForPrompt(10086L, "我喜欢打羽毛球");
-        assertNull(context);
-        verify(memoryMetricsRecorder, never()).recordSearchSuccess();
+        assertNotNull(context);
+        assertFalse(context.isEmpty());
+        assertTrue(context.getMemorySnippets().contains("用户偏好羽毛球活动"));
+        assertFalse(context.getProfileAttributes().containsKey("年龄"));
+        assertEquals("羽毛球", context.getProfileAttributes().get("爱好"));
+        verify(memoryMetricsRecorder).recordSearchSuccess();
         verify(memoryMetricsRecorder, never()).recordSearchFailure();
+    }
+
+    @Test
+    void recallForPrompt_whenSearchThrows_shouldReturnEmptyAndCountFailure() {
+        when(memoryLibraryClient.searchMemory(any(), any())).thenThrow(new RuntimeException("search failed"));
+        MemoryContext context = memoryFacade.recallForPrompt(10086L, "测试");
+        assertNotNull(context);
+        assertTrue(context.isEmpty());
+        verify(memoryMetricsRecorder).recordSearchFailure();
     }
 
     @Test

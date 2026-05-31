@@ -1,19 +1,19 @@
 package com.sparklink.memory.queue;
 
 import com.sparklink.memory.client.MemoryLibraryClient;
+import com.sparklink.memory.config.MemoryLibraryProperties;
 import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.time.Instant;
@@ -51,28 +51,38 @@ public class MemoryEventConsumer {
     private final StringRedisTemplate stringRedisTemplate;
     private final MemoryAddExecutor memoryAddExecutor;
     private final MemoryMetricsRecorder memoryMetricsRecorder;
+    private final MemoryLibraryProperties memoryLibraryProperties;
 
     public MemoryEventConsumer(StringRedisTemplate stringRedisTemplate, MemoryLibraryClient memoryLibraryClient) {
-        this(stringRedisTemplate, new ReflectiveMemoryAddExecutor(memoryLibraryClient), new MemoryMetricsRecorder());
+        this(stringRedisTemplate, memoryLibraryClient::addMemory, new MemoryMetricsRecorder(), new MemoryLibraryProperties());
     }
 
     @Autowired
     public MemoryEventConsumer(StringRedisTemplate stringRedisTemplate,
                                MemoryLibraryClient memoryLibraryClient,
-                               MemoryMetricsRecorder memoryMetricsRecorder) {
-        this(stringRedisTemplate, new ReflectiveMemoryAddExecutor(memoryLibraryClient), memoryMetricsRecorder);
+                               MemoryMetricsRecorder memoryMetricsRecorder,
+                               MemoryLibraryProperties memoryLibraryProperties) {
+        this(stringRedisTemplate, memoryLibraryClient::addMemory, memoryMetricsRecorder, memoryLibraryProperties);
     }
 
     MemoryEventConsumer(StringRedisTemplate stringRedisTemplate, MemoryAddExecutor memoryAddExecutor) {
-        this(stringRedisTemplate, memoryAddExecutor, new MemoryMetricsRecorder());
+        this(stringRedisTemplate, memoryAddExecutor, new MemoryMetricsRecorder(), new MemoryLibraryProperties());
     }
 
     MemoryEventConsumer(StringRedisTemplate stringRedisTemplate,
                         MemoryAddExecutor memoryAddExecutor,
                         MemoryMetricsRecorder memoryMetricsRecorder) {
+        this(stringRedisTemplate, memoryAddExecutor, memoryMetricsRecorder, new MemoryLibraryProperties());
+    }
+
+    MemoryEventConsumer(StringRedisTemplate stringRedisTemplate,
+                        MemoryAddExecutor memoryAddExecutor,
+                        MemoryMetricsRecorder memoryMetricsRecorder,
+                        MemoryLibraryProperties memoryLibraryProperties) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.memoryAddExecutor = memoryAddExecutor;
         this.memoryMetricsRecorder = memoryMetricsRecorder;
+        this.memoryLibraryProperties = memoryLibraryProperties;
     }
 
     public void consume(MemoryEvent event) {
@@ -98,6 +108,20 @@ public class MemoryEventConsumer {
         } catch (Exception ex) {
             moveRawRecordToDlq(record, buildErrorMessage(ex));
         }
+    }
+
+    /**
+     * 轮询主流与重试流，提供可运行的消费入口。
+     */
+    @Scheduled(fixedDelayString = "${memory.library.consumer-poll-interval-ms:2000}")
+    public void pollStreams() {
+        if (memoryLibraryProperties == null
+                || !memoryLibraryProperties.isEnabled()
+                || !memoryLibraryProperties.isConsumerEnabled()) {
+            return;
+        }
+        drainStream(MemoryEventProducer.MAIN_STREAM_KEY, false);
+        drainStream(RETRY_STREAM_KEY, true);
     }
 
     private boolean acquireIdempotency(String idempotencyKey) {
@@ -148,6 +172,42 @@ public class MemoryEventConsumer {
 
     private void releaseIdempotency(String idempotencyKey) {
         stringRedisTemplate.delete(IDEMPOTENCY_PREFIX + idempotencyKey);
+    }
+
+    private void drainStream(String streamKey, boolean retryStream) {
+        int batchSize = memoryLibraryProperties.getConsumerBatchSize() == null
+                ? 50
+                : Math.max(1, memoryLibraryProperties.getConsumerBatchSize());
+        List<MapRecord<String, Object, Object>> records =
+                stringRedisTemplate.opsForStream().range(streamKey, org.springframework.data.domain.Range.unbounded());
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+        int processed = 0;
+        for (MapRecord<String, Object, Object> record : records) {
+            if (processed >= batchSize) {
+                break;
+            }
+            if (retryStream && !isDueRetryRecord(record)) {
+                continue;
+            }
+            consumeRecord(record);
+            stringRedisTemplate.opsForStream().delete(streamKey, record.getId());
+            processed++;
+        }
+    }
+
+    private boolean isDueRetryRecord(MapRecord<String, Object, Object> record) {
+        Object value = record.getValue().get(MemoryEvent.FIELD_NEXT_RETRY_AT);
+        if (value == null) {
+            return true;
+        }
+        try {
+            Instant nextRetryAt = Instant.parse(String.valueOf(value));
+            return !nextRetryAt.isAfter(Instant.now());
+        } catch (Exception ex) {
+            return true;
+        }
     }
 
     private boolean isRetryable(Throwable throwable) {
@@ -217,38 +277,4 @@ public class MemoryEventConsumer {
         void addMemory(String memoryUserId, List<Map<String, String>> messages);
     }
 
-    private static final class ReflectiveMemoryAddExecutor implements MemoryAddExecutor {
-        private final MemoryLibraryClient memoryLibraryClient;
-        private final Method addMemoryMethod;
-
-        private ReflectiveMemoryAddExecutor(MemoryLibraryClient memoryLibraryClient) {
-            this.memoryLibraryClient = memoryLibraryClient;
-            this.addMemoryMethod = resolveAddMemoryMethod(memoryLibraryClient);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public void addMemory(String memoryUserId, List<Map<String, String>> messages) {
-            try {
-                addMemoryMethod.invoke(memoryLibraryClient, memoryUserId, messages);
-            } catch (IllegalAccessException ex) {
-                throw new IllegalStateException("调用 MemoryLibraryClient.addMemory 失败", ex);
-            } catch (InvocationTargetException ex) {
-                Throwable target = ex.getTargetException();
-                if (target instanceof RuntimeException runtimeException) {
-                    throw runtimeException;
-                }
-                throw new IllegalStateException("MemoryLibraryClient.addMemory 执行失败", target);
-            }
-        }
-
-        private static Method resolveAddMemoryMethod(MemoryLibraryClient memoryLibraryClient) {
-            Assert.notNull(memoryLibraryClient, "memoryLibraryClient 不能为空");
-            try {
-                return memoryLibraryClient.getClass().getMethod("addMemory", String.class, List.class);
-            } catch (NoSuchMethodException ex) {
-                throw new IllegalStateException("MemoryLibraryClient.addMemory(String, List) 未实现", ex);
-            }
-        }
-    }
 }

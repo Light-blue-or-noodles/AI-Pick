@@ -23,6 +23,16 @@ public class MemoryLibraryProperties {
     private String knowledgebaseId = "5eb944ee565c400d8fb71e6ab119dfe3";
 
     /**
+     * 阿里云 API Key。
+     */
+    private String apiKey = "";
+
+    /**
+     * 记忆库 API 基础地址。
+     */
+    private String baseUrl = "https://dashscope.aliyuncs.com/api/v2/apps/memory";
+
+    /**
      * 相似度阈值。
      */
     private Double similarityThreshold = 0.6D;
@@ -31,6 +41,21 @@ public class MemoryLibraryProperties {
      * 最大返回条数。
      */
     private Integer maxResults = 8;
+
+    /**
+     * 是否启用消费者轮询。
+     */
+    private boolean consumerEnabled = true;
+
+    /**
+     * 轮询间隔毫秒。
+     */
+    private Long consumerPollIntervalMs = 2000L;
+
+    /**
+     * 单次轮询批量上限。
+     */
+    private Integer consumerBatchSize = 50;
 
     public boolean isEnabled() {
         return enabled;
@@ -48,6 +73,22 @@ public class MemoryLibraryProperties {
         this.knowledgebaseId = knowledgebaseId;
     }
 
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
     public Double getSimilarityThreshold() {
         return similarityThreshold;
     }
@@ -62,5 +103,29 @@ public class MemoryLibraryProperties {
 
     public void setMaxResults(Integer maxResults) {
         this.maxResults = maxResults;
+    }
+
+    public boolean isConsumerEnabled() {
+        return consumerEnabled;
+    }
+
+    public void setConsumerEnabled(boolean consumerEnabled) {
+        this.consumerEnabled = consumerEnabled;
+    }
+
+    public Long getConsumerPollIntervalMs() {
+        return consumerPollIntervalMs;
+    }
+
+    public void setConsumerPollIntervalMs(Long consumerPollIntervalMs) {
+        this.consumerPollIntervalMs = consumerPollIntervalMs;
+    }
+
+    public Integer getConsumerBatchSize() {
+        return consumerBatchSize;
+    }
+
+    public void setConsumerBatchSize(Integer consumerBatchSize) {
+        this.consumerBatchSize = consumerBatchSize;
     }
 }
