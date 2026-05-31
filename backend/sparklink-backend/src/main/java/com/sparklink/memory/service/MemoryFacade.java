@@ -1,9 +1,11 @@
 package com.sparklink.memory.service;
 
 import cn.hutool.core.util.IdUtil;
+import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryContext;
 import com.sparklink.memory.queue.MemoryEventProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -18,9 +20,16 @@ import java.util.Map;
 public class MemoryFacade {
 
     private final MemoryEventProducer memoryEventProducer;
+    private final MemoryMetricsRecorder memoryMetricsRecorder;
 
     public MemoryFacade(MemoryEventProducer memoryEventProducer) {
+        this(memoryEventProducer, new MemoryMetricsRecorder());
+    }
+
+    @Autowired
+    public MemoryFacade(MemoryEventProducer memoryEventProducer, MemoryMetricsRecorder memoryMetricsRecorder) {
         this.memoryEventProducer = memoryEventProducer;
+        this.memoryMetricsRecorder = memoryMetricsRecorder;
     }
 
     /**
@@ -30,6 +39,7 @@ public class MemoryFacade {
         if (userId == null || !StringUtils.hasText(query)) {
             return null;
         }
+        memoryMetricsRecorder.recordSearchSuccess();
         return null;
     }
 
@@ -57,8 +67,10 @@ public class MemoryFacade {
                     Map.of("role", "assistant", "content", assistantMessage)
             );
             memoryEventProducer.publish(memoryUserId, messages, IdUtil.fastSimpleUUID());
+            memoryMetricsRecorder.recordAddSuccess();
         } catch (Exception ex) {
             // 记忆写入为异步增强能力，不应影响主业务响应
+            memoryMetricsRecorder.recordDlq(ex.getClass().getSimpleName());
             log.warn("enqueue conversation to memory failed, userId={}, reason={}", userId, ex.getMessage());
         }
     }

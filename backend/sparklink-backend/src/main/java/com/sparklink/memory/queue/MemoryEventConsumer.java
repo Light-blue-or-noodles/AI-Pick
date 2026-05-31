@@ -1,7 +1,9 @@
 package com.sparklink.memory.queue;
 
 import com.sparklink.memory.client.MemoryLibraryClient;
+import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryEvent;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -44,14 +46,29 @@ public class MemoryEventConsumer {
 
     private final StringRedisTemplate stringRedisTemplate;
     private final MemoryAddExecutor memoryAddExecutor;
+    private final MemoryMetricsRecorder memoryMetricsRecorder;
 
     public MemoryEventConsumer(StringRedisTemplate stringRedisTemplate, MemoryLibraryClient memoryLibraryClient) {
-        this(stringRedisTemplate, new ReflectiveMemoryAddExecutor(memoryLibraryClient));
+        this(stringRedisTemplate, new ReflectiveMemoryAddExecutor(memoryLibraryClient), new MemoryMetricsRecorder());
+    }
+
+    @Autowired
+    public MemoryEventConsumer(StringRedisTemplate stringRedisTemplate,
+                               MemoryLibraryClient memoryLibraryClient,
+                               MemoryMetricsRecorder memoryMetricsRecorder) {
+        this(stringRedisTemplate, new ReflectiveMemoryAddExecutor(memoryLibraryClient), memoryMetricsRecorder);
     }
 
     MemoryEventConsumer(StringRedisTemplate stringRedisTemplate, MemoryAddExecutor memoryAddExecutor) {
+        this(stringRedisTemplate, memoryAddExecutor, new MemoryMetricsRecorder());
+    }
+
+    MemoryEventConsumer(StringRedisTemplate stringRedisTemplate,
+                        MemoryAddExecutor memoryAddExecutor,
+                        MemoryMetricsRecorder memoryMetricsRecorder) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.memoryAddExecutor = memoryAddExecutor;
+        this.memoryMetricsRecorder = memoryMetricsRecorder;
     }
 
     public void consume(MemoryEvent event) {
@@ -62,6 +79,7 @@ public class MemoryEventConsumer {
 
         try {
             memoryAddExecutor.addMemory(event.getMemoryUserId(), event.getMessages());
+            memoryMetricsRecorder.recordAddSuccess();
         } catch (Exception ex) {
             handleFailure(event, ex);
         }
@@ -101,22 +119,27 @@ public class MemoryEventConsumer {
         long backoffSeconds = RETRY_BACKOFF_SECONDS[currentRetryCount];
         MemoryEvent retryEvent = event.withRetry(nextRetryCount, Instant.now().plusSeconds(backoffSeconds), sanitizeAndTruncate(errorMessage));
         stringRedisTemplate.opsForStream().add(RETRY_STREAM_KEY, retryEvent.toStreamBody());
+        memoryMetricsRecorder.recordRetry();
     }
 
     private void moveToDlq(MemoryEvent event, String errorMessage) {
+        String sanitizedReason = sanitizeAndTruncate(errorMessage);
         Map<String, Object> body = new LinkedHashMap<>(event.toStreamBody());
-        body.put(MemoryEvent.FIELD_FAILURE_REASON, sanitizeAndTruncate(errorMessage));
+        body.put(MemoryEvent.FIELD_FAILURE_REASON, sanitizedReason);
         stringRedisTemplate.opsForStream().add(DLQ_STREAM_KEY, body);
+        memoryMetricsRecorder.recordDlq(sanitizedReason);
     }
 
     private void moveRawRecordToDlq(MapRecord<String, Object, Object> record, String errorMessage) {
+        String sanitizedReason = sanitizeAndTruncate(errorMessage);
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("source_stream", record.getStream());
         body.put("source_record_id", String.valueOf(record.getId()));
-        body.put(MemoryEvent.FIELD_FAILURE_REASON, sanitizeAndTruncate(errorMessage));
+        body.put(MemoryEvent.FIELD_FAILURE_REASON, sanitizedReason);
         body.put("raw_summary", summarizeRecordBody(record.getValue()));
         body.put(MemoryEvent.FIELD_CREATED_AT, Instant.now().toString());
         stringRedisTemplate.opsForStream().add(DLQ_STREAM_KEY, body);
+        memoryMetricsRecorder.recordDlq(sanitizedReason);
     }
 
     private void releaseIdempotency(String idempotencyKey) {
@@ -167,8 +190,13 @@ public class MemoryEventConsumer {
                 .replace('\r', ' ')
                 .replace('\t', ' ')
                 .replaceAll("\\p{Cntrl}", " ");
+        boolean hasSensitiveKv = SENSITIVE_KV_PATTERN.matcher(sanitized).find();
         sanitized = SENSITIVE_KV_PATTERN.matcher(sanitized).replaceAll("$1=[REDACTED]");
+        boolean hasBearerToken = BEARER_PATTERN.matcher(sanitized).find();
         sanitized = BEARER_PATTERN.matcher(sanitized).replaceAll("Bearer [REDACTED]");
+        if (hasSensitiveKv || hasBearerToken) {
+            memoryMetricsRecorder.recordSensitiveFieldBlock();
+        }
         sanitized = sanitized.replaceAll("\\s{2,}", " ").trim();
         if (sanitized.length() > MAX_ERROR_LENGTH) {
             return sanitized.substring(0, MAX_ERROR_LENGTH);
