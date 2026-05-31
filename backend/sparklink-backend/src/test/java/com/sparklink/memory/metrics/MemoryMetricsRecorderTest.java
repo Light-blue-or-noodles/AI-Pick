@@ -13,7 +13,10 @@ class MemoryMetricsRecorderTest {
         MemoryMetricsRecorder recorder = new MemoryMetricsRecorder();
 
         recorder.recordSearchSuccess();
+        recorder.recordSearchFailure();
         recorder.recordAddSuccess();
+        recorder.recordEnqueueSuccess();
+        recorder.recordEnqueueFailure();
         recorder.recordRetry();
         recorder.recordRetry();
         recorder.recordDlq("timeout");
@@ -23,7 +26,10 @@ class MemoryMetricsRecorderTest {
 
         MemoryMetricsRecorder.Snapshot snapshot = recorder.snapshot();
         assertEquals(1L, snapshot.searchSuccessCount());
+        assertEquals(1L, snapshot.searchFailureCount());
         assertEquals(1L, snapshot.addSuccessCount());
+        assertEquals(1L, snapshot.enqueueSuccessCount());
+        assertEquals(1L, snapshot.enqueueFailureCount());
         assertEquals(2L, snapshot.retryCount());
         assertEquals(3L, snapshot.dlqCount());
         assertEquals(1L, snapshot.sensitiveFieldBlockCount());

@@ -18,7 +18,10 @@ public class MemoryMetricsRecorder {
     private static final String UNKNOWN_REASON = "unknown";
 
     private final AtomicLong searchSuccessCount = new AtomicLong(0);
+    private final AtomicLong searchFailureCount = new AtomicLong(0);
     private final AtomicLong addSuccessCount = new AtomicLong(0);
+    private final AtomicLong enqueueSuccessCount = new AtomicLong(0);
+    private final AtomicLong enqueueFailureCount = new AtomicLong(0);
     private final AtomicLong retryCount = new AtomicLong(0);
     private final AtomicLong dlqCount = new AtomicLong(0);
     private final AtomicLong sensitiveFieldBlockCount = new AtomicLong(0);
@@ -28,8 +31,20 @@ public class MemoryMetricsRecorder {
         searchSuccessCount.incrementAndGet();
     }
 
+    public void recordSearchFailure() {
+        searchFailureCount.incrementAndGet();
+    }
+
     public void recordAddSuccess() {
         addSuccessCount.incrementAndGet();
+    }
+
+    public void recordEnqueueSuccess() {
+        enqueueSuccessCount.incrementAndGet();
+    }
+
+    public void recordEnqueueFailure() {
+        enqueueFailureCount.incrementAndGet();
     }
 
     public void recordRetry() {
@@ -51,7 +66,10 @@ public class MemoryMetricsRecorder {
         dlqReasonCounts.forEach((key, value) -> reasonSnapshot.put(key, value.get()));
         return new Snapshot(
                 searchSuccessCount.get(),
+                searchFailureCount.get(),
                 addSuccessCount.get(),
+                enqueueSuccessCount.get(),
+                enqueueFailureCount.get(),
                 retryCount.get(),
                 dlqCount.get(),
                 sensitiveFieldBlockCount.get(),
@@ -60,7 +78,10 @@ public class MemoryMetricsRecorder {
     }
 
     public record Snapshot(long searchSuccessCount,
+                           long searchFailureCount,
                            long addSuccessCount,
+                           long enqueueSuccessCount,
+                           long enqueueFailureCount,
                            long retryCount,
                            long dlqCount,
                            long sensitiveFieldBlockCount,

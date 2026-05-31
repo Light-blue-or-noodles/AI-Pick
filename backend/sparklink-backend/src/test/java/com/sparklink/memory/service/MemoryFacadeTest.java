@@ -44,6 +44,7 @@ class MemoryFacadeTest {
         MemoryContext context = memoryFacade.recallForPrompt(10086L, "我喜欢打羽毛球");
         assertNull(context);
         verify(memoryMetricsRecorder, never()).recordSearchSuccess();
+        verify(memoryMetricsRecorder).recordSearchFailure();
     }
 
     @Test
@@ -67,6 +68,8 @@ class MemoryFacadeTest {
         assertNotNull(idempotencyCaptor.getValue());
         verify(memoryMetricsRecorder, never()).recordAddSuccess();
         verify(memoryMetricsRecorder, never()).recordDlq(any());
+        verify(memoryMetricsRecorder).recordEnqueueSuccess();
+        verify(memoryMetricsRecorder, never()).recordEnqueueFailure();
     }
 
     @Test
@@ -77,6 +80,8 @@ class MemoryFacadeTest {
 
         verify(memoryMetricsRecorder, never()).recordAddSuccess();
         verify(memoryMetricsRecorder, never()).recordDlq(any());
+        verify(memoryMetricsRecorder, never()).recordEnqueueSuccess();
+        verify(memoryMetricsRecorder).recordEnqueueFailure();
     }
 
     @Test

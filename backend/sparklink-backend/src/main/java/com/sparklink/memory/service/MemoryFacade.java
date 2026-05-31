@@ -39,6 +39,7 @@ public class MemoryFacade {
         if (userId == null || !StringUtils.hasText(query)) {
             return null;
         }
+        memoryMetricsRecorder.recordSearchFailure();
         return null;
     }
 
@@ -66,8 +67,10 @@ public class MemoryFacade {
                     Map.of("role", "assistant", "content", assistantMessage)
             );
             memoryEventProducer.publish(memoryUserId, messages, IdUtil.fastSimpleUUID());
+            memoryMetricsRecorder.recordEnqueueSuccess();
         } catch (Exception ex) {
             // 记忆写入为异步增强能力，不应影响主业务响应
+            memoryMetricsRecorder.recordEnqueueFailure();
             log.warn("enqueue conversation to memory failed, userId={}, reason={}", userId, ex.getMessage());
         }
     }
