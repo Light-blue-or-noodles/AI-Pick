@@ -1,5 +1,6 @@
 package com.sparklink.memory.service;
 
+import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryContext;
 import com.sparklink.memory.queue.MemoryEventProducer;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,8 +16,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MemoryFacadeTest {
@@ -24,17 +29,21 @@ class MemoryFacadeTest {
     @Mock
     private MemoryEventProducer memoryEventProducer;
 
+    @Mock
+    private MemoryMetricsRecorder memoryMetricsRecorder;
+
     private MemoryFacade memoryFacade;
 
     @BeforeEach
     void setUp() {
-        memoryFacade = new MemoryFacade(memoryEventProducer);
+        memoryFacade = new MemoryFacade(memoryEventProducer, memoryMetricsRecorder);
     }
 
     @Test
     void recallForPrompt_whenNoRecallImplementation_returnsNullContext() {
         MemoryContext context = memoryFacade.recallForPrompt(10086L, "我喜欢打羽毛球");
         assertNull(context);
+        verify(memoryMetricsRecorder, never()).recordSearchSuccess();
     }
 
     @Test
@@ -56,5 +65,25 @@ class MemoryFacadeTest {
         assertEquals(Map.of("role", "user", "content", "你好"), messages.get(0));
         assertEquals(Map.of("role", "assistant", "content", "你好，我在"), messages.get(1));
         assertNotNull(idempotencyCaptor.getValue());
+        verify(memoryMetricsRecorder, never()).recordAddSuccess();
+        verify(memoryMetricsRecorder, never()).recordDlq(any());
+    }
+
+    @Test
+    void enqueueConversation_whenPublishFails_shouldNotCountDlqOrAddSuccess() {
+        when(memoryEventProducer.publish(any(), any(), any())).thenThrow(new RuntimeException("publish failed"));
+
+        memoryFacade.enqueueConversation(10086L, "你好", "你好，我在");
+
+        verify(memoryMetricsRecorder, never()).recordAddSuccess();
+        verify(memoryMetricsRecorder, never()).recordDlq(any());
+    }
+
+    @Test
+    void enqueueConversation_whenInputInvalid_shouldSkipWithoutMetrics() {
+        memoryFacade.enqueueConversation(null, "你好", "你好，我在");
+
+        verifyNoInteractions(memoryEventProducer);
+        verifyNoInteractions(memoryMetricsRecorder);
     }
 }

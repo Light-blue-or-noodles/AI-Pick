@@ -1,5 +1,6 @@
 package com.sparklink.memory.queue;
 
+import com.sparklink.memory.metrics.MemoryMetricsRecorder;
 import com.sparklink.memory.model.MemoryEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,11 +45,14 @@ class MemoryEventConsumerTest {
     @Mock
     private MemoryEventConsumer.MemoryAddExecutor memoryAddExecutor;
 
+    @Mock
+    private MemoryMetricsRecorder memoryMetricsRecorder;
+
     private MemoryEventConsumer consumer;
 
     @BeforeEach
     void setUp() {
-        consumer = new MemoryEventConsumer(stringRedisTemplate, memoryAddExecutor);
+        consumer = new MemoryEventConsumer(stringRedisTemplate, memoryAddExecutor, memoryMetricsRecorder);
     }
 
     @Test
@@ -90,6 +94,8 @@ class MemoryEventConsumerTest {
         Map<String, Object> body = captor.getValue();
         assertEquals("idem-retry", body.get("idempotency_key"));
         assertEquals("1", body.get("retry_count"));
+        verify(memoryMetricsRecorder).recordRetry();
+        verify(memoryMetricsRecorder, never()).recordDlq(any());
     }
 
     @Test
@@ -109,6 +115,7 @@ class MemoryEventConsumerTest {
         verify(streamOperations).add(eq("memory:events:dlq"), captor.capture());
         Map<String, Object> body = captor.getValue();
         assertEquals("bad payload", body.get("failure_reason"));
+        verify(memoryMetricsRecorder).recordDlq("bad payload");
     }
 
     @Test
@@ -128,6 +135,7 @@ class MemoryEventConsumerTest {
         verify(streamOperations).add(eq("memory:events:dlq"), captor.capture());
         String failureReason = String.valueOf(captor.getValue().get("failure_reason"));
         assertTrue(failureReason.contains("token=[REDACTED]"));
+        verify(memoryMetricsRecorder).recordSensitiveFieldBlock();
     }
 
     @Test
@@ -142,6 +150,29 @@ class MemoryEventConsumerTest {
         verify(memoryAddExecutor).addMemory(eq("sparklink:user:10086"), any());
         verify(streamOperations, never()).add(eq("memory:events:retry"), any(Map.class));
         verify(streamOperations, never()).add(eq("memory:events:dlq"), any(Map.class));
+        verify(memoryMetricsRecorder).recordAddSuccess();
+    }
+
+    @Test
+    void shouldSanitizeJsonStyleSensitiveFieldsWhenMoveToDlq() {
+        MemoryEvent event = buildEvent("idem-json-sensitive", MemoryEventConsumer.MAX_RETRY_COUNT);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(stringRedisTemplate.opsForStream()).thenReturn(streamOperations);
+        when(valueOperations.setIfAbsent(eq("memory:event:idempotent:idem-json-sensitive"), eq("1"), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        org.mockito.Mockito.doThrow(new RuntimeException("{\"token\":\"abc123\",\"apiKey\":\"k-001\"}"))
+                .when(memoryAddExecutor).addMemory(any(), any());
+
+        consumer.consume(event);
+
+        ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(streamOperations).add(eq("memory:events:dlq"), captor.capture());
+        String failureReason = String.valueOf(captor.getValue().get("failure_reason"));
+        assertTrue(failureReason.contains("\"token\":\"[REDACTED]\""));
+        assertTrue(failureReason.contains("\"apiKey\":\"[REDACTED]\""));
+        assertFalse(failureReason.contains("abc123"));
+        assertFalse(failureReason.contains("k-001"));
+        verify(memoryMetricsRecorder).recordSensitiveFieldBlock();
     }
 
     @Test

@@ -42,6 +42,10 @@ public class MemoryEventConsumer {
     private static final long[] RETRY_BACKOFF_SECONDS = {5, 30, 120, 600, 1800, 7200};
     private static final Pattern SENSITIVE_KV_PATTERN =
             Pattern.compile("(?i)(authorization|token|secret|password|passwd|api[-_]?key)\\s*[=:]\\s*\\S+");
+    private static final Pattern SENSITIVE_JSON_DQ_PATTERN =
+            Pattern.compile("(?i)(\"(?:authorization|token|secret|password|passwd|api[-_]?key)\"\\s*:\\s*\")([^\"]*)(\")");
+    private static final Pattern SENSITIVE_JSON_SQ_PATTERN =
+            Pattern.compile("(?i)('(?:authorization|token|secret|password|passwd|api[-_]?key)'\\s*:\\s*')([^']*)(')");
     private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer\\s+[A-Za-z0-9._\\-+/=]+");
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -192,9 +196,13 @@ public class MemoryEventConsumer {
                 .replaceAll("\\p{Cntrl}", " ");
         boolean hasSensitiveKv = SENSITIVE_KV_PATTERN.matcher(sanitized).find();
         sanitized = SENSITIVE_KV_PATTERN.matcher(sanitized).replaceAll("$1=[REDACTED]");
+        boolean hasSensitiveJsonDq = SENSITIVE_JSON_DQ_PATTERN.matcher(sanitized).find();
+        sanitized = SENSITIVE_JSON_DQ_PATTERN.matcher(sanitized).replaceAll("$1[REDACTED]$3");
+        boolean hasSensitiveJsonSq = SENSITIVE_JSON_SQ_PATTERN.matcher(sanitized).find();
+        sanitized = SENSITIVE_JSON_SQ_PATTERN.matcher(sanitized).replaceAll("$1[REDACTED]$3");
         boolean hasBearerToken = BEARER_PATTERN.matcher(sanitized).find();
         sanitized = BEARER_PATTERN.matcher(sanitized).replaceAll("Bearer [REDACTED]");
-        if (hasSensitiveKv || hasBearerToken) {
+        if (hasSensitiveKv || hasSensitiveJsonDq || hasSensitiveJsonSq || hasBearerToken) {
             memoryMetricsRecorder.recordSensitiveFieldBlock();
         }
         sanitized = sanitized.replaceAll("\\s{2,}", " ").trim();
