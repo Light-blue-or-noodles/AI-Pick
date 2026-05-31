@@ -102,9 +102,13 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<ChatMessage> getHistory(String sessionId) {
+    public List<ChatMessage> getHistory(String sessionId, Long userId) {
+        if (!StringUtils.hasText(sessionId) || userId == null) {
+            return List.of();
+        }
         LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatMessage::getSessionId, sessionId)
+                .eq(ChatMessage::getUserId, userId)
                 .orderByAsc(ChatMessage::getCreateTime);
         return chatMessageMapper.selectList(wrapper);
     }

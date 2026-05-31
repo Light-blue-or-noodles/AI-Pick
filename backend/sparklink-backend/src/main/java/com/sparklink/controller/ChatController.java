@@ -42,11 +42,13 @@ public class ChatController {
      * 获取 AI 会话历史（sessionId 为空时返回空列表，避免 500）
      */
     @GetMapping("/ai/history/{sessionId}")
-    public Result<List<ChatMessage>> getHistory(@PathVariable(required = false) String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) {
+    public Result<List<ChatMessage>> getHistory(
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @PathVariable(required = false) String sessionId) {
+        if (sessionId == null || sessionId.isBlank() || userId == null) {
             return Result.success(List.of());
         }
-        List<ChatMessage> history = chatService.getHistory(sessionId);
+        List<ChatMessage> history = chatService.getHistory(sessionId, userId);
         return Result.success(history);
     }
 }

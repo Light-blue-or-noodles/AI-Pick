@@ -1,6 +1,15 @@
 <template>
   <div class="ai-chat page page--no-tab">
-    <van-nav-bar title="AI 助手" left-arrow @click-left="$router.back()" />
+    <van-nav-bar
+      title="AI 助手"
+      left-arrow
+      @click-left="$router.back()"
+      @click-right="startNewSession"
+    >
+      <template #right>
+        <span class="ai-chat__nav-action">开启新会话</span>
+      </template>
+    </van-nav-bar>
     <div ref="scrollEl" class="ai-chat__list">
       <div v-for="msg in messages" :key="msg.id" class="ai-chat__pair">
         <div class="ai-chat__user">{{ msg.content }}</div>
@@ -28,22 +37,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { showToast } from 'vant';
+import { showConfirmDialog, showToast } from 'vant';
 import { post, get } from '@/utils/request';
-import { KEYS, getItem, setItem } from '@/utils/storage';
+import { KEYS, getItem, removeItem, setItem } from '@/utils/storage';
 import { normalizeImageUrl } from '@/utils/mediaUrl';
 import { getApiBaseUrl } from '@/config/env';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 const scrollEl = ref(null);
 const messages = ref([]);
 const inputValue = ref('');
 const isLoading = ref(false);
 const loadingId = ref(null);
-const sessionId = ref(getItem(KEYS.sessionId) || '');
+const sessionKey = computed(() => {
+  const uid = auth.userId ? String(auth.userId) : '';
+  return uid ? `${KEYS.sessionId}:${uid}` : KEYS.sessionId;
+});
+const sessionId = ref('');
+const CACHE_PREFIX = 'aiChat:conversation:';
 
 function scrollBottom() {
   nextTick(() => {
@@ -51,6 +67,65 @@ function scrollBottom() {
       scrollEl.value.scrollTop = scrollEl.value.scrollHeight;
     }
   });
+}
+
+function getConversationCacheKey(sid) {
+  const uid = auth.userId ? String(auth.userId) : 'guest';
+  if (!sid) {
+    return '';
+  }
+  return `${CACHE_PREFIX}${uid}:${sid}`;
+}
+
+function loadConversationCache(sid) {
+  const key = getConversationCacheKey(sid);
+  if (!key) {
+    return [];
+  }
+  const raw = getItem(key);
+  if (!raw) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveConversationCache(sid, list) {
+  const key = getConversationCacheKey(sid);
+  if (!key) {
+    return;
+  }
+  setItem(key, JSON.stringify(Array.isArray(list) ? list : []));
+}
+
+function mergeRecommendsFromCache(list, cachedList) {
+  if (!Array.isArray(list) || !Array.isArray(cachedList) || !cachedList.length) {
+    return list;
+  }
+  const cacheMap = new Map();
+  cachedList.forEach((item) => {
+    const key = `${item?.content || ''}__${item?.reply || ''}`;
+    if (!cacheMap.has(key) && Array.isArray(item?.recommends)) {
+      cacheMap.set(key, item.recommends);
+    }
+  });
+  return list.map((item) => {
+    const key = `${item?.content || ''}__${item?.reply || ''}`;
+    const recommends = cacheMap.get(key);
+    return recommends ? { ...item, recommends } : item;
+  });
+}
+
+function persistCurrentConversation() {
+  const sid = sessionId.value.trim();
+  if (!sid) {
+    return;
+  }
+  saveConversationCache(sid, messages.value);
 }
 
 async function loadHistory() {
@@ -73,7 +148,9 @@ async function loadHistory() {
         i++;
       }
     }
-    messages.value = list;
+    const cached = loadConversationCache(sid);
+    messages.value = mergeRecommendsFromCache(list, cached);
+    persistCurrentConversation();
   } catch {
     messages.value = [];
   }
@@ -96,6 +173,42 @@ function openRecommend(rec) {
     return;
   }
   router.push({ name: 'partner-detail', params: { id: rec.id } });
+}
+
+async function startNewSession() {
+  if (isLoading.value) {
+    return;
+  }
+  const hasConversation = messages.value.length > 0 || !!sessionId.value.trim();
+  if (!hasConversation) {
+    const oldSid = sessionId.value.trim();
+    sessionId.value = '';
+    messages.value = [];
+    removeItem(sessionKey.value);
+    const cacheKey = getConversationCacheKey(oldSid);
+    if (cacheKey) {
+      removeItem(cacheKey);
+    }
+    showToast('已开启新会话');
+    return;
+  }
+  try {
+    await showConfirmDialog({
+      title: '开启新会话',
+      message: '将清空当前对话窗口，并从新会话开始。'
+    });
+    const oldSid = sessionId.value.trim();
+    sessionId.value = '';
+    messages.value = [];
+    removeItem(sessionKey.value);
+    const cacheKey = getConversationCacheKey(oldSid);
+    if (cacheKey) {
+      removeItem(cacheKey);
+    }
+    showToast('已新建会话');
+  } catch {
+    // 用户取消
+  }
 }
 
 async function send(textFromQuick) {
@@ -121,7 +234,7 @@ async function send(textFromQuick) {
     const { reply = '', recommends = [], sessionId: newSid } = payload;
     if (newSid) {
       sessionId.value = newSid;
-      setItem(KEYS.sessionId, newSid);
+      setItem(sessionKey.value, newSid);
     }
     const idx = messages.value.findIndex((m) => m.id === msgId);
     if (idx >= 0) {
@@ -131,6 +244,7 @@ async function send(textFromQuick) {
         recommends: mapRecommends(recommends)
       };
     }
+    persistCurrentConversation();
   } catch {
     const idx = messages.value.findIndex((m) => m.id === msgId);
     if (idx >= 0) {
@@ -144,6 +258,7 @@ async function send(textFromQuick) {
 }
 
 onMounted(async () => {
+  sessionId.value = getItem(sessionKey.value) || '';
   await loadHistory();
   const quick = route.query.quick;
   if (quick && !messages.value.length) {
@@ -222,5 +337,11 @@ onMounted(async () => {
 
 .ai-chat__bar .van-field {
   flex: 1;
+}
+
+.ai-chat__nav-action {
+  color: #5FB3A8;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>

@@ -52,6 +52,9 @@ export const useAuthStore = defineStore('auth', () => {
     removeItem(KEYS.imUserSig);
     removeItem(KEYS.imUserID);
     removeItem(KEYS.imSdkAppId);
+    // 仅清理旧版全局会话键；保留按用户隔离的 sessionId:{userId}
+    // 这样同一用户重新登录后仍可看到自己的历史对话。
+    removeItem(KEYS.sessionId);
   }
 
   async function login(username, password) {

@@ -117,7 +117,16 @@ async function onSubmit() {
     showToast('登录成功');
     afterLogin();
   } catch (e) {
-    showToast(getApiErrorMessage(e, '登录失败'));
+    const msg = getApiErrorMessage(e, '登录失败');
+    if (
+      msg.includes('用户名或密码错误')
+      || msg.includes('status code 400')
+      || msg.includes('请求失败（400）')
+    ) {
+      showToast('账号或密码不正确，请重新输入');
+    } else {
+      showToast(msg);
+    }
   } finally {
     loading.value = false;
   }

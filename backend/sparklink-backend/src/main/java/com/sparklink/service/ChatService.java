@@ -23,7 +23,8 @@ public interface ChatService {
      * 获取会话历史
      *
      * @param sessionId 会话ID
+     * @param userId 用户ID（用于隔离不同用户历史）
      * @return 历史消息
      */
-    java.util.List<com.sparklink.entity.ChatMessage> getHistory(String sessionId);
+    java.util.List<com.sparklink.entity.ChatMessage> getHistory(String sessionId, Long userId);
 }

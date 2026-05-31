@@ -32,6 +32,9 @@ function clearLocalSession() {
   removeItem(KEYS.imUserSig);
   removeItem(KEYS.imUserID);
   removeItem(KEYS.imSdkAppId);
+  // 仅清理旧版全局会话键；保留按用户隔离的 sessionId:{userId}
+  // 避免同一用户重新登录后丢失自己的对话历史。
+  removeItem(KEYS.sessionId);
 }
 
 const http = axios.create({
@@ -93,9 +96,16 @@ http.interceptors.response.use(
       }
     }
     if (!error.config?.suppressErrorToast) {
-      showToast('网络请求失败');
+      const backendMsg = body && (body.message || body.msg);
+      if (backendMsg) {
+        showToast(String(backendMsg));
+      } else if (status) {
+        showToast(`请求失败（${status}）`);
+      } else {
+        showToast('网络请求失败');
+      }
     }
-    return Promise.reject(error);
+    return Promise.reject(body || error);
   }
 );
 
@@ -127,6 +137,20 @@ export function uploadFile(url, file, fieldName = 'file', options = {}) {
 export function getApiErrorMessage(err, fallback = '操作失败') {
   if (err == null) {
     return fallback;
+  }
+  const respBody = err.response?.data;
+  if (respBody) {
+    const m = respBody.message || respBody.msg;
+    if (m && String(m).trim()) {
+      return String(m).trim();
+    }
+  }
+  const dataBody = err.data;
+  if (dataBody) {
+    const m = dataBody.message || dataBody.msg;
+    if (m && String(m).trim()) {
+      return String(m).trim();
+    }
   }
   if (typeof err === 'string') {
     return err || fallback;
