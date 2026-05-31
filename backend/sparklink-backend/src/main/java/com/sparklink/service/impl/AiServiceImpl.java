@@ -3,8 +3,6 @@ package com.sparklink.service.impl;
 import com.sparklink.common.AiConstants;
 import com.sparklink.common.RecommendFeedbackConstants;
 import com.sparklink.dto.AiRecommendRequest;
-import com.sparklink.dto.ChatRequest;
-import com.sparklink.dto.ChatResponse;
 import com.sparklink.common.PartnerScopeConstants;
 import com.sparklink.common.PartnerTypeConstants;
 import com.sparklink.entity.Activity;
@@ -13,6 +11,8 @@ import com.sparklink.entity.User;
 import com.sparklink.mapper.ActivityMapper;
 import com.sparklink.mapper.PartnerMapper;
 import com.sparklink.mapper.UserMapper;
+import com.sparklink.memory.model.MemoryContext;
+import com.sparklink.memory.service.MemoryFacade;
 import com.sparklink.service.AiService;
 import com.sparklink.service.RecommendFeedbackService;
 import com.sparklink.util.AvatarUtil;
@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -69,18 +68,21 @@ public class AiServiceImpl implements AiService {
     private final RecommendFeedbackService recommendFeedbackService;
     private final ChatModel chatModel;
     private final ObjectMapper objectMapper;
+    private final MemoryFacade memoryFacade;
 
     public AiServiceImpl(PartnerMapper partnerMapper,
                          ActivityMapper activityMapper,
                          UserMapper userMapper,
                          RecommendFeedbackService recommendFeedbackService,
-                         ObjectProvider<ChatModel> chatModelProvider) {
+                         ObjectProvider<ChatModel> chatModelProvider,
+                         MemoryFacade memoryFacade) {
         this.partnerMapper = partnerMapper;
         this.activityMapper = activityMapper;
         this.userMapper = userMapper;
         this.recommendFeedbackService = recommendFeedbackService;
         this.chatModel = chatModelProvider.getIfAvailable();
         this.objectMapper = new ObjectMapper();
+        this.memoryFacade = memoryFacade;
     }
 
     @Override
@@ -99,11 +101,13 @@ public class AiServiceImpl implements AiService {
 
         List<PartnerVO> partnerVOList = buildPartnerVOWithScore(partners, request, profile);
         List<ActivityVO> activityVOList = buildActivityVOWithScore(activities, request, profile);
+        String userInput = buildRecommendMemoryInput(request, profile);
+        MemoryContext memoryContext = memoryFacade.recallForPrompt(request.getUserId(), userInput);
 
         partnerVOList.sort(Comparator.comparing(PartnerVO::getMatchScore, Comparator.nullsLast(Comparator.reverseOrder())));
         activityVOList.sort(Comparator.comparing(ActivityVO::getMatchScore, Comparator.nullsLast(Comparator.reverseOrder())));
 
-        applyAiRerank(partnerVOList, activityVOList, profile);
+        applyAiRerank(partnerVOList, activityVOList, profile, request.getUserId(), userInput, memoryContext);
 
         partnerVOList.sort(Comparator.comparing(PartnerVO::getMatchScore, Comparator.nullsLast(Comparator.reverseOrder())));
         activityVOList.sort(Comparator.comparing(ActivityVO::getMatchScore, Comparator.nullsLast(Comparator.reverseOrder())));
@@ -613,10 +617,21 @@ public class AiServiceImpl implements AiService {
         return d == DayOfWeek.SATURDAY || d == DayOfWeek.SUNDAY;
     }
 
+    private static String buildRecommendMemoryInput(AiRecommendRequest request, RecommendUserProfile profile) {
+        String category = request.getCategory() != null ? request.getCategory().trim() : "";
+        String interests = profile.interestTypes.isEmpty() ? "未指定" : profile.interestTypes.toString();
+        return "推荐请求: category=" + (category.isEmpty() ? "未指定" : category) + ", interests=" + interests;
+    }
+
     /**
      * 百炼模型对 Top 候选重打分；失败则保留规则分
      */
-    private void applyAiRerank(List<PartnerVO> partners, List<ActivityVO> activities, RecommendUserProfile profile) {
+    private void applyAiRerank(List<PartnerVO> partners,
+                               List<ActivityVO> activities,
+                               RecommendUserProfile profile,
+                               Long userId,
+                               String userInput,
+                               MemoryContext memoryContext) {
         if (chatModel == null) {
             return;
         }
@@ -632,11 +647,13 @@ public class AiServiceImpl implements AiService {
             return;
         }
         String prompt = buildRankPrompt(profile, pTop, aTop);
+        String mergedPrompt = memoryFacade.mergePrompt(prompt, memoryContext);
         try {
-            String raw = chatModel.call(prompt);
+            String raw = chatModel.call(mergedPrompt);
             Map<String, Integer> scoreMap = parseAiScoreMap(raw);
             applyPartnerAiScores(partners, scoreMap);
             applyActivityAiScores(activities, scoreMap);
+            memoryFacade.enqueueConversation(userId, userInput, raw);
         } catch (Exception ignored) {
             // 保留规则分
         }
@@ -823,36 +840,6 @@ public class AiServiceImpl implements AiService {
             return vo.getCategory().trim();
         }
         return "__uncategorized__";
-    }
-
-    @Override
-    public ChatResponse chat(ChatRequest request) {
-        String sessionId = request.getSessionId();
-        if (sessionId == null || sessionId.isBlank()) {
-            sessionId = UUID.randomUUID().toString().replace("-", "");
-        }
-        String message = request.getMessage() != null ? request.getMessage().trim().toLowerCase() : "";
-        String reply = buildRuleBasedReply(message);
-        return new ChatResponse(sessionId, reply);
-    }
-
-    private String buildRuleBasedReply(String message) {
-        if (message.contains("搭子") || message.contains("找伴") || message.contains("约")) {
-            return "想找志同道合的搭子？可以在「找搭子」页按兴趣类型筛选，发布你的需求或浏览他人的征搭子帖，匹配度高的会优先展示哦～";
-        }
-        if (message.contains("活动") || message.contains("线下") || message.contains("聚会")) {
-            return "发现有趣活动：打开「发现活动」页，按分类、时间筛选，报名感兴趣的活动即可。有想法的也可以自己发起活动～";
-        }
-        if (message.contains("资料") || message.contains("头像") || message.contains("昵称") || message.contains("个人")) {
-            return "优化个人资料能提高匹配率：完善昵称、头像、兴趣标签和简介，让他人更容易找到你。在「我的」-「个人资料」里即可编辑。";
-        }
-        if (message.contains("你好") || message.contains("hi") || message.contains("在吗")) {
-            return "你好～我是社交小助手。可以问我：怎么找搭子、怎么发现活动、怎么优化个人资料，有问必答～";
-        }
-        if (message.contains("帮助") || message.contains("怎么") || message.contains("如何")) {
-            return "我可以帮你：1）找志同道合的搭子 2）发现有趣的活动 3）优化个人资料。直接说你想了解哪一块即可～";
-        }
-        return "暂时还不懂这句～你可以问我：怎么找搭子、怎么发现活动、怎么优化个人资料，我会尽力帮你～";
     }
 
     /**

@@ -1,8 +1,13 @@
 package com.sparklink.service.impl;
 
 import com.sparklink.dto.ActivityAiRequest;
+import com.sparklink.memory.model.MemoryContext;
+import com.sparklink.memory.service.MemoryFacade;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * 活动文案 AI 生成与优化服务
@@ -16,9 +21,11 @@ import org.springframework.stereotype.Service;
 public class ActivityAiTextService {
 
     private final ChatModel chatModel;
+    private final MemoryFacade memoryFacade;
 
-    public ActivityAiTextService(ChatModel chatModel) {
+    public ActivityAiTextService(ChatModel chatModel, MemoryFacade memoryFacade) {
         this.chatModel = chatModel;
+        this.memoryFacade = memoryFacade;
     }
 
     /**
@@ -28,6 +35,9 @@ public class ActivityAiTextService {
      * @return 优化后的描述
      */
     public String enhanceDescription(ActivityAiRequest req) {
+        Long userId = resolveUserId();
+        String userInput = buildUserInput(req);
+        MemoryContext memoryContext = memoryFacade.recallForPrompt(userId, userInput);
         // System 提示：告知模型角色与约束
         StringBuilder system = new StringBuilder();
         system.append("你是一个帮用户润色线下活动介绍文案的助手，要求：");
@@ -69,12 +79,38 @@ public class ActivityAiTextService {
 
         // 使用 ChatModel 简化接口：system 提示 + 用户内容拼成一个消息
         String fullPrompt = system + "\n\n用户输入：\n" + userContent;
-        String text = chatModel.call(fullPrompt);
-        return text != null ? text.trim() : "";
+        String mergedPrompt = memoryFacade.mergePrompt(fullPrompt, memoryContext);
+        String text = chatModel.call(mergedPrompt);
+        String output = text != null ? text.trim() : "";
+        memoryFacade.enqueueConversation(userId, userInput, output);
+        return output;
     }
 
     private String orEmpty(String v) {
         return v == null ? "" : v;
+    }
+
+    private static String buildUserInput(ActivityAiRequest req) {
+        return "活动文案优化: title=" + safe(req.getTitle())
+                + ", category=" + safe(req.getCategory())
+                + ", draft=" + safe(req.getCurrentDesc());
+    }
+
+    private static String safe(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private static Long resolveUserId() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            return null;
+        }
+        HttpServletRequest request = attributes.getRequest();
+        Object userIdObj = request.getAttribute("userId");
+        if (userIdObj instanceof Number number) {
+            return number.longValue();
+        }
+        return null;
     }
 }
 

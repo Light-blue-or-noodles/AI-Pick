@@ -1,8 +1,13 @@
 package com.sparklink.service.impl;
 
 import com.sparklink.dto.PartnerAiRequest;
+import com.sparklink.memory.model.MemoryContext;
+import com.sparklink.memory.service.MemoryFacade;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * 搭子详情文案 AI 润色（≤300 字）
@@ -11,12 +16,17 @@ import org.springframework.stereotype.Service;
 public class PartnerAiTextService {
 
     private final ChatModel chatModel;
+    private final MemoryFacade memoryFacade;
 
-    public PartnerAiTextService(ChatModel chatModel) {
+    public PartnerAiTextService(ChatModel chatModel, MemoryFacade memoryFacade) {
         this.chatModel = chatModel;
+        this.memoryFacade = memoryFacade;
     }
 
     public String enhanceDescription(PartnerAiRequest req) {
+        Long userId = resolveUserId();
+        String userInput = buildUserInput(req);
+        MemoryContext memoryContext = memoryFacade.recallForPrompt(userId, userInput);
         StringBuilder system = new StringBuilder();
         system.append("你是帮用户写「找搭子」详情介绍的助手。要求：");
         system.append("1）根据标题、类型、偏好扩展为一段自然、真诚的说明；");
@@ -42,18 +52,43 @@ public class PartnerAiTextService {
         userContent.append("输出一段即可，不要分段标题。");
 
         String fullPrompt = system + "\n\n用户输入：\n" + userContent;
-        String text = chatModel.call(fullPrompt);
+        String mergedPrompt = memoryFacade.mergePrompt(fullPrompt, memoryContext);
+        String text = chatModel.call(mergedPrompt);
         if (text == null) {
+            memoryFacade.enqueueConversation(userId, userInput, "");
             return "";
         }
         text = text.trim();
         if (text.length() > 300) {
-            return text.substring(0, 300);
+            String truncated = text.substring(0, 300);
+            memoryFacade.enqueueConversation(userId, userInput, truncated);
+            return truncated;
         }
+        memoryFacade.enqueueConversation(userId, userInput, text);
         return text;
     }
 
     private static String nullToEmpty(String s) {
         return s == null ? "" : s;
+    }
+
+    private static String buildUserInput(PartnerAiRequest req) {
+        return "搭子文案优化: title=" + nullToEmpty(req.getTitle()).trim()
+                + ", type=" + nullToEmpty(req.getTypeName()).trim()
+                + ", preference=" + nullToEmpty(req.getPreference()).trim()
+                + ", draft=" + nullToEmpty(req.getCurrentDesc()).trim();
+    }
+
+    private static Long resolveUserId() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            return null;
+        }
+        HttpServletRequest request = attributes.getRequest();
+        Object userIdObj = request.getAttribute("userId");
+        if (userIdObj instanceof Number number) {
+            return number.longValue();
+        }
+        return null;
     }
 }
