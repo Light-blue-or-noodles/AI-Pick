@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -71,8 +72,6 @@ class AiServiceMemoryHookTest {
         );
         AiRecommendRequest request = new AiRecommendRequest();
         request.setUserId(10086L);
-        request.setCategory("羽毛球");
-        request.setInterestTypes(List.of(5));
         request.setPartnerLimit(1);
         request.setActivityLimit(1);
 
@@ -202,5 +201,111 @@ class AiServiceMemoryHookTest {
         AiRecommendVO result = aiService.recommend(request);
         assertNotNull(result);
         assertTrue(result.getPartners() != null);
+    }
+
+    @Test
+    void recommend_shouldFailOpenWhenMergePromptThrows() {
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        AiServiceImpl aiService = new AiServiceImpl(
+                partnerMapper,
+                activityMapper,
+                userMapper,
+                recommendFeedbackService,
+                chatModelProvider,
+                memoryFacade
+        );
+        AiRecommendRequest request = new AiRecommendRequest();
+        request.setUserId(10020L);
+        request.setPartnerLimit(1);
+        request.setActivityLimit(1);
+
+        Partner partner = new Partner();
+        partner.setId(78L);
+        partner.setUserId(20002L);
+        partner.setStatus(0);
+        partner.setScope(1);
+        partner.setType(6);
+        partner.setTitle("电影搭子");
+        partner.setContent("周末看电影");
+        partner.setPlanTime(LocalDateTime.now().plusDays(1));
+        when(partnerMapper.selectList(any())).thenReturn(List.of(partner));
+
+        Activity activity = new Activity();
+        activity.setId(89L);
+        activity.setUserId(30002L);
+        activity.setStatus(1);
+        activity.setCategory("娱乐");
+        activity.setTitle("电影局");
+        activity.setDescription("轻松交流");
+        activity.setStartTime(LocalDateTime.now().plusDays(1));
+        when(activityMapper.selectList(any())).thenReturn(List.of(activity));
+
+        when(userMapper.selectById(10020L)).thenReturn(null);
+        when(userMapper.selectBatchIds(any())).thenReturn(List.of());
+        when(recommendFeedbackService.findNegativeTargetIds(any(), anyInt())).thenReturn(java.util.Set.of());
+        when(recommendFeedbackService.countNegativeByPartnerType(any())).thenReturn(Map.of());
+        when(recommendFeedbackService.countNegativeByActivityCategory(any())).thenReturn(Map.of());
+
+        when(memoryFacade.recallForPrompt(eq(10020L), anyString())).thenReturn(null);
+        when(memoryFacade.mergePrompt(anyString(), isNull())).thenThrow(new RuntimeException("merge failed"));
+        when(chatModel.call(anyString())).thenReturn("[{\"kind\":\"partner\",\"id\":78,\"score\":85}]");
+
+        AiRecommendVO result = aiService.recommend(request);
+        assertNotNull(result);
+        assertNotNull(result.getPartners());
+    }
+
+    @Test
+    void recommend_shouldFailOpenWhenEnqueueThrows() {
+        when(chatModelProvider.getIfAvailable()).thenReturn(chatModel);
+        AiServiceImpl aiService = new AiServiceImpl(
+                partnerMapper,
+                activityMapper,
+                userMapper,
+                recommendFeedbackService,
+                chatModelProvider,
+                memoryFacade
+        );
+        AiRecommendRequest request = new AiRecommendRequest();
+        request.setUserId(10030L);
+        request.setPartnerLimit(1);
+        request.setActivityLimit(1);
+
+        Partner partner = new Partner();
+        partner.setId(79L);
+        partner.setUserId(20003L);
+        partner.setStatus(0);
+        partner.setScope(1);
+        partner.setType(7);
+        partner.setTitle("咖啡搭子");
+        partner.setContent("周末喝咖啡");
+        partner.setPlanTime(LocalDateTime.now().plusDays(1));
+        when(partnerMapper.selectList(any())).thenReturn(List.of(partner));
+
+        Activity activity = new Activity();
+        activity.setId(90L);
+        activity.setUserId(30003L);
+        activity.setStatus(1);
+        activity.setCategory("社交");
+        activity.setTitle("咖啡交流会");
+        activity.setDescription("轻松闲聊");
+        activity.setStartTime(LocalDateTime.now().plusDays(1));
+        when(activityMapper.selectList(any())).thenReturn(List.of(activity));
+
+        when(userMapper.selectById(10030L)).thenReturn(null);
+        when(userMapper.selectBatchIds(any())).thenReturn(List.of());
+        when(recommendFeedbackService.findNegativeTargetIds(any(), anyInt())).thenReturn(java.util.Set.of());
+        when(recommendFeedbackService.countNegativeByPartnerType(any())).thenReturn(Map.of());
+        when(recommendFeedbackService.countNegativeByActivityCategory(any())).thenReturn(Map.of());
+
+        when(memoryFacade.recallForPrompt(eq(10030L), anyString())).thenReturn(null);
+        when(memoryFacade.mergePrompt(anyString(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(chatModel.call(anyString())).thenReturn("[{\"kind\":\"partner\",\"id\":79,\"score\":90}]");
+        doThrow(new RuntimeException("enqueue failed"))
+                .when(memoryFacade).enqueueConversation(eq(10030L), anyString(), anyString());
+
+        AiRecommendVO result = aiService.recommend(request);
+        assertNotNull(result);
+        assertNotNull(result.getActivities());
     }
 }
