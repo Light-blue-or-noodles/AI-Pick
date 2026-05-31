@@ -15,10 +15,12 @@ import java.lang.reflect.Method;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 /**
  * MemoryEvent 消费者（幂等 + 重试 + DLQ）。
@@ -33,8 +35,12 @@ public class MemoryEventConsumer {
     public static final String IDEMPOTENCY_PREFIX = "memory:event:idempotent:";
     public static final Duration IDEMPOTENCY_TTL = Duration.ofDays(7);
     public static final int MAX_RETRY_COUNT = 6;
+    public static final int MAX_ERROR_LENGTH = 512;
 
     private static final long[] RETRY_BACKOFF_SECONDS = {5, 30, 120, 600, 1800, 7200};
+    private static final Pattern SENSITIVE_KV_PATTERN =
+            Pattern.compile("(?i)(authorization|token|secret|password|passwd|api[-_]?key)\\s*[=:]\\s*\\S+");
+    private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer\\s+[A-Za-z0-9._\\-+/=]+");
 
     private final StringRedisTemplate stringRedisTemplate;
     private final MemoryAddExecutor memoryAddExecutor;
@@ -63,9 +69,13 @@ public class MemoryEventConsumer {
 
     public void consumeRecord(MapRecord<String, Object, Object> record) {
         Assert.notNull(record, "record 不能为空");
-        Map<Object, Object> body = new LinkedHashMap<>(record.getValue());
-        MemoryEvent event = MemoryEvent.fromStreamBody(body);
-        consume(event);
+        try {
+            Map<Object, Object> body = new LinkedHashMap<>(record.getValue());
+            MemoryEvent event = MemoryEvent.fromStreamBody(body);
+            consume(event);
+        } catch (Exception ex) {
+            moveRawRecordToDlq(record, buildErrorMessage(ex));
+        }
     }
 
     private boolean acquireIdempotency(String idempotencyKey) {
@@ -89,13 +99,23 @@ public class MemoryEventConsumer {
         int currentRetryCount = event.getRetryCount();
         int nextRetryCount = currentRetryCount + 1;
         long backoffSeconds = RETRY_BACKOFF_SECONDS[currentRetryCount];
-        MemoryEvent retryEvent = event.withRetry(nextRetryCount, Instant.now().plusSeconds(backoffSeconds), errorMessage);
+        MemoryEvent retryEvent = event.withRetry(nextRetryCount, Instant.now().plusSeconds(backoffSeconds), sanitizeAndTruncate(errorMessage));
         stringRedisTemplate.opsForStream().add(RETRY_STREAM_KEY, retryEvent.toStreamBody());
     }
 
     private void moveToDlq(MemoryEvent event, String errorMessage) {
         Map<String, Object> body = new LinkedHashMap<>(event.toStreamBody());
-        body.put(MemoryEvent.FIELD_FAILURE_REASON, errorMessage);
+        body.put(MemoryEvent.FIELD_FAILURE_REASON, sanitizeAndTruncate(errorMessage));
+        stringRedisTemplate.opsForStream().add(DLQ_STREAM_KEY, body);
+    }
+
+    private void moveRawRecordToDlq(MapRecord<String, Object, Object> record, String errorMessage) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("source_stream", record.getStream());
+        body.put("source_record_id", String.valueOf(record.getId()));
+        body.put(MemoryEvent.FIELD_FAILURE_REASON, sanitizeAndTruncate(errorMessage));
+        body.put("raw_summary", summarizeRecordBody(record.getValue()));
+        body.put(MemoryEvent.FIELD_CREATED_AT, Instant.now().toString());
         stringRedisTemplate.opsForStream().add(DLQ_STREAM_KEY, body);
     }
 
@@ -131,6 +151,29 @@ public class MemoryEventConsumer {
             return throwable.getMessage();
         }
         return throwable.getClass().getSimpleName();
+    }
+
+    private String summarizeRecordBody(Map<Object, Object> recordValue) {
+        Map<Object, Object> safeMap = recordValue == null ? Collections.emptyMap() : recordValue;
+        return sanitizeAndTruncate(String.valueOf(safeMap));
+    }
+
+    private String sanitizeAndTruncate(String rawValue) {
+        if (!StringUtils.hasText(rawValue)) {
+            return "unknown error";
+        }
+        String sanitized = rawValue
+                .replace('\n', ' ')
+                .replace('\r', ' ')
+                .replace('\t', ' ')
+                .replaceAll("\\p{Cntrl}", " ");
+        sanitized = SENSITIVE_KV_PATTERN.matcher(sanitized).replaceAll("$1=[REDACTED]");
+        sanitized = BEARER_PATTERN.matcher(sanitized).replaceAll("Bearer [REDACTED]");
+        sanitized = sanitized.replaceAll("\\s{2,}", " ").trim();
+        if (sanitized.length() > MAX_ERROR_LENGTH) {
+            return sanitized.substring(0, MAX_ERROR_LENGTH);
+        }
+        return sanitized;
     }
 
     @FunctionalInterface
