@@ -69,6 +69,10 @@
         </button>
       </form>
 
+      <aside class="login__hint" aria-label="测试账号提示">
+        <p class="login__hint-text">测试账号：test，密码：123456</p>
+      </aside>
+
       <footer class="login__footer">
         <p>H5 使用账号密码登录；微信一键登录请使用小程序。</p>
       </footer>
@@ -370,6 +374,25 @@ function onWechatLogin() {
   color: #fff;
   background: #07c160;
   box-shadow: 0 4px 14px rgba(7, 193, 96, 0.28);
+}
+
+.login__hint {
+  width: 100%;
+  max-width: 400px;
+  margin: 16px auto 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 248, 230, 0.92);
+  border: 1px dashed rgba(230, 162, 60, 0.45);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.login__hint-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #b88230;
 }
 
 .login__footer {
