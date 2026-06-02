@@ -6,6 +6,7 @@ import com.sparklink.dto.ChatResponse;
 import com.sparklink.entity.ChatMessage;
 import com.sparklink.service.ChatService;
 import com.sparklink.util.PromptSanitizer;
+import com.sparklink.util.RequestUserResolver;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +22,11 @@ import java.util.List;
 public class ChatController {
 
     private final ChatService chatService;
+    private final RequestUserResolver requestUserResolver;
 
-    public ChatController(ChatService chatService) {
+    public ChatController(ChatService chatService, RequestUserResolver requestUserResolver) {
         this.chatService = chatService;
+        this.requestUserResolver = requestUserResolver;
     }
 
     /**
@@ -34,7 +37,8 @@ public class ChatController {
             @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @Valid @RequestBody ChatRequest request) {
         request.setMessage(PromptSanitizer.sanitize(request.getMessage()));
-        ChatResponse response = chatService.chat(userId, request);
+        Long resolvedUserId = requestUserResolver.requireUserId(userId);
+        ChatResponse response = chatService.chat(resolvedUserId, request);
         return Result.success(response);
     }
 
@@ -45,10 +49,14 @@ public class ChatController {
     public Result<List<ChatMessage>> getHistory(
             @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @PathVariable(required = false) String sessionId) {
-        if (sessionId == null || sessionId.isBlank() || userId == null) {
+        if (sessionId == null || sessionId.isBlank()) {
             return Result.success(List.of());
         }
-        List<ChatMessage> history = chatService.getHistory(sessionId, userId);
+        Long resolvedUserId = requestUserResolver.resolveUserId(userId);
+        if (resolvedUserId == null) {
+            return Result.success(List.of());
+        }
+        List<ChatMessage> history = chatService.getHistory(sessionId, resolvedUserId);
         return Result.success(history);
     }
 }

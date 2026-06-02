@@ -10,6 +10,7 @@ import com.sparklink.ai.chat.SearchResultFilterService;
 import com.sparklink.ai.chat.WebSearchPolicyService;
 import com.sparklink.ai.chat.WebSearchProperties;
 import com.sparklink.common.AiConstants;
+import com.sparklink.common.BusinessException;
 import com.sparklink.dto.ChatCitationItem;
 import com.sparklink.dto.ChatRecommendItem;
 import com.sparklink.dto.ChatRequest;
@@ -119,6 +120,9 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatResponse chat(Long userId, ChatRequest request) {
+        if (userId == null) {
+            throw new BusinessException(401, "请先登录");
+        }
         String sessionId = request.getSessionId();
         if (sessionId == null || sessionId.isEmpty()) {
             sessionId = IdUtil.fastSimpleUUID();

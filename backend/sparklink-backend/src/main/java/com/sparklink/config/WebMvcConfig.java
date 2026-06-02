@@ -78,23 +78,24 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/api/**")
+                .addPathPatterns("/**")
                 .excludePathPatterns(
-                        "/api/user/login",
-                        "/api/user/register",
-                        "/api/user/wechat-login",
-                        "/api/user/test-login",
-                        "/api/im/admin/batch-import-users",
-                        "/api/static/**",
-                        "/api/partner/list",
-                        "/api/partner/my",
-                        "/api/partner/my/**",
-                        "/api/partner/*",
-                        "/api/partner/filter",
-                        "/api/activity/list",
-                        "/api/activity/*",
-                        "/api/activity/calendar",
-                        "/api/ai/*"
+                        "/user/login",
+                        "/user/register",
+                        "/user/wechat-login",
+                        "/user/test-login",
+                        "/im/admin/batch-import-users",
+                        "/static/**",
+                        "/partner/list",
+                        "/partner/my",
+                        "/partner/my/**",
+                        "/partner/*",
+                        "/partner/filter",
+                        "/activity/list",
+                        "/activity/*",
+                        "/activity/calendar",
+                        "/ai/**",
+                        "/health"
                 );
     }
 }

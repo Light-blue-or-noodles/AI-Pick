@@ -1,7 +1,6 @@
 package com.sparklink.config;
 
 import cn.hutool.core.util.StrUtil;
-import com.sparklink.common.BusinessException;
 import com.sparklink.common.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
@@ -49,14 +48,20 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         // 移除前缀
         if (token.startsWith(prefix)) {
-            token = token.substring(prefix.length());
+            token = token.substring(prefix.length()).trim();
         }
 
         try {
-            // 验证token
             Claims claims = jwtUtils.parseToken(token);
-            Long userId = claims.get("userId", Long.class);
+            Long userId = extractUserId(claims);
             String username = claims.get("username", String.class);
+
+            if (userId == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(objectMapper.writeValueAsString(Result.unauthorized("登录已过期，请重新登录")));
+                return false;
+            }
 
             // 将用户信息存入请求属性
             request.setAttribute("userId", userId);
@@ -70,5 +75,20 @@ public class JwtInterceptor implements HandlerInterceptor {
             response.getWriter().write(objectMapper.writeValueAsString(Result.unauthorized("登录已过期，请重新登录")));
             return false;
         }
+    }
+
+    private static Long extractUserId(Claims claims) {
+        Object userIdObj = claims.get("userId");
+        if (userIdObj instanceof Number number) {
+            return number.longValue();
+        }
+        if (userIdObj instanceof String str && !str.isBlank()) {
+            try {
+                return Long.parseLong(str.trim());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 }

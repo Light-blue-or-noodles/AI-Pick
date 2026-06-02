@@ -6,7 +6,7 @@
 set -e
 BASE="${1:-https://www.aipick.cloud}"
 BASE="${BASE%/}"
-USER="${H5_TEST_USER:-testuser}"
+USER="${H5_TEST_USER:-test}"
 PASS="${H5_TEST_PASS:-123456}"
 
 echo "=== API base: $BASE ==="
@@ -55,5 +55,18 @@ curl -sS -o /tmp/h5-usersig.json -w "GET /api/im/usersig -> HTTP %{http_code}\n"
   -H "Authorization: Bearer $token" \
   -H "X-User-Id: $uid" \
   "$BASE/api/im/usersig"
+
+chat=$(curl -sS -X POST "$BASE/api/chat" \
+  -H "Authorization: Bearer $token" \
+  -H 'Content-Type: application/json' \
+  -d '{"message":"你好，请简短回复"}')
+chat_code=$(echo "$chat" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('code', -1))" 2>/dev/null || echo -1)
+echo "POST /api/chat (JWT only, no X-User-Id) -> code $chat_code"
+echo "$chat" | head -c 300
+echo ""
+if [ "$chat_code" != "0" ]; then
+  echo "AI 对话失败"
+  exit 1
+fi
 
 echo "=== API 冒烟完成 ==="

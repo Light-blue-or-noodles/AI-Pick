@@ -114,33 +114,36 @@ MEMORY_LIBRARY_ENVIRONMENT_TAG=prod
 git add sparklink-h5/src/views/LoginView.vue
 git commit -m "feat(h5): add temporary test account hint on login page"
 
-# 2. SSH 更新 .env（在服务器上编辑，追加/覆盖上述变量）
+# 2. SSH 更新 .env（在服务器上编辑，追加 DIFY 等变量；参考 部署/sparklink.env.example）
 ssh root@59.110.0.107
 # vi /opt/sparklink/.env
 
-# 3. 确认 systemd 读取 EnvironmentFile
-# systemctl cat sparklink | grep EnvironmentFile
-
-# 4. 本机部署后端
+# 3. 本机一键全量部署（后端 + H5 + Nginx + systemd sparklink）
 cd /Users/yanleishi/AI/Project/OpenClaw
-./部署/deploy.sh prod
+./scripts/deploy-prod.sh prod
+# 或: ./deploy.sh prod
 
-# 5. 健康检查
+# 可选参数:
+#   --backend-only   仅后端
+#   --h5-only        仅 H5 + Nginx
+#   --skip-nginx     跳过 Nginx 同步
+
+# 4. 健康检查（脚本末尾也会执行）
 curl -s http://59.110.0.107:8080/api/health
 curl -s https://www.aipick.cloud/api/health
+curl -sI https://www.aipick.cloud/
 ```
 
-### 4.4 systemd 注意事项
+### 4.4 systemd 与 legacy 迁移
 
-`部署/deploy.sh` 在 `systemctl start sparklink` 失败时会 fallback 到 `nohup java -jar`，且 fallback 分支**硬编码部分环境变量**，可能不加载 `.env` 中的 DIFY 变量。
+`scripts/deploy-prod.sh` 会：
 
-部署前必须确认：
+1. 安装 `部署/sparklink.service` → `/etc/systemd/system/sparklink.service`
+2. 使用 `EnvironmentFile=/opt/sparklink/.env`（首次可从 `/opt/aipick/.env` 自动迁移）
+3. 停止并 disable legacy 服务 `aipick`，避免 8080 端口冲突
+4. `systemctl restart sparklink`
 
-1. `systemctl cat sparklink` 存在且 `EnvironmentFile=/opt/sparklink/.env`
-2. `ExecStart` 含 `--spring.profiles.active=prod`
-3. 优先使用 `systemctl restart sparklink`，避免走 fallback
-
-若 systemd 未配置 `EnvironmentFile`，需在部署步骤中补全 unit 文件并 `daemon-reload`。
+部署前确认 `/opt/sparklink/.env` 已包含 DIFY 变量（参考 `部署/sparklink.env.example`）。
 
 ### 4.5 后端错误处理
 
@@ -166,12 +169,21 @@ curl -s https://www.aipick.cloud/api/health
 
 ### 5.2 部署命令
 
+全量部署已包含 H5 环节（推荐）：
+
 ```bash
-cd /Users/yanleishi/AI/Project/OpenClaw
+./scripts/deploy-prod.sh prod
+```
+
+仅 H5 时：
+
+```bash
 ./scripts/deploy-h5.sh root@59.110.0.107 /var/www/sparklink-h5
 ```
 
 脚本流程：`npm ci` → `npm run build` → `rsync -avz --delete dist/` 到服务器。
+
+Nginx 由 `deploy-prod.sh` 同步 `部署/nginx/sparklink-h5.conf` → `/etc/nginx/conf.d/sparklink.conf`，并禁用 legacy `aipick.conf`。
 
 ### 5.3 前端注意事项
 
