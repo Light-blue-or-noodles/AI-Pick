@@ -27,9 +27,29 @@
             {{ r.title || r.name }}
           </div>
         </div>
+        <div v-if="msg.citations?.length" class="ai-chat__citations">
+          <a
+            v-for="c in msg.citations"
+            :key="`${c.url}-${c.title || ''}`"
+            class="ai-chat__citation-link"
+            :href="c.url"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ c.title || c.domain || c.url }}
+          </a>
+        </div>
       </div>
     </div>
     <div class="ai-chat__bar">
+      <div class="ai-chat__mode">
+        <span class="ai-chat__mode-label">联网</span>
+        <div class="ai-chat__mode-actions">
+          <van-button size="mini" :type="webSearchMode === 'auto' ? 'primary' : 'default'" @click="webSearchMode = 'auto'">自动</van-button>
+          <van-button size="mini" :type="webSearchMode === 'on' ? 'primary' : 'default'" @click="webSearchMode = 'on'">开</van-button>
+          <van-button size="mini" :type="webSearchMode === 'off' ? 'primary' : 'default'" @click="webSearchMode = 'off'">关</van-button>
+        </div>
+      </div>
       <van-field v-model="inputValue" placeholder="问 AI 找搭子..." @keyup.enter="send" />
       <van-button type="primary" size="small" color="#5FB3A8" :loading="isLoading" @click="send">发送</van-button>
     </div>
@@ -54,6 +74,7 @@ const messages = ref([]);
 const inputValue = ref('');
 const isLoading = ref(false);
 const loadingId = ref(null);
+const webSearchMode = ref('auto');
 const sessionKey = computed(() => {
   const uid = auth.userId ? String(auth.userId) : '';
   return uid ? `${KEYS.sessionId}:${uid}` : KEYS.sessionId;
@@ -155,7 +176,8 @@ async function loadHistory() {
           id: raw[i].id || i,
           content: raw[i].content || '',
           reply: raw[i + 1].content || '',
-          recommends: []
+          recommends: [],
+          citations: []
         });
         i++;
       }
@@ -231,7 +253,7 @@ async function send(textFromQuick) {
     return;
   }
   const msgId = Date.now();
-  const userMessage = { id: msgId, content, reply: '', recommends: [] };
+  const userMessage = { id: msgId, content, reply: '', recommends: [], citations: [] };
   messages.value.push(userMessage);
   inputValue.value = '';
   isLoading.value = true;
@@ -240,10 +262,11 @@ async function send(textFromQuick) {
   try {
     const res = await post('/api/chat', {
       message: content,
-      sessionId: sessionId.value
+      sessionId: sessionId.value,
+      webSearchMode: webSearchMode.value
     });
     const payload = res.data || {};
-    const { reply = '', recommends = [], sessionId: newSid } = payload;
+    const { reply = '', recommends = [], citations = [], sessionId: newSid } = payload;
     if (newSid) {
       sessionId.value = newSid;
       setItem(sessionKey.value, newSid);
@@ -253,7 +276,8 @@ async function send(textFromQuick) {
       messages.value[idx] = {
         ...messages.value[idx],
         reply,
-        recommends: mapRecommends(recommends)
+        recommends: mapRecommends(recommends),
+        citations: Array.isArray(citations) ? citations : []
       };
     }
     persistCurrentConversation();
@@ -336,6 +360,20 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
+.ai-chat__citations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.ai-chat__citation-link {
+  color: #5FB3A8;
+  font-size: 12px;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
 .ai-chat__rec {
   padding: 8px 12px;
   font-size: 13px;
@@ -344,10 +382,28 @@ onMounted(async () => {
 
 .ai-chat__bar {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 8px 12px calc(8px + var(--safe-bottom));
   background: #fff;
   border-top: 1px solid var(--border-color);
+}
+
+.ai-chat__mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-chat__mode-label {
+  color: #8e8e93;
+  font-size: 12px;
+}
+
+.ai-chat__mode-actions {
+  display: flex;
+  gap: 6px;
 }
 
 .ai-chat__bar .van-field {

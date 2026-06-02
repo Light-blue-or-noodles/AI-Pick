@@ -118,6 +118,68 @@ java -jar target/aipick-backend-1.0.0.jar
 | POST | /api/chat | AI 对话 | 是 |
 | GET | /api/chat/history/{sessionId} | 会话历史 | 是 |
 
+### AI Chat 联网搜索配置
+
+`application.yml` 中可配置以下参数：
+
+```yaml
+app:
+  chat:
+    web-search:
+      enabled: true
+      endpoint: https://dashscope.aliyuncs.com/api/v1/mcps/WebSearch/mcp
+      timeout-ms: 5000
+      max-results: 5
+      domain-whitelist: []
+      domain-blacklist: []
+```
+
+- `enabled`: 是否启用联网搜索总开关（`true/false`）。
+- `endpoint`: 百炼 WebSearch MCP 连接地址（默认 `https://dashscope.aliyuncs.com/api/v1/mcps/WebSearch/mcp`）。
+- `timeout-ms`: 联网搜索超时时间（毫秒）。
+- `max-results`: 每次联网搜索最多返回结果数。
+- `domain-whitelist`: 域名白名单，非空时仅保留白名单域名结果。
+- `domain-blacklist`: 域名黑名单，命中黑名单域名的结果会被过滤。
+- `ChatRequest.webSearchMode`: 每次请求可选 `auto/on/off`。
+  - `auto`: 按策略自动判定是否触发联网搜索。
+  - `on`: 强制触发联网搜索。
+  - `off`: 强制关闭联网搜索。
+
+### AI Chat Dify Cloud 知识检索配置
+
+知识检索依赖 Dify Cloud Dataset API，建议通过环境变量注入敏感信息：
+
+```bash
+export DIFY_API_KEY=你的DifyApiKey
+export DIFY_DATASET_ID=你的DifyDatasetId
+```
+
+`application.yml` 示例：
+
+```yaml
+app:
+  dify:
+    enabled: true
+    base-url: https://api.dify.ai/v1
+    api-key: ${DIFY_API_KEY:}
+    dataset-id: ${DIFY_DATASET_ID:}
+    timeout-ms: 6000
+    retrieve:
+      top-k: 6
+      threshold-enabled: true
+      score-threshold: 0.55
+      search-method: hybrid_search
+      reranking-enable: false
+      max-inject-records: 4
+      max-inject-chars-per-record: 400
+```
+
+参数说明：
+- `DIFY_API_KEY`：Dify Cloud API Key，未配置时将触发检索降级。
+- `DIFY_DATASET_ID`：知识库 Dataset ID，需与 Dify 后台一致。
+- `app.dify.retrieve.*`：检索策略参数（TopK、阈值过滤、检索方法、重排、注入上限）；
+- 生产环境请通过环境变量/配置中心注入密钥，不要将真实密钥提交到仓库。
+
 ## 请求头说明
 
 需要认证的接口需要在请求头中添加:

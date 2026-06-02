@@ -19,16 +19,26 @@ public class ChatResponse {
     /** 推荐列表（系统内搭子/活动，供前端展示卡片） */
     private List<ChatRecommendItem> recommends;
 
+    /** 联网引用列表 */
+    private List<ChatCitationItem> citations;
+
+    /** 联网搜索元信息 */
+    private ChatSearchMeta searchMeta;
+
     public ChatResponse(String sessionId, String reply) {
         this.sessionId = sessionId;
         this.reply = reply;
         this.recommends = Collections.emptyList();
+        this.citations = Collections.emptyList();
+        this.searchMeta = ChatSearchMeta.notTriggered("not_evaluated", 0);
     }
 
     public ChatResponse(String sessionId, String reply, List<ChatRecommendItem> recommends) {
         this.sessionId = sessionId;
         this.reply = reply;
         this.recommends = recommends != null ? recommends : Collections.emptyList();
+        this.citations = Collections.emptyList();
+        this.searchMeta = ChatSearchMeta.notTriggered("not_evaluated", 0);
     }
 
     public String getSessionId() {
@@ -53,5 +63,21 @@ public class ChatResponse {
 
     public void setRecommends(List<ChatRecommendItem> recommends) {
         this.recommends = recommends != null ? recommends : Collections.emptyList();
+    }
+
+    public List<ChatCitationItem> getCitations() {
+        return citations;
+    }
+
+    public void setCitations(List<ChatCitationItem> citations) {
+        this.citations = citations != null ? citations : Collections.emptyList();
+    }
+
+    public ChatSearchMeta getSearchMeta() {
+        return searchMeta;
+    }
+
+    public void setSearchMeta(ChatSearchMeta searchMeta) {
+        this.searchMeta = searchMeta != null ? searchMeta : ChatSearchMeta.notTriggered("not_evaluated", 0);
     }
 }

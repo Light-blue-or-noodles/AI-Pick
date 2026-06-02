@@ -18,6 +18,9 @@ public class ChatRequest {
     @Size(max = 2000, message = "消息内容长度不能超过2000个字符")
     private String message;
 
+    /** 联网搜索模式：auto/on/off */
+    private String webSearchMode = "auto";
+
     public String getSessionId() {
         return sessionId;
     }
@@ -32,5 +35,13 @@ public class ChatRequest {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getWebSearchMode() {
+        return webSearchMode;
+    }
+
+    public void setWebSearchMode(String webSearchMode) {
+        this.webSearchMode = webSearchMode;
     }
 }

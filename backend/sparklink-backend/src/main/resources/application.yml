@@ -13,6 +13,26 @@ app:
   chat:
     tools-enabled: ${CHAT_TOOLS_ENABLED:true}
     tools-timeout-ms: ${CHAT_TOOLS_TIMEOUT_MS:25000}
+    web-search:
+      enabled: ${CHAT_WEB_SEARCH_ENABLED:true}
+      endpoint: ${CHAT_WEB_SEARCH_ENDPOINT:https://dashscope.aliyuncs.com/api/v1/mcps/WebSearch/mcp}
+      timeout-ms: ${CHAT_WEB_SEARCH_TIMEOUT_MS:5000}
+      max-results: ${CHAT_WEB_SEARCH_MAX_RESULTS:5}
+      domain-whitelist: []
+      domain-blacklist: []
+  dify:
+    base-url: ${DIFY_BASE_URL:https://api.dify.ai/v1}
+    api-key: ${DIFY_API_KEY:}
+    dataset-id: ${DIFY_DATASET_ID:}
+    timeout-ms: ${DIFY_TIMEOUT_MS:6000}
+    retrieve:
+      top-k: ${DIFY_RETRIEVE_TOP_K:6}
+      threshold-enabled: ${DIFY_RETRIEVE_THRESHOLD_ENABLED:true}
+      score-threshold: ${DIFY_RETRIEVE_SCORE_THRESHOLD:0.55}
+      search-method: ${DIFY_RETRIEVE_SEARCH_METHOD:hybrid_search}
+      reranking-enable: ${DIFY_RETRIEVE_RERANKING_ENABLE:false}
+      max-inject-records: ${DIFY_RETRIEVE_MAX_INJECT_RECORDS:4}
+      max-inject-chars-per-record: ${DIFY_RETRIEVE_MAX_INJECT_CHARS_PER_RECORD:400}
 
 spring:
   application:
